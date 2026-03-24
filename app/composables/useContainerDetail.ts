@@ -5,6 +5,7 @@ export function useContainerDetail(id: Ref<string> | string) {
   const logs = ref<string>('')
   const loading = ref(false)
   const error = ref<string | null>(null)
+  const toast = useToast()
 
   const resolvedId = computed(() => typeof id === 'string' ? id : id.value)
 
@@ -17,6 +18,7 @@ export function useContainerDetail(id: Ref<string> | string) {
       container.value = response.data
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to fetch container details'
+      toast.error('Kunde inte hämta containerdetaljer')
     } finally {
       loading.value = false
     }
@@ -30,6 +32,7 @@ export function useContainerDetail(id: Ref<string> | string) {
       logs.value = response.data
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to fetch logs'
+      toast.error('Kunde inte hämta loggar')
     }
   }
 

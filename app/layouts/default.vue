@@ -61,6 +61,8 @@ function toggleSidebar() {
       <slot />
     </main>
   </div>
+
+  <UiToastContainer />
 </template>
 
 <style scoped>

@@ -4,6 +4,7 @@ export function useProjects() {
   const projects = ref<ComposeProject[]>([])
   const loading = ref(false)
   const error = ref<string | null>(null)
+  const toast = useToast()
 
   /** Fetch all compose projects */
   async function fetchProjects() {
@@ -14,6 +15,7 @@ export function useProjects() {
       projects.value = response.data
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to fetch projects'
+      toast.error('Kunde inte hämta projekt')
     } finally {
       loading.value = false
     }
@@ -23,8 +25,10 @@ export function useProjects() {
   async function projectUp(name: string) {
     try {
       await $fetch(`/api/projects/${name}/up`, { method: 'POST' })
+      toast.success('Projekt startat')
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to start project'
+      toast.error('Kunde inte starta projekt')
     }
   }
 
@@ -32,8 +36,10 @@ export function useProjects() {
   async function projectDown(name: string) {
     try {
       await $fetch(`/api/projects/${name}/down`, { method: 'POST' })
+      toast.success('Projekt stoppat')
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to stop project'
+      toast.error('Kunde inte stoppa projekt')
     }
   }
 
@@ -41,8 +47,10 @@ export function useProjects() {
   async function projectPull(name: string) {
     try {
       await $fetch(`/api/projects/${name}/pull`, { method: 'POST' })
+      toast.success('Images uppdaterade')
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to pull project images'
+      toast.error('Kunde inte hämta images')
     }
   }
 
@@ -51,8 +59,10 @@ export function useProjects() {
     try {
       await $fetch(`/api/projects/${name}/down`, { method: 'POST' })
       await $fetch(`/api/projects/${name}/up`, { method: 'POST' })
+      toast.success('Projekt omstartat')
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to restart project'
+      toast.error('Kunde inte starta om projekt')
     }
   }
 
@@ -63,6 +73,7 @@ export function useProjects() {
       return response.data
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to get config'
+      toast.error('Kunde inte hämta konfiguration')
       return ''
     }
   }
@@ -74,8 +85,10 @@ export function useProjects() {
         method: 'PUT',
         body: { content },
       })
+      toast.success('Konfiguration sparad')
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to save config'
+      toast.error('Kunde inte spara konfiguration')
     }
   }
 

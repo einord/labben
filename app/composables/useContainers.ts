@@ -4,6 +4,7 @@ export function useContainers() {
   const containers = ref<ContainerSummary[]>([])
   const loading = ref(false)
   const error = ref<string | null>(null)
+  const toast = useToast()
 
   /** Fetch all containers from the API */
   async function fetchContainers() {
@@ -14,6 +15,7 @@ export function useContainers() {
       containers.value = response.data
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to fetch containers'
+      toast.error('Kunde inte hämta containers')
     } finally {
       loading.value = false
     }
@@ -23,8 +25,10 @@ export function useContainers() {
   async function startContainer(id: string) {
     try {
       await $fetch(`/api/containers/${id}/start`, { method: 'POST' })
+      toast.success('Container startad')
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to start container'
+      toast.error('Kunde inte starta container')
     }
   }
 
@@ -32,8 +36,10 @@ export function useContainers() {
   async function stopContainer(id: string) {
     try {
       await $fetch(`/api/containers/${id}/stop`, { method: 'POST' })
+      toast.success('Container stoppad')
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to stop container'
+      toast.error('Kunde inte stoppa container')
     }
   }
 
@@ -41,8 +47,10 @@ export function useContainers() {
   async function restartContainer(id: string) {
     try {
       await $fetch(`/api/containers/${id}/restart`, { method: 'POST' })
+      toast.success('Container omstartad')
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to restart container'
+      toast.error('Kunde inte starta om container')
     }
   }
 
