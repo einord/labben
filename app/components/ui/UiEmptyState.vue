@@ -34,19 +34,19 @@ defineProps<UiEmptyStateProps>()
 }
 
 .icon {
-  font-size: 3rem;
+  font-size: var(--icon-size-xl);
   color: var(--color-text-muted);
   margin-bottom: var(--spacing-sm);
 }
 
 .title {
-  font-size: 1.2rem;
+  font-size: var(--font-size-xl);
   font-weight: 600;
   color: var(--color-text-bright);
 }
 
 .description {
-  font-size: 0.9rem;
+  font-size: var(--font-size-md);
   color: var(--color-text-muted);
   max-width: 360px;
   line-height: 1.5;

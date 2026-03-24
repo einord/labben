@@ -9,8 +9,8 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { label: 'Dashboard', icon: 'lucide:layout-dashboard', to: '/' },
+  { label: 'Projects', icon: 'lucide:folder-open', to: '/projects' },
   { label: 'Containers', icon: 'lucide:container', to: '/containers' },
-  { label: 'Sites', icon: 'lucide:globe', to: '/sites' },
   { label: 'Proxy', icon: 'lucide:route', to: '/proxy' },
   { label: 'Backup', icon: 'lucide:hard-drive-download', to: '/backup' },
 ]

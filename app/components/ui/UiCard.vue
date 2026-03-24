@@ -67,7 +67,7 @@ withDefaults(defineProps<UiCardProps>(), {
 }
 
 .icon-area {
-  font-size: 2rem;
+  font-size: var(--icon-size-lg);
   color: var(--color-accent);
 }
 

@@ -62,4 +62,21 @@
   --font-size-xl: 1.2rem;
   --font-size-2xl: 1.4rem;
   --font-size-3xl: 1.8rem;
+
+  /* Code/terminal background */
+  --color-code-bg: #0d0d1a;
+  --color-code-gutter: rgba(0, 0, 0, 0.2);
+
+  /* Monospace font stack */
+  --font-family-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+
+  /* Z-index scale */
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-modal: 1000;
+  --z-tooltip: 1100;
+
+  /* Icon sizes */
+  --icon-size-lg: 2rem;
+  --icon-size-xl: 3rem;
 }

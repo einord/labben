@@ -2,7 +2,7 @@ services:
   labben:
     build: .
     ports:
-      - "3000:3000"
+      - "3005:3005"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     restart: unless-stopped

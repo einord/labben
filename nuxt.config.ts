@@ -4,6 +4,10 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   ssr: true,
 
+  devServer: {
+    port: 3005,
+  },
+
   css: [
     '~/assets/css/reset.css',
     '~/assets/css/variables.css',
@@ -11,6 +15,14 @@ export default defineNuxtConfig({
   ],
 
   modules: ['@nuxt/icon'],
+
+  components: [
+    { path: '~/components', pathPrefix: false },
+  ],
+
+  icon: {
+    mode: 'css',
+  },
 
   app: {
     head: {
@@ -24,5 +36,9 @@ export default defineNuxtConfig({
 
   nitro: {
     preset: 'node-server',
+    externals: {
+      inline: [],
+      external: ['dockerode'],
+    },
   },
 })
