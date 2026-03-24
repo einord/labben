@@ -2,11 +2,11 @@
 const sidebarOpen = ref(false)
 
 const navItems = [
-  { label: 'Dashboard', icon: '📊', to: '/' },
-  { label: 'Containers', icon: '🐳', to: '/containers' },
-  { label: 'Sites', icon: '🌐', to: '/sites' },
-  { label: 'Proxy', icon: '🔀', to: '/proxy' },
-  { label: 'Backup', icon: '💾', to: '/backup' },
+  { label: 'Dashboard', icon: 'lucide:layout-dashboard', to: '/' },
+  { label: 'Containers', icon: 'lucide:container', to: '/containers' },
+  { label: 'Sites', icon: 'lucide:globe', to: '/sites' },
+  { label: 'Proxy', icon: 'lucide:route', to: '/proxy' },
+  { label: 'Backup', icon: 'lucide:hard-drive-download', to: '/backup' },
 ]
 
 function toggleSidebar() {
@@ -18,7 +18,7 @@ function toggleSidebar() {
   <div class="layout">
     <!-- Mobile hamburger -->
     <button class="hamburger" @click="toggleSidebar">
-      ☰
+      <Icon name="lucide:menu" />
     </button>
 
     <!-- Overlay for mobile -->
@@ -31,7 +31,7 @@ function toggleSidebar() {
     <!-- Sidebar -->
     <aside class="sidebar" :class="{ open: sidebarOpen }">
       <div class="sidebar-header">
-        <h1 class="logo">⚡ Labben</h1>
+        <h1 class="logo"><Icon name="lucide:flask-round" /> Labben</h1>
       </div>
       <nav class="nav">
         <NuxtLink
@@ -41,7 +41,7 @@ function toggleSidebar() {
           class="nav-item"
           @click="sidebarOpen = false"
         >
-          <span class="nav-icon">{{ item.icon }}</span>
+          <Icon :name="item.icon" class="nav-icon" />
           <span class="nav-label">{{ item.label }}</span>
         </NuxtLink>
       </nav>

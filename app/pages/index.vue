@@ -9,25 +9,25 @@ interface DashboardCard {
 const cards: DashboardCard[] = [
   {
     title: 'Docker Containers',
-    icon: '🐳',
+    icon: 'lucide:container',
     description: 'Monitor and manage running containers, images, and networks.',
     to: '/containers',
   },
   {
     title: 'Static Sites',
-    icon: '🌐',
+    icon: 'lucide:globe',
     description: 'Deploy and manage static sites served from your homelab.',
     to: '/sites',
   },
   {
     title: 'Proxy Manager',
-    icon: '🔀',
+    icon: 'lucide:route',
     description: 'Configure reverse proxy rules, SSL certificates, and routing.',
     to: '/proxy',
   },
   {
     title: 'Backup Status',
-    icon: '💾',
+    icon: 'lucide:hard-drive-download',
     description: 'View backup schedules, history, and restore points.',
     to: '/backup',
   },
@@ -46,7 +46,7 @@ const cards: DashboardCard[] = [
         :to="card.to"
         class="card"
       >
-        <span class="card-icon">{{ card.icon }}</span>
+        <Icon :name="card.icon" class="card-icon" />
         <h2 class="card-title">{{ card.title }}</h2>
         <p class="card-description">{{ card.description }}</p>
       </NuxtLink>
@@ -98,6 +98,7 @@ const cards: DashboardCard[] = [
 
 .card-icon {
   font-size: 2rem;
+  color: #00dc82;
 }
 
 .card-title {

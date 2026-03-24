@@ -4,6 +4,8 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   ssr: true,
 
+  modules: ['@nuxt/icon'],
+
   app: {
     head: {
       title: 'Labben',
