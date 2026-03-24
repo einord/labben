@@ -36,80 +36,34 @@ const cards: DashboardCard[] = [
 
 <template>
   <div class="dashboard">
-    <h1 class="page-title">Dashboard</h1>
-    <p class="page-subtitle">Welcome to Labben — your homelab at a glance.</p>
+    <UiPageHeader
+      title="Dashboard"
+      subtitle="Welcome to Labben — your homelab at a glance."
+    />
 
     <div class="card-grid">
-      <NuxtLink
+      <UiCard
         v-for="card in cards"
         :key="card.title"
+        hoverable
         :to="card.to"
-        class="card"
       >
-        <Icon :name="card.icon" class="card-icon" />
-        <h2 class="card-title">{{ card.title }}</h2>
-        <p class="card-description">{{ card.description }}</p>
-      </NuxtLink>
+        <template #icon>
+          <Icon :name="card.icon" />
+        </template>
+        <template #header>
+          {{ card.title }}
+        </template>
+        {{ card.description }}
+      </UiCard>
     </div>
   </div>
 </template>
 
 <style scoped>
-.dashboard {
-  max-width: 1000px;
-}
-
-.page-title {
-  font-size: 1.8rem;
-  font-weight: 700;
-  color: #f0f0f0;
-  margin-bottom: 0.25rem;
-}
-
-.page-subtitle {
-  color: #888;
-  margin-bottom: 2rem;
-  font-size: 0.95rem;
-}
-
 .card-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 1.25rem;
-}
-
-.card {
-  background-color: #22223a;
-  border: 1px solid #2a2a4a;
-  border-radius: 12px;
-  padding: 1.5rem;
-  transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
-  cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
-  border-color: #00dc82;
-}
-
-.card-icon {
-  font-size: 2rem;
-  color: #00dc82;
-}
-
-.card-title {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: #f0f0f0;
-}
-
-.card-description {
-  font-size: 0.85rem;
-  color: #888;
-  line-height: 1.5;
+  gap: var(--spacing-lg);
 }
 </style>

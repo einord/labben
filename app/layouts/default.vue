@@ -1,7 +1,13 @@
 <script setup lang="ts">
 const sidebarOpen = ref(false)
 
-const navItems = [
+interface NavItem {
+  label: string
+  icon: string
+  to: string
+}
+
+const navItems: NavItem[] = [
   { label: 'Dashboard', icon: 'lucide:layout-dashboard', to: '/' },
   { label: 'Containers', icon: 'lucide:container', to: '/containers' },
   { label: 'Sites', icon: 'lucide:globe', to: '/sites' },
@@ -17,9 +23,12 @@ function toggleSidebar() {
 <template>
   <div class="layout">
     <!-- Mobile hamburger -->
-    <button class="hamburger" @click="toggleSidebar">
-      <Icon name="lucide:menu" />
-    </button>
+    <UiButton
+      variant="ghost"
+      icon="lucide:menu"
+      class="hamburger"
+      @click="toggleSidebar"
+    />
 
     <!-- Overlay for mobile -->
     <div
@@ -54,30 +63,6 @@ function toggleSidebar() {
   </div>
 </template>
 
-<style>
-/* Global reset and base styles */
-*,
-*::before,
-*::after {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-html, body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
-    Ubuntu, Cantarell, sans-serif;
-  background-color: #1a1a2e;
-  color: #e0e0e0;
-  min-height: 100vh;
-}
-
-a {
-  text-decoration: none;
-  color: inherit;
-}
-</style>
-
 <style scoped>
 .layout {
   display: flex;
@@ -88,10 +73,10 @@ a {
 .sidebar {
   width: 240px;
   min-width: 240px;
-  background-color: #16162a;
+  background-color: var(--color-sidebar);
   display: flex;
   flex-direction: column;
-  border-right: 1px solid #2a2a4a;
+  border-right: 1px solid var(--color-border);
   position: fixed;
   top: 0;
   left: 0;
@@ -100,46 +85,46 @@ a {
 }
 
 .sidebar-header {
-  padding: 1.5rem 1.25rem;
-  border-bottom: 1px solid #2a2a4a;
+  padding: var(--spacing-lg) var(--spacing-lg);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .logo {
-  font-size: 1.4rem;
+  font-size: var(--font-size-2xl);
   font-weight: 700;
-  color: #00dc82;
+  color: var(--color-accent);
   letter-spacing: 0.02em;
 }
 
 .nav {
   display: flex;
   flex-direction: column;
-  padding: 0.75rem 0;
+  padding: var(--spacing-sm) 0;
 }
 
 .nav-item {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.75rem 1.25rem;
-  color: #a0a0b8;
-  transition: background-color 0.15s, color 0.15s;
-  font-size: 0.95rem;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-lg);
+  color: var(--color-text-secondary);
+  transition: background-color var(--transition-fast), color var(--transition-fast);
+  font-size: var(--font-size-md);
 }
 
 .nav-item:hover {
-  background-color: #1f1f3a;
-  color: #e0e0e0;
+  background-color: var(--color-surface-hover);
+  color: var(--color-text);
 }
 
 .nav-item.router-link-active {
-  background-color: rgba(0, 220, 130, 0.1);
-  color: #00dc82;
-  border-right: 3px solid #00dc82;
+  background-color: var(--color-accent-dim);
+  color: var(--color-accent);
+  border-right: 3px solid var(--color-accent);
 }
 
 .nav-icon {
-  font-size: 1.2rem;
+  font-size: var(--font-size-xl);
   width: 1.5rem;
   text-align: center;
 }
@@ -148,7 +133,7 @@ a {
 .main {
   flex: 1;
   margin-left: 240px;
-  padding: 2rem;
+  padding: var(--spacing-xl);
   min-height: 100vh;
 }
 
@@ -156,16 +141,9 @@ a {
 .hamburger {
   display: none;
   position: fixed;
-  top: 1rem;
-  left: 1rem;
+  top: var(--spacing-md);
+  left: var(--spacing-md);
   z-index: 200;
-  background-color: #16162a;
-  color: #e0e0e0;
-  border: 1px solid #2a2a4a;
-  border-radius: 8px;
-  padding: 0.5rem 0.75rem;
-  font-size: 1.4rem;
-  cursor: pointer;
 }
 
 .overlay {
@@ -175,12 +153,12 @@ a {
 /* Responsive: mobile */
 @media (max-width: 768px) {
   .hamburger {
-    display: block;
+    display: flex;
   }
 
   .sidebar {
     transform: translateX(-100%);
-    transition: transform 0.25s ease;
+    transition: transform var(--transition-normal);
   }
 
   .sidebar.open {
@@ -191,14 +169,14 @@ a {
     display: block;
     position: fixed;
     inset: 0;
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: var(--color-overlay);
     z-index: 90;
   }
 
   .main {
     margin-left: 0;
-    padding: 1rem;
-    padding-top: 4rem;
+    padding: var(--spacing-md);
+    padding-top: calc(var(--spacing-xl) * 2);
   }
 }
 </style>

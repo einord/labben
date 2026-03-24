@@ -4,6 +4,12 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   ssr: true,
 
+  css: [
+    '~/assets/css/reset.css',
+    '~/assets/css/variables.css',
+    '~/assets/css/animations.css',
+  ],
+
   modules: ['@nuxt/icon'],
 
   app: {
