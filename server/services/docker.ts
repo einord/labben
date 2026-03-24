@@ -28,10 +28,10 @@ function toContainerStatus(state: string): ContainerStatus {
 
 class DockerService {
   private _docker: Docker | null = null
-  private composeDir: string
+  private newProjectDir: string
 
   constructor() {
-    this.composeDir = process.env.COMPOSE_DIR || '/compose-files'
+    this.newProjectDir = process.env.COMPOSE_DIR || '/compose-files'
   }
 
   /** Lazy-initialize Docker connection to avoid HMR issues */
@@ -56,6 +56,8 @@ class DockerService {
       statusText: c.Status,
       ports: this.mapPorts(c.Ports),
       project: c.Labels['com.docker.compose.project'] || undefined,
+      projectWorkingDir: c.Labels['com.docker.compose.project.working_dir'] || undefined,
+      projectConfigFile: c.Labels['com.docker.compose.project.config_files'] || undefined,
       createdAt: new Date(c.Created * 1000).toISOString(),
     }))
   }
@@ -137,30 +139,36 @@ class DockerService {
     return stream as unknown as Readable
   }
 
-  /** List compose projects by grouping containers. */
+  /** List compose projects by grouping containers and reading paths from Docker labels. */
   async listProjects(): Promise<ComposeProject[]> {
     const containers = await this.listContainers()
-    const projectMap = new Map<string, ContainerSummary[]>()
+    const projectMap = new Map<string, { containers: ContainerSummary[]; workingDir: string; configFile: string }>()
 
     for (const container of containers) {
       if (!container.project) continue
       const existing = projectMap.get(container.project)
       if (existing) {
-        existing.push(container)
+        existing.containers.push(container)
       } else {
-        projectMap.set(container.project, [container])
+        projectMap.set(container.project, {
+          containers: [container],
+          workingDir: container.projectWorkingDir ?? '',
+          configFile: container.projectConfigFile ?? '',
+        })
       }
     }
 
     const projects: ComposeProject[] = []
-    for (const [name, projectContainers] of projectMap) {
-      const runningCount = projectContainers.filter((c) => c.status === 'running').length
+    for (const [name, data] of projectMap) {
+      const runningCount = data.containers.filter((c) => c.status === 'running').length
+      const configPath = data.configFile || join(data.workingDir, 'docker-compose.yml')
       projects.push({
         name,
-        configPath: this.getComposeFilePath(name),
-        containers: projectContainers,
+        configPath,
+        workingDir: data.workingDir,
+        containers: data.containers,
         runningCount,
-        totalCount: projectContainers.length,
+        totalCount: data.containers.length,
       })
     }
 
@@ -169,14 +177,14 @@ class DockerService {
 
   /** Read the docker-compose.yml content for a project. */
   async getProjectConfig(name: string): Promise<string> {
-    const filePath = this.getComposeFilePath(name)
-    return await readFile(filePath, 'utf-8')
+    const project = await this.findProject(name)
+    return await readFile(project.configPath, 'utf-8')
   }
 
   /** Save docker-compose.yml content for a project. */
   async saveProjectConfig(name: string, content: string): Promise<void> {
-    const filePath = this.getComposeFilePath(name)
-    await writeFile(filePath, content, 'utf-8')
+    const project = await this.findProject(name)
+    await writeFile(project.configPath, content, 'utf-8')
   }
 
   /** Run `docker compose up -d` for a project. */
@@ -196,18 +204,23 @@ class DockerService {
 
   // -- Private helpers --
 
-  private getComposeFilePath(name: string): string {
-    // Prevent path traversal
-    const safeName = name.replace(/[^a-zA-Z0-9_-]/g, '')
-    return join(this.composeDir, safeName, 'docker-compose.yml')
+  /** Find a project by name from running containers. */
+  private async findProject(name: string): Promise<ComposeProject> {
+    const projects = await this.listProjects()
+    const project = projects.find((p) => p.name === name)
+    if (!project) {
+      throw new Error(`Project not found: ${name}`)
+    }
+    return project
   }
 
+  /** Run a docker compose command using the real project working directory. */
   private async runComposeCommand(name: string, ...args: string[]): Promise<string> {
-    const filePath = this.getComposeFilePath(name)
+    const project = await this.findProject(name)
     const { stdout, stderr } = await execFileAsync(
       'docker',
-      ['compose', '-f', filePath, ...args],
-      { timeout: 120_000 },
+      ['compose', '-f', project.configPath, ...args],
+      { timeout: 120_000, cwd: project.workingDir || undefined },
     )
     return stdout + stderr
   }

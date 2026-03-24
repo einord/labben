@@ -26,6 +26,10 @@ export interface ContainerSummary {
   ports: ContainerPort[]
   /** Docker Compose project name, if applicable */
   project?: string
+  /** Working directory of the compose project (from Docker label) */
+  projectWorkingDir?: string
+  /** Config file path of the compose project (from Docker label) */
+  projectConfigFile?: string
   /** When the container was created */
   createdAt: string
 }
@@ -54,8 +58,10 @@ export interface ContainerVolume {
 /** A Docker Compose project (group of related containers) */
 export interface ComposeProject {
   name: string
-  /** Path to the docker-compose.yml file */
+  /** Full path to the docker-compose.yml file (from Docker labels) */
   configPath: string
+  /** Working directory for compose commands */
+  workingDir: string
   /** Containers belonging to this project */
   containers: ContainerSummary[]
   /** Number of running containers */
