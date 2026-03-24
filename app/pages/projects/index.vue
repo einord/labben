@@ -1,6 +1,12 @@
 <script setup lang="ts">
 const { projects, loading, fetchProjects, projectUp, projectDown, projectRestart, projectPull } = useProjects()
 
+const showCreateModal = ref(false)
+
+async function handleCreated() {
+  await fetchProjects()
+}
+
 async function handleUp(name: string) {
   await projectUp(name)
   await fetchProjects()
@@ -30,6 +36,14 @@ onMounted(() => {
   <div>
     <UiPageHeader title="Projekt">
       <template #actions>
+        <UiButton
+          variant="primary"
+          size="sm"
+          icon="lucide:plus"
+          @click="showCreateModal = true"
+        >
+          Nytt projekt
+        </UiButton>
         <UiButton
           variant="secondary"
           size="sm"
@@ -62,6 +76,11 @@ onMounted(() => {
         @pull="handlePull(project.name)"
       />
     </div>
+
+    <ProjectCreateModal
+      v-model="showCreateModal"
+      @created="handleCreated"
+    />
   </div>
 </template>
 

@@ -1,7 +1,7 @@
 import Docker from 'dockerode'
 import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
-import { readFile, writeFile } from 'node:fs/promises'
+import { readFile, writeFile, mkdir, access } from 'node:fs/promises'
 import { join } from 'node:path'
 import type { Readable } from 'node:stream'
 import type {
@@ -200,6 +200,29 @@ class DockerService {
   /** Run `docker compose pull` for a project. */
   async projectPull(name: string): Promise<string> {
     return this.runComposeCommand(name, 'pull')
+  }
+
+  /** Create a new compose project directory and write the docker-compose.yml file. */
+  async createProject(name: string, content: string): Promise<{ name: string; configPath: string }> {
+    const safeName = name.replace(/[^a-zA-Z0-9_-]/g, '')
+    const projectDir = join(this.newProjectDir, safeName)
+    const configPath = join(projectDir, 'docker-compose.yml')
+
+    // Ensure the directory does not already exist
+    try {
+      await access(projectDir)
+      throw new Error(`Project directory already exists: ${safeName}`)
+    } catch (err: unknown) {
+      // access throws if path doesn't exist — that's what we want
+      if (err instanceof Error && err.message.includes('already exists')) {
+        throw err
+      }
+    }
+
+    await mkdir(projectDir, { recursive: true })
+    await writeFile(configPath, content, 'utf-8')
+
+    return { name: safeName, configPath }
   }
 
   // -- Private helpers --

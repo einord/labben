@@ -92,5 +92,22 @@ export function useProjects() {
     }
   }
 
-  return { projects, loading, error, fetchProjects, projectUp, projectDown, projectRestart, projectPull, getConfig, saveConfig }
+  /** Create a new compose project */
+  async function createProject(name: string, content: string): Promise<boolean> {
+    try {
+      await $fetch('/api/projects', {
+        method: 'POST',
+        body: { name, content },
+      })
+      toast.success(`Projekt '${name}' skapat`)
+      return true
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to create project'
+      error.value = message
+      toast.error('Kunde inte skapa projekt')
+      return false
+    }
+  }
+
+  return { projects, loading, error, fetchProjects, createProject, projectUp, projectDown, projectRestart, projectPull, getConfig, saveConfig }
 }
