@@ -16,6 +16,7 @@ const emit = defineEmits<{
   start: [id: string]
   stop: [id: string]
   restart: [id: string]
+  select: [id: string]
 }>()
 </script>
 
@@ -36,6 +37,7 @@ const emit = defineEmits<{
         :key="container.id"
         :container="container"
         :loading="loadingIds?.includes(container.id) ?? false"
+        @select="emit('select', container.id)"
         @start="emit('start', container.id)"
         @stop="emit('stop', container.id)"
         @restart="emit('restart', container.id)"

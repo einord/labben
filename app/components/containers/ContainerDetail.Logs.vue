@@ -1,9 +1,15 @@
 <script setup lang="ts">
-const route = useRoute()
-const containerId = computed(() => String(route.params.id))
+interface ContainerDetailLogsProps {
+  /** The container ID to display logs for */
+  containerId: string
+}
 
-const { logs: streamLogs, connected, connect, disconnect, clear } = useLogStream(containerId)
-const { logs: initialLogs, fetchLogs } = useContainerDetail(containerId)
+const props = defineProps<ContainerDetailLogsProps>()
+
+const resolvedId = computed(() => props.containerId)
+
+const { logs: streamLogs, connected, connect, disconnect, clear } = useLogStream(resolvedId)
+const { logs: initialLogs, fetchLogs } = useContainerDetail(resolvedId)
 
 const logContainer = ref<HTMLElement | null>(null)
 const autoScroll = ref(true)

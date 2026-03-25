@@ -15,6 +15,7 @@ defineEmits<{
   start: []
   stop: []
   restart: []
+  select: []
 }>()
 
 const displayName = computed(() => formatContainerName(props.container.name))
@@ -29,7 +30,7 @@ const portsDisplay = computed(() => {
 </script>
 
 <template>
-  <NuxtLink :to="`/containers/${container.id}`" class="item">
+  <div class="item" @click="$emit('select')">
     <div class="info">
       <span class="name">{{ displayName }}</span>
       <span class="image">{{ container.image }}</span>
@@ -48,7 +49,7 @@ const portsDisplay = computed(() => {
         @restart="$emit('restart')"
       />
     </div>
-  </NuxtLink>
+  </div>
 </template>
 
 <style scoped>
@@ -61,8 +62,7 @@ const portsDisplay = computed(() => {
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  text-decoration: none;
-  color: inherit;
+  cursor: pointer;
   transition: background-color var(--transition-fast),
     border-color var(--transition-fast);
 

@@ -13,6 +13,7 @@ defineEmits<{
   down: []
   restart: []
   pull: []
+  settings: []
 }>()
 
 const statusLabel = computed(() => {
@@ -30,14 +31,6 @@ const statusVariant = computed(() => {
   <div class="project-info">
     <UiPageHeader :title="project.name">
       <template #actions>
-        <UiButton
-          variant="ghost"
-          size="sm"
-          icon="lucide:arrow-left"
-          @click="navigateTo('/projects')"
-        >
-          Tillbaka
-        </UiButton>
         <UiButton
           variant="secondary"
           size="sm"
@@ -70,6 +63,12 @@ const statusVariant = computed(() => {
         >
           Down
         </UiButton>
+        <UiButton
+          variant="ghost"
+          size="sm"
+          icon="lucide:settings"
+          @click="$emit('settings')"
+        />
       </template>
     </UiPageHeader>
 
