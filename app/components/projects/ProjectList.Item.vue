@@ -22,6 +22,13 @@ const statusVariant = computed(() => {
 const statusLabel = computed(() => {
   return `${props.project.runningCount}/${props.project.totalCount}`
 })
+
+const roleLabel = computed(() => {
+  const roles: Record<string, string> = {
+    proxy: 'Proxy',
+  }
+  return props.project.metadata.role ? roles[props.project.metadata.role] ?? props.project.metadata.role : ''
+})
 </script>
 
 <template>
@@ -35,9 +42,14 @@ const statusLabel = computed(() => {
       <Icon v-else-if="project.source === 'external'" name="lucide:external-link" class="status-icon external-icon" />
       <span class="name">{{ displayName }}</span>
     </div>
-    <UiBadge :variant="statusVariant" dot size="sm">
-      {{ statusLabel }}
-    </UiBadge>
+    <div class="badges">
+      <UiBadge v-if="project.metadata.role" variant="info" size="sm">
+        {{ roleLabel }}
+      </UiBadge>
+      <UiBadge :variant="statusVariant" dot size="sm">
+        {{ statusLabel }}
+      </UiBadge>
+    </div>
   </button>
 </template>
 
@@ -102,5 +114,11 @@ const statusLabel = computed(() => {
 
 .external-icon {
   color: var(--color-text-muted);
+}
+
+.badges {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
 }
 </style>

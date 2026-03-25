@@ -1,10 +1,12 @@
+<script setup lang="ts">
+</script>
+
 <template>
   <div>
-    <UiPageHeader title="Proxy Manager" />
-    <UiEmptyState
-      icon="lucide:route"
+    <UiPageHeader
       title="Proxy Manager"
-      description="Nginx Proxy Manager integration coming soon."
+      subtitle="Hantera Nginx Proxy Manager for dina projekt."
     />
+    <ProxySetup />
   </div>
 </template>

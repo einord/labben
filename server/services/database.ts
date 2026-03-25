@@ -27,11 +27,33 @@ class DatabaseService {
         name TEXT PRIMARY KEY,
         group_id INTEGER,
         display_name TEXT,
+        role TEXT,
         created_at TEXT NOT NULL DEFAULT (datetime('now')),
         updated_at TEXT NOT NULL DEFAULT (datetime('now')),
         FOREIGN KEY (group_id) REFERENCES groups(id) ON DELETE SET NULL
       );
+
+      CREATE TABLE IF NOT EXISTS settings (
+        key TEXT PRIMARY KEY,
+        value TEXT NOT NULL
+      );
     `)
+    this.migrate()
+  }
+
+  /** Run schema migrations based on user_version pragma */
+  private migrate(): void {
+    const version = (this.db.pragma('user_version', { simple: true }) as number) ?? 0
+
+    if (version < 1) {
+      // Add role column if upgrading from initial schema
+      const columns = this.db.prepare("PRAGMA table_info('project_metadata')").all() as Array<{ name: string }>
+      const hasRole = columns.some(c => c.name === 'role')
+      if (!hasRole) {
+        this.db.exec('ALTER TABLE project_metadata ADD COLUMN role TEXT')
+      }
+      this.db.pragma('user_version = 1')
+    }
   }
 
   // -- Groups --
@@ -95,10 +117,11 @@ class DatabaseService {
         pm.name,
         pm.group_id as groupId,
         g.name as groupName,
-        pm.display_name as displayName
+        pm.display_name as displayName,
+        pm.role as role
       FROM project_metadata pm
       LEFT JOIN groups g ON pm.group_id = g.id
-    `).all() as Array<{ name: string; groupId: number | null; groupName: string | null; displayName: string | null }>
+    `).all() as Array<{ name: string; groupId: number | null; groupName: string | null; displayName: string | null; role: string | null }>
 
     const map = new Map<string, ProjectMetadata>()
     for (const row of rows) {
@@ -106,13 +129,14 @@ class DatabaseService {
         groupId: row.groupId,
         groupName: row.groupName,
         displayName: row.displayName,
+        role: row.role,
       })
     }
     return map
   }
 
   /** Create or update metadata for a project */
-  upsertProjectMetadata(name: string, data: { groupId?: number | null; displayName?: string | null }): void {
+  upsertProjectMetadata(name: string, data: { groupId?: number | null; displayName?: string | null; role?: string | null }): void {
     const existing = this.db.prepare(
       'SELECT name FROM project_metadata WHERE name = ?',
     ).get(name) as { name: string } | undefined
@@ -129,6 +153,10 @@ class DatabaseService {
         updates.push('display_name = ?')
         values.push(data.displayName)
       }
+      if (data.role !== undefined) {
+        updates.push('role = ?')
+        values.push(data.role)
+      }
 
       if (updates.length > 0) {
         updates.push("updated_at = datetime('now')")
@@ -139,14 +167,39 @@ class DatabaseService {
       }
     } else {
       this.db.prepare(
-        'INSERT INTO project_metadata (name, group_id, display_name) VALUES (?, ?, ?)',
-      ).run(name, data.groupId ?? null, data.displayName ?? null)
+        'INSERT INTO project_metadata (name, group_id, display_name, role) VALUES (?, ?, ?, ?)',
+      ).run(name, data.groupId ?? null, data.displayName ?? null, data.role ?? null)
     }
   }
 
   /** Delete metadata for a project */
   deleteProjectMetadata(name: string): void {
     this.db.prepare('DELETE FROM project_metadata WHERE name = ?').run(name)
+  }
+
+  // -- Settings --
+
+  /** Get a setting value by key */
+  getSetting(key: string): string | null {
+    const row = this.db.prepare('SELECT value FROM settings WHERE key = ?').get(key) as { value: string } | undefined
+    return row?.value ?? null
+  }
+
+  /** Set a setting value */
+  setSetting(key: string, value: string): void {
+    this.db.prepare(
+      'INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = ?',
+    ).run(key, value, value)
+  }
+
+  /** Delete a setting */
+  deleteSetting(key: string): void {
+    this.db.prepare('DELETE FROM settings WHERE key = ?').run(key)
+  }
+
+  /** Clear the role for all projects that have a specific role */
+  clearRole(role: string): void {
+    this.db.prepare("UPDATE project_metadata SET role = NULL, updated_at = datetime('now') WHERE role = ?").run(role)
   }
 }
 

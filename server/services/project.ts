@@ -3,10 +3,32 @@ import { resolve } from 'node:path'
 import { dockerService } from './docker'
 import { databaseService } from './database'
 
+const NPM_IMAGE_PREFIX = 'jc21/nginx-proxy-manager'
+
+const NPM_COMPOSE_TEMPLATE = `services:
+  app:
+    image: jc21/nginx-proxy-manager:latest
+    ports:
+      - "80:80"
+      - "443:443"
+      - "81:81"
+    volumes:
+      - ./data:/data
+      - ./letsencrypt:/etc/letsencrypt
+    restart: unless-stopped
+    networks:
+      - proxy
+
+networks:
+  proxy:
+    name: proxy
+`
+
 const DEFAULT_METADATA: ProjectMetadata = {
   groupId: null,
   groupName: null,
   displayName: null,
+  role: null,
 }
 
 class ProjectService {
@@ -28,7 +50,7 @@ class ProjectService {
     for (const project of dockerProjects) {
       seenNames.add(project.name)
       const metadata = metadataMap.get(project.name) ?? DEFAULT_METADATA
-      const source = this.resolveSource(project.workingDir)
+      const source = metadata.role ? 'system' : this.resolveSource(project.workingDir)
       result.push({ ...project, metadata, source })
     }
 
@@ -72,6 +94,44 @@ class ProjectService {
   /** Update the display name for a project. */
   updateDisplayName(projectName: string, displayName: string | null): void {
     databaseService.upsertProjectMetadata(projectName, { displayName })
+  }
+
+  /** Check if a project uses the Nginx Proxy Manager image */
+  isNpmCompatible(project: ProjectWithMetadata): boolean {
+    return project.containers.some(c => c.image.startsWith(NPM_IMAGE_PREFIX))
+  }
+
+  /** Get all projects that could serve as an NPM proxy */
+  async getNpmCandidates(): Promise<ProjectWithMetadata[]> {
+    const projects = await this.listProjects()
+    return projects.filter(p => this.isNpmCompatible(p) && p.source !== 'missing')
+  }
+
+  /** Get the currently configured proxy project name */
+  getProxyProject(): string | null {
+    return databaseService.getSetting('proxy_project')
+  }
+
+  /** Set a project as the system proxy */
+  setProxyProject(name: string): void {
+    // Clear any existing proxy role
+    databaseService.clearRole('proxy')
+    // Set the new proxy role and setting
+    databaseService.upsertProjectMetadata(name, { role: 'proxy' })
+    databaseService.setSetting('proxy_project', name)
+  }
+
+  /** Remove the proxy designation */
+  clearProxyProject(): void {
+    databaseService.clearRole('proxy')
+    databaseService.deleteSetting('proxy_project')
+  }
+
+  /** Create a new NPM project with the default template and set it as proxy */
+  async createNpmProject(name: string): Promise<{ name: string; configPath: string }> {
+    const result = await this.createProject(name, NPM_COMPOSE_TEMPLATE)
+    this.setProxyProject(result.name)
+    return result
   }
 
   /** Remove all metadata for a project from the database. */

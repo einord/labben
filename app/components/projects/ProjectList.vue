@@ -25,12 +25,18 @@ interface ListSection {
   projects: ProjectWithMetadata[]
 }
 
+const systemProjects = computed(() => props.projects.filter(p => p.source === 'system'))
 const managedProjects = computed(() => props.projects.filter(p => p.source === 'managed'))
 const externalProjects = computed(() => props.projects.filter(p => p.source === 'external'))
 const missingProjects = computed(() => props.projects.filter(p => p.source === 'missing'))
 
 const sections = computed<ListSection[]>(() => {
   const result: ListSection[] = []
+
+  // System projects (proxy, monitoring, etc.)
+  if (systemProjects.value.length > 0) {
+    result.push({ key: 'system', label: 'System', icon: 'lucide:server', projects: systemProjects.value })
+  }
 
   // Managed projects: group by user-defined groups
   if (props.groups && props.groups.length > 0) {
