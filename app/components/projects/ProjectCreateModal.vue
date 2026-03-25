@@ -81,6 +81,7 @@ function resetForm() {
         <label class="editor-label">docker-compose.yml</label>
         <UiComposeEditor
           v-model="composeContent"
+          :show-footer="false"
         />
       </div>
     </div>

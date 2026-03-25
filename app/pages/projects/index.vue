@@ -1,6 +1,7 @@
 <script setup lang="ts">
 const {
   projects,
+  groups,
   selectedProjectName,
   selectedProject,
   projectContainers,
@@ -61,6 +62,7 @@ onMounted(() => init())
       <aside class="list-panel">
         <ProjectList
           :projects="projects"
+          :groups="groups"
           :selected-name="selectedProjectName"
           :loading="projectsLoading"
           @select="selectProject"

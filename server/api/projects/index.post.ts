@@ -1,4 +1,4 @@
-import { dockerService } from '../../services/docker'
+import { projectService } from '../../services/project'
 
 export default defineEventHandler(async (event) => {
   const body = await readBody<{ name?: string; content?: string }>(event)
@@ -19,7 +19,7 @@ export default defineEventHandler(async (event) => {
   }
 
   try {
-    const result = await dockerService.createProject(name, content)
+    const result = await projectService.createProject(name, content)
     return { success: true, data: result }
   } catch (error) {
     if (isAlreadyExistsError(error)) {

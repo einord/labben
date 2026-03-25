@@ -1,8 +1,8 @@
 import Docker from 'dockerode'
 import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
-import { readFile, writeFile, mkdir, access } from 'node:fs/promises'
-import { join } from 'node:path'
+import { readFile, writeFile, mkdir, access, readdir, stat } from 'node:fs/promises'
+import { join, resolve } from 'node:path'
 import type { Readable } from 'node:stream'
 import type {
   ContainerSummary,
@@ -31,7 +31,7 @@ class DockerService {
   private newProjectDir: string
 
   constructor() {
-    this.newProjectDir = process.env.COMPOSE_DIR || '/compose-files'
+    this.newProjectDir = resolve(process.env.COMPOSE_DIR || '/compose-files')
   }
 
   /** Lazy-initialize Docker connection to avoid HMR issues */
@@ -139,11 +139,12 @@ class DockerService {
     return stream as unknown as Readable
   }
 
-  /** List compose projects by grouping containers and reading paths from Docker labels. */
+  /** List compose projects from both Docker containers and the filesystem. */
   async listProjects(): Promise<ComposeProject[]> {
     const containers = await this.listContainers()
     const projectMap = new Map<string, { containers: ContainerSummary[]; workingDir: string; configFile: string }>()
 
+    // Group running containers by compose project
     for (const container of containers) {
       if (!container.project) continue
       const existing = projectMap.get(container.project)
@@ -157,6 +158,9 @@ class DockerService {
         })
       }
     }
+
+    // Scan the compose directory for projects not yet in Docker
+    await this.addFilesystemProjects(projectMap)
 
     const projects: ComposeProject[] = []
     for (const [name, data] of projectMap) {
@@ -227,7 +231,7 @@ class DockerService {
 
   // -- Private helpers --
 
-  /** Find a project by name from running containers. */
+  /** Find a project by name from all known projects (Docker + filesystem). */
   private async findProject(name: string): Promise<ComposeProject> {
     const projects = await this.listProjects()
     const project = projects.find((p) => p.name === name)
@@ -235,6 +239,37 @@ class DockerService {
       throw new Error(`Project not found: ${name}`)
     }
     return project
+  }
+
+  /** Scan the compose directory and add any projects not already known from Docker. */
+  private async addFilesystemProjects(
+    projectMap: Map<string, { containers: ContainerSummary[]; workingDir: string; configFile: string }>,
+  ): Promise<void> {
+    try {
+      const entries = await readdir(this.newProjectDir, { withFileTypes: true })
+      for (const entry of entries) {
+        if (!entry.isDirectory()) continue
+        if (projectMap.has(entry.name)) continue
+
+        const projectDir = join(this.newProjectDir, entry.name)
+        const configPath = join(projectDir, 'docker-compose.yml')
+
+        // Only include directories that contain a docker-compose.yml
+        try {
+          await access(configPath)
+        } catch {
+          continue
+        }
+
+        projectMap.set(entry.name, {
+          containers: [],
+          workingDir: projectDir,
+          configFile: configPath,
+        })
+      }
+    } catch {
+      // Compose directory may not exist yet — that's fine
+    }
   }
 
   /** Run a docker compose command using the real project working directory. */

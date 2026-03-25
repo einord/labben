@@ -21,6 +21,9 @@ logs
 # Package manager
 package-lock.json
 
+# Local data (compose files, etc.)
+data/
+
 # Local env files
 .env
 .env.*

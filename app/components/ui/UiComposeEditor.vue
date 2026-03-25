@@ -2,9 +2,13 @@
 interface ComposeEditorProps {
   /** The compose file content (v-model) */
   modelValue: string
+  /** Whether to show the footer with line count and save button */
+  showFooter?: boolean
 }
 
-const props = defineProps<ComposeEditorProps>()
+const props = withDefaults(defineProps<ComposeEditorProps>(), {
+  showFooter: true,
+})
 
 const emit = defineEmits<{
   'update:modelValue': [value: string]
@@ -62,7 +66,7 @@ function handleKeydown(event: KeyboardEvent) {
         @keydown="handleKeydown"
       />
     </div>
-    <div class="editor-footer">
+    <div v-if="showFooter" class="editor-footer">
       <span class="line-count">{{ lineNumbers.length }} rader</span>
       <UiButton
         variant="primary"

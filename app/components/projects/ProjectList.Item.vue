@@ -1,15 +1,17 @@
 <script setup lang="ts">
-import type { ComposeProject } from '~/types/docker'
+import type { ProjectWithMetadata } from '~/types/project'
 
 interface ProjectListItemProps {
   /** The project to display */
-  project: ComposeProject
+  project: ProjectWithMetadata
   /** Whether this item is currently selected */
   selected: boolean
 }
 
 const props = defineProps<ProjectListItemProps>()
 defineEmits<{ select: [] }>()
+
+const displayName = computed(() => props.project.metadata.displayName ?? props.project.name)
 
 const statusVariant = computed(() => {
   if (props.project.runningCount === 0) return 'danger' as const
@@ -25,10 +27,14 @@ const statusLabel = computed(() => {
 <template>
   <button
     class="list-item"
-    :class="{ selected }"
+    :class="{ selected, missing: project.source === 'missing', external: project.source === 'external' }"
     @click="$emit('select')"
   >
-    <span class="name">{{ project.name }}</span>
+    <div class="item-content">
+      <Icon v-if="project.source === 'missing'" name="lucide:alert-triangle" class="status-icon missing-icon" />
+      <Icon v-else-if="project.source === 'external'" name="lucide:external-link" class="status-icon external-icon" />
+      <span class="name">{{ displayName }}</span>
+    </div>
     <UiBadge :variant="statusVariant" dot size="sm">
       {{ statusLabel }}
     </UiBadge>
@@ -62,11 +68,39 @@ const statusLabel = computed(() => {
   }
 }
 
+.item-content {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  min-width: 0;
+}
+
 .name {
   font-weight: 500;
   font-size: var(--font-size-md);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.missing {
+  opacity: 0.5;
+}
+
+.external {
+  opacity: 0.8;
+}
+
+.status-icon {
+  font-size: var(--font-size-sm);
+  flex-shrink: 0;
+}
+
+.missing-icon {
+  color: var(--color-warning);
+}
+
+.external-icon {
+  color: var(--color-text-muted);
 }
 </style>

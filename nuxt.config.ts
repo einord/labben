@@ -38,7 +38,7 @@ export default defineNuxtConfig({
     preset: 'node-server',
     externals: {
       inline: [],
-      external: ['dockerode'],
+      external: ['dockerode', 'better-sqlite3'],
     },
   },
 })

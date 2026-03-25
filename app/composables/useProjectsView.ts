@@ -1,4 +1,5 @@
-import type { ComposeProject, ContainerSummary } from '~/types/docker'
+import type { ContainerSummary } from '~/types/docker'
+import type { ProjectWithMetadata } from '~/types/project'
 
 export function useProjectsView() {
   const route = useRoute()
@@ -13,6 +14,8 @@ export function useProjectsView() {
     projectRestart,
     projectPull,
     createProject,
+    assignGroup,
+    removeFromDatabase,
   } = useProjects()
 
   const {
@@ -24,12 +27,17 @@ export function useProjectsView() {
     restartContainer,
   } = useContainers()
 
+  const {
+    groups,
+    fetchGroups,
+  } = useGroups()
+
   // Selected project from query param
   const selectedProjectName = computed<string | undefined>(
     () => (route.query.selected as string) || undefined,
   )
 
-  const selectedProject = computed<ComposeProject | undefined>(() => {
+  const selectedProject = computed<ProjectWithMetadata | undefined>(() => {
     if (!selectedProjectName.value) return undefined
     return projects.value.find(p => p.name === selectedProjectName.value)
   })
@@ -62,9 +70,9 @@ export function useProjectsView() {
     router.push({ query: rest })
   }
 
-  /** Refresh both projects and containers from the API */
+  /** Refresh projects, containers, and groups from the API */
   async function refreshAll() {
-    await Promise.all([fetchProjects(), fetchContainers()])
+    await Promise.all([fetchProjects(), fetchContainers(), fetchGroups()])
   }
 
   /** Bring the selected project up and refresh */
@@ -120,6 +128,7 @@ export function useProjectsView() {
 
   return {
     projects,
+    groups,
     selectedProjectName,
     selectedProject,
     projectContainers,
@@ -128,6 +137,9 @@ export function useProjectsView() {
     projectsLoading,
     containersLoading,
     createProject,
+    assignGroup,
+    removeFromDatabase,
+    fetchGroups,
     init,
     refreshAll,
     selectProject,

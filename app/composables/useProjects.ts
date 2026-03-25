@@ -1,7 +1,7 @@
-import type { ComposeProject } from '~/types/docker'
+import type { ProjectWithMetadata } from '~/types/project'
 
 export function useProjects() {
-  const projects = ref<ComposeProject[]>([])
+  const projects = ref<ProjectWithMetadata[]>([])
   const loading = ref(false)
   const error = ref<string | null>(null)
   const toast = useToast()
@@ -11,7 +11,7 @@ export function useProjects() {
     loading.value = true
     error.value = null
     try {
-      const response = await $fetch<{ success: boolean; data: ComposeProject[] }>('/api/projects')
+      const response = await $fetch<{ success: boolean; data: ProjectWithMetadata[] }>('/api/projects')
       projects.value = response.data
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to fetch projects'
@@ -109,5 +109,31 @@ export function useProjects() {
     }
   }
 
-  return { projects, loading, error, fetchProjects, createProject, projectUp, projectDown, projectRestart, projectPull, getConfig, saveConfig }
+  /** Assign a project to a group */
+  async function assignGroup(projectName: string, groupId: number | null) {
+    try {
+      await $fetch(`/api/projects/${projectName}/metadata`, {
+        method: 'PUT',
+        body: { groupId },
+      })
+      toast.success(groupId ? 'Projekt tilldelat grupp' : 'Projekt borttaget från grupp')
+    } catch {
+      toast.error('Kunde inte uppdatera grupp')
+    }
+  }
+
+  /** Remove a missing project from the database */
+  async function removeFromDatabase(projectName: string) {
+    try {
+      await $fetch(`/api/projects/${projectName}/metadata`, {
+        method: 'PUT',
+        body: { groupId: null, displayName: null },
+      })
+      toast.success('Projekt borttaget från databasen')
+    } catch {
+      toast.error('Kunde inte ta bort projekt')
+    }
+  }
+
+  return { projects, loading, error, fetchProjects, createProject, projectUp, projectDown, projectRestart, projectPull, getConfig, saveConfig, assignGroup, removeFromDatabase }
 }

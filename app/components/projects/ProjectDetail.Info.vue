@@ -1,12 +1,14 @@
 <script setup lang="ts">
-import type { ComposeProject } from '~/types/docker'
+import type { ProjectWithMetadata } from '~/types/project'
 
 interface ProjectDetailInfoProps {
   /** The compose project to display details for */
-  project: ComposeProject
+  project: ProjectWithMetadata
 }
 
 const props = defineProps<ProjectDetailInfoProps>()
+
+const isMissing = computed(() => props.project.source === 'missing')
 
 defineEmits<{
   up: []
@@ -35,6 +37,7 @@ const statusVariant = computed(() => {
           variant="secondary"
           size="sm"
           icon="lucide:download"
+          :disabled="isMissing"
           @click="$emit('pull')"
         >
           Pull
@@ -43,6 +46,7 @@ const statusVariant = computed(() => {
           variant="secondary"
           size="sm"
           icon="lucide:play"
+          :disabled="isMissing"
           @click="$emit('up')"
         >
           Up
@@ -51,6 +55,7 @@ const statusVariant = computed(() => {
           variant="secondary"
           size="sm"
           icon="lucide:refresh-cw"
+          :disabled="isMissing"
           @click="$emit('restart')"
         >
           Restart
@@ -59,11 +64,13 @@ const statusVariant = computed(() => {
           variant="secondary"
           size="sm"
           icon="lucide:square"
+          :disabled="isMissing"
           @click="$emit('down')"
         >
           Down
         </UiButton>
         <UiButton
+          v-if="!isMissing"
           variant="ghost"
           size="sm"
           icon="lucide:settings"

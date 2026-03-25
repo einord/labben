@@ -1,8 +1,8 @@
-import { dockerService } from '../../services/docker'
+import { projectService } from '../../services/project'
 
 export default defineEventHandler(async () => {
   try {
-    const projects = await dockerService.listProjects()
+    const projects = await projectService.listProjects()
     return { success: true, data: projects }
   } catch (error) {
     throw createError({
