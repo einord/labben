@@ -10,9 +10,17 @@ const {
   clearProxy,
 } = useProxy()
 
+const { detectUrl } = useNpm()
+
 const showCreateForm = ref(false)
 const newProjectName = ref('nginx-proxy-manager')
 const creating = ref(false)
+const npmAdminUrl = ref<string | null>(null)
+
+/** Detect NPM admin panel URL from container ports */
+async function loadAdminUrl() {
+  npmAdminUrl.value = await detectUrl()
+}
 
 async function handleCreate() {
   if (!newProjectName.value.trim() || creating.value) return
@@ -38,6 +46,7 @@ async function handleClear() {
 
 async function refresh() {
   await Promise.all([fetchProxySettings(), fetchNpmCandidates()])
+  await loadAdminUrl()
 }
 
 onMounted(() => refresh())
@@ -53,9 +62,22 @@ onMounted(() => refresh())
           <UiBadge variant="success" dot>Aktiv</UiBadge>
           <span class="proxy-name">{{ proxyProject }}</span>
         </div>
-        <UiButton variant="ghost" size="sm" icon="lucide:x" @click="handleClear">
-          Ta bort
-        </UiButton>
+        <div class="proxy-actions">
+          <a
+            v-if="npmAdminUrl"
+            :href="npmAdminUrl"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="admin-link"
+          >
+            <UiButton variant="secondary" size="sm" icon="lucide:external-link">
+              Öppna admin
+            </UiButton>
+          </a>
+          <UiButton variant="ghost" size="sm" icon="lucide:x" @click="handleClear">
+            Ta bort
+          </UiButton>
+        </div>
       </div>
     </UiCard>
 
@@ -156,6 +178,16 @@ onMounted(() => refresh())
   font-weight: 600;
   color: var(--color-text-bright);
   font-size: var(--font-size-lg);
+}
+
+.proxy-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.admin-link {
+  text-decoration: none;
 }
 
 .loading-wrapper {

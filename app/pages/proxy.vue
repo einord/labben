@@ -5,8 +5,20 @@
   <div>
     <UiPageHeader
       title="Proxy Manager"
-      subtitle="Hantera Nginx Proxy Manager for dina projekt."
+      subtitle="Hantera Nginx Proxy Manager för dina projekt."
     />
-    <ProxySetup />
+    <div class="proxy-content">
+      <ProxySetup />
+      <ProxyCredentials />
+      <ProxyHosts />
+    </div>
   </div>
 </template>
+
+<style scoped>
+.proxy-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xl);
+}
+</style>
