@@ -81,7 +81,7 @@ class DockerService {
       image: info.Config.Image,
       status: toContainerStatus(info.State.Status),
       state: info.State.Status,
-      statusText: info.State.Status,
+      statusText: this.buildStatusText(info.State),
       ports,
       project: info.Config.Labels['com.docker.compose.project'] || undefined,
       createdAt: info.Created,
@@ -281,6 +281,36 @@ class DockerService {
       }
     }
     return ports
+  }
+
+  /** Build a human-readable status text from container state (similar to Docker CLI output). */
+  private buildStatusText(state: { Status: string; StartedAt?: string; FinishedAt?: string }): string {
+    const status = state.Status
+    if (status === 'running' && state.StartedAt) {
+      const started = new Date(state.StartedAt)
+      const now = new Date()
+      const diffMs = now.getTime() - started.getTime()
+      return `Up ${this.formatDuration(diffMs)}`
+    }
+    if ((status === 'exited' || status === 'dead') && state.FinishedAt) {
+      const finished = new Date(state.FinishedAt)
+      const now = new Date()
+      const diffMs = now.getTime() - finished.getTime()
+      return `Exited ${this.formatDuration(diffMs)} ago`
+    }
+    return status.charAt(0).toUpperCase() + status.slice(1)
+  }
+
+  /** Format a duration in milliseconds to a human-readable string. */
+  private formatDuration(ms: number): string {
+    const seconds = Math.floor(ms / 1000)
+    if (seconds < 60) return `${seconds} seconds`
+    const minutes = Math.floor(seconds / 60)
+    if (minutes < 60) return `${minutes} minutes`
+    const hours = Math.floor(minutes / 60)
+    if (hours < 24) return `${hours} hours`
+    const days = Math.floor(hours / 24)
+    return `${days} days`
   }
 
   private demuxLogs(buffer: Buffer | string): string {

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { ComposeProject } from '~/types/docker'
+import { statusToVariant } from '~/utils/docker'
 
 interface ProjectCardProps {
   /** The compose project to display */
@@ -24,19 +25,6 @@ const statusVariant = computed(() => {
   if (props.project.runningCount < props.project.totalCount) return 'warning' as const
   return 'success' as const
 })
-
-function containerStatusVariant(status: string): 'success' | 'danger' | 'warning' | 'info' | 'neutral' {
-  const map: Record<string, 'success' | 'danger' | 'warning' | 'info' | 'neutral'> = {
-    running: 'success',
-    exited: 'danger',
-    dead: 'danger',
-    paused: 'warning',
-    restarting: 'info',
-    created: 'neutral',
-    removing: 'neutral',
-  }
-  return map[status] ?? 'neutral'
-}
 </script>
 
 <template>
@@ -57,7 +45,7 @@ function containerStatusVariant(status: string): 'success' | 'danger' | 'warning
         class="container-row"
       >
         <span class="container-name">{{ container.name }}</span>
-        <UiBadge :variant="containerStatusVariant(container.status)" size="sm">
+        <UiBadge :variant="statusToVariant(container.status)" size="sm">
           {{ container.status }}
         </UiBadge>
       </div>

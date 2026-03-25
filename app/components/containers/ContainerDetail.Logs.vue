@@ -65,10 +65,10 @@ onMounted(async () => {
       <UiButton
         :variant="connected ? 'primary' : 'secondary'"
         size="sm"
-        :icon="connected ? 'lucide:radio' : 'lucide:radio'"
+        :icon="connected ? 'lucide:radio' : 'lucide:circle'"
         @click="toggleLive"
       >
-        {{ connected ? 'Live' : 'Live' }}
+        {{ connected ? 'Live' : 'Anslut' }}
       </UiButton>
       <UiButton
         variant="ghost"

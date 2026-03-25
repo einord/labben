@@ -1,4 +1,5 @@
 import type { ContainerDetail } from '~/types/docker'
+import { formatContainerName } from '~/utils/docker'
 
 export function useContainerDetail(id: Ref<string> | string) {
   const container = ref<ContainerDetail | null>(null)
@@ -8,6 +9,11 @@ export function useContainerDetail(id: Ref<string> | string) {
   const toast = useToast()
 
   const resolvedId = computed(() => typeof id === 'string' ? id : id.value)
+
+  const displayName = computed(() => {
+    if (!container.value) return 'Container'
+    return formatContainerName(container.value.name)
+  })
 
   /** Fetch detailed container information */
   async function fetchDetail() {
@@ -36,5 +42,5 @@ export function useContainerDetail(id: Ref<string> | string) {
     }
   }
 
-  return { container, logs, loading, error, fetchDetail, fetchLogs }
+  return { container, displayName, logs, loading, error, fetchDetail, fetchLogs }
 }

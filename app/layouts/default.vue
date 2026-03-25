@@ -1,20 +1,6 @@
 <script setup lang="ts">
 const sidebarOpen = ref(false)
 
-interface NavItem {
-  label: string
-  icon: string
-  to: string
-}
-
-const navItems: NavItem[] = [
-  { label: 'Dashboard', icon: 'lucide:layout-dashboard', to: '/' },
-  { label: 'Projects', icon: 'lucide:folder-open', to: '/projects' },
-  { label: 'Containers', icon: 'lucide:container', to: '/containers' },
-  { label: 'Proxy', icon: 'lucide:route', to: '/proxy' },
-  { label: 'Backup', icon: 'lucide:hard-drive-download', to: '/backup' },
-]
-
 function toggleSidebar() {
   sidebarOpen.value = !sidebarOpen.value
 }
@@ -44,7 +30,7 @@ function toggleSidebar() {
       </div>
       <nav class="nav">
         <NuxtLink
-          v-for="item in navItems"
+          v-for="item in NAV_ITEMS"
           :key="item.to"
           :to="item.to"
           class="nav-item"

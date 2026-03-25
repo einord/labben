@@ -6,6 +6,8 @@ interface ContainerListProps {
   containers: ContainerSummary[]
   /** Whether the list is loading */
   loading: boolean
+  /** Container IDs currently performing an action */
+  loadingIds?: string[]
 }
 
 defineProps<ContainerListProps>()
@@ -33,6 +35,7 @@ const emit = defineEmits<{
         v-for="container in containers"
         :key="container.id"
         :container="container"
+        :loading="loadingIds?.includes(container.id) ?? false"
         @start="emit('start', container.id)"
         @stop="emit('stop', container.id)"
         @restart="emit('restart', container.id)"

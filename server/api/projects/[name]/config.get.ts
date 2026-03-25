@@ -10,14 +10,10 @@ export default defineEventHandler(async (event) => {
     const config = await dockerService.getProjectConfig(name)
     return { success: true, data: config }
   } catch (error) {
-    const statusCode = isFileNotFound(error) ? 404 : 500
+    const statusCode = isFileNotFoundError(error) ? 404 : 500
     throw createError({
       statusCode,
       message: statusCode === 404 ? 'Project config not found' : 'Failed to read project config',
     })
   }
 })
-
-function isFileNotFound(error: unknown): boolean {
-  return error instanceof Error && 'code' in error && (error as NodeJS.ErrnoException).code === 'ENOENT'
-}

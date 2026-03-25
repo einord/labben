@@ -1,19 +1,10 @@
 <script setup lang="ts">
-import { formatContainerName } from '~/utils/docker'
-
 const route = useRoute()
 const containerId = computed(() => String(route.params.id))
 
-const { container, loading, fetchDetail } = useContainerDetail(containerId)
+const { container, displayName, loading, fetchDetail } = useContainerDetail(containerId)
 
-const displayName = computed(() => {
-  if (!container.value) return 'Container'
-  return formatContainerName(container.value.name)
-})
-
-onMounted(() => {
-  fetchDetail()
-})
+onMounted(() => fetchDetail())
 </script>
 
 <template>
@@ -64,5 +55,4 @@ onMounted(() => {
 .logs-section {
   margin-top: var(--spacing-xl);
 }
-
 </style>

@@ -3,86 +3,23 @@ const route = useRoute()
 const projectName = computed(() => route.params.name as string)
 
 const {
-  projects,
-  loading: projectsLoading,
-  fetchProjects,
-  projectUp,
-  projectDown,
-  projectRestart,
-  projectPull,
-  getConfig,
-  saveConfig,
-} = useProjects()
+  project,
+  containers,
+  composeContent,
+  projectsLoading,
+  containersLoading,
+  init,
+  handleSaveConfig,
+  handleUp,
+  handleDown,
+  handleRestart,
+  handlePull,
+  handleStartContainer,
+  handleStopContainer,
+  handleRestartContainer,
+} = useProjectDetail(projectName)
 
-const {
-  containers: allContainers,
-  loading: containersLoading,
-  fetchContainers,
-  startContainer,
-  stopContainer,
-  restartContainer,
-} = useContainers()
-
-const project = computed(() => {
-  return projects.value.find(p => p.name === projectName.value)
-})
-
-const projectContainers = computed(() => {
-  return allContainers.value.filter(c => c.project === projectName.value)
-})
-
-const composeContent = ref('')
-
-async function loadConfig() {
-  composeContent.value = await getConfig(projectName.value)
-}
-
-async function handleSaveConfig() {
-  await saveConfig(projectName.value, composeContent.value)
-}
-
-async function handleUp() {
-  await projectUp(projectName.value)
-  await refreshAll()
-}
-
-async function handleDown() {
-  await projectDown(projectName.value)
-  await refreshAll()
-}
-
-async function handleRestart() {
-  await projectRestart(projectName.value)
-  await refreshAll()
-}
-
-async function handlePull() {
-  await projectPull(projectName.value)
-  await refreshAll()
-}
-
-async function handleStart(id: string) {
-  await startContainer(id)
-  await refreshAll()
-}
-
-async function handleStop(id: string) {
-  await stopContainer(id)
-  await refreshAll()
-}
-
-async function handleContainerRestart(id: string) {
-  await restartContainer(id)
-  await refreshAll()
-}
-
-async function refreshAll() {
-  await Promise.all([fetchProjects(), fetchContainers()])
-}
-
-onMounted(async () => {
-  await Promise.all([fetchProjects(), fetchContainers(), loadConfig()])
-})
+onMounted(() => init())
 </script>
 
 <template>
@@ -104,17 +41,17 @@ onMounted(async () => {
         <section class="section-containers">
           <UiPageHeader title="Containrar" />
           <ContainerList
-            :containers="projectContainers"
+            :containers="containers"
             :loading="containersLoading"
-            @start="handleStart"
-            @stop="handleStop"
-            @restart="handleContainerRestart"
+            @start="handleStartContainer"
+            @stop="handleStopContainer"
+            @restart="handleRestartContainer"
           />
         </section>
 
         <section class="section-editor">
           <UiPageHeader title="Compose" />
-          <ContainersComposeEditor
+          <UiComposeEditor
             v-model="composeContent"
             @save="handleSaveConfig"
           />

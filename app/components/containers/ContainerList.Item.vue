@@ -5,6 +5,8 @@ import { formatContainerName, statusToVariant } from '~/utils/docker'
 interface ContainerListItemProps {
   /** The container to display */
   container: ContainerSummary
+  /** Whether an action is in progress for this container */
+  loading?: boolean
 }
 
 const props = defineProps<ContainerListItemProps>()
@@ -40,7 +42,7 @@ const portsDisplay = computed(() => {
     <div class="actions" @click.prevent.stop>
       <ContainerListItemActions
         :status="container.status"
-        :loading="false"
+        :loading="loading ?? false"
         @start="$emit('start')"
         @stop="$emit('stop')"
         @restart="$emit('restart')"

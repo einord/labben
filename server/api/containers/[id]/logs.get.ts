@@ -7,7 +7,8 @@ export default defineEventHandler(async (event) => {
   }
 
   const query = getQuery(event)
-  const tail = Math.max(1, Math.min(10000, Number(query.tail) || 100))
+  const tailRaw = Array.isArray(query.tail) ? query.tail[0] : query.tail
+  const tail = Math.max(1, Math.min(10000, Number(tailRaw) || 100))
 
   try {
     const logs = await dockerService.getContainerLogs(id, tail)

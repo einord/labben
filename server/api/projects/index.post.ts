@@ -21,13 +21,11 @@ export default defineEventHandler(async (event) => {
   try {
     const result = await dockerService.createProject(name, content)
     return { success: true, data: result }
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Unknown error'
-
-    if (message.includes('already exists')) {
-      throw createError({ statusCode: 409, statusMessage: message })
+  } catch (error) {
+    if (isAlreadyExistsError(error)) {
+      throw createError({ statusCode: 409, statusMessage: 'A project with that name already exists' })
     }
 
-    throw createError({ statusCode: 500, statusMessage: message })
+    throw createError({ statusCode: 500, statusMessage: 'Failed to create project' })
   }
 })

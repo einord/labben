@@ -25,7 +25,19 @@ const projectName = ref('')
 const composeContent = ref(DEFAULT_TEMPLATE)
 const creating = ref(false)
 
-const isValid = computed(() => projectName.value.trim().length > 0)
+const NAME_PATTERN = /^[a-zA-Z0-9_-]+$/
+
+const nameError = computed(() => {
+  const name = projectName.value.trim()
+  if (!name) return ''
+  if (!NAME_PATTERN.test(name)) return 'Namn får bara innehålla bokstäver, siffror, bindestreck och understreck'
+  return ''
+})
+
+const isValid = computed(() => {
+  const name = projectName.value.trim()
+  return name.length > 0 && !nameError.value
+})
 
 async function handleCreate() {
   if (!isValid.value || creating.value) return
@@ -63,10 +75,11 @@ function resetForm() {
         v-model="projectName"
         label="Projektnamn"
         placeholder="mitt-projekt"
+        :error="nameError"
       />
       <div class="editor-section">
         <label class="editor-label">docker-compose.yml</label>
-        <ContainersComposeEditor
+        <UiComposeEditor
           v-model="composeContent"
         />
       </div>
