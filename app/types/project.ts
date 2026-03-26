@@ -23,6 +23,8 @@ export interface ProjectWithMetadata extends ComposeProject {
   metadata: ProjectMetadata
   /** Where this project comes from */
   source: ProjectSource
+  /** True if this project contains the Labben app itself */
+  isSelf: boolean
 }
 
 /** Global application settings */

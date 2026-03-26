@@ -130,6 +130,7 @@ onMounted(async () => {
               :containers="projectContainers"
               :loading="containersLoading"
               :proxy-hosts="proxyHosts"
+              :disable-destructive="selectedProject?.isSelf"
               @start="handleStartContainer"
               @stop="handleStopContainer"
               @restart="handleRestartContainer"

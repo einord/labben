@@ -13,6 +13,7 @@ const props = withDefaults(defineProps<ProjectDetailInfoProps>(), {
 })
 
 const isMissing = computed(() => props.project.source === 'missing')
+const isSelf = computed(() => props.project.isSelf)
 
 defineEmits<{
   up: []
@@ -60,7 +61,7 @@ const statusVariant = computed(() => {
           variant="secondary"
           size="sm"
           icon="lucide:refresh-cw"
-          :disabled="isMissing"
+          :disabled="isMissing || isSelf"
           @click="$emit('restart')"
         >
           Restart
@@ -69,7 +70,7 @@ const statusVariant = computed(() => {
           variant="secondary"
           size="sm"
           icon="lucide:square"
-          :disabled="isMissing"
+          :disabled="isMissing || isSelf"
           @click="$emit('down')"
         >
           Down

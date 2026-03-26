@@ -10,6 +10,8 @@ interface ContainerListItemProps {
   loading?: boolean
   /** Proxy hosts currently pointing to this container */
   proxyHosts?: NpmProxyHost[]
+  /** Whether destructive actions should be hidden (e.g. for Labben's own containers) */
+  disableDestructive?: boolean
 }
 
 const props = defineProps<ContainerListItemProps>()
@@ -57,6 +59,7 @@ const portsDisplay = computed(() => {
         <ContainerListItemActions
           :status="container.status"
           :loading="loading ?? false"
+          :disable-destructive="disableDestructive"
           @start="$emit('start')"
           @stop="$emit('stop')"
           @restart="$emit('restart')"

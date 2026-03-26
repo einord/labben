@@ -26,6 +26,7 @@ const statusLabel = computed(() => {
 const roleLabel = computed(() => {
   const roles: Record<string, string> = {
     proxy: 'Proxy',
+    labben: 'Labben',
   }
   return props.project.metadata.role ? roles[props.project.metadata.role] ?? props.project.metadata.role : ''
 })

@@ -11,6 +11,8 @@ interface ContainerListProps {
   loadingIds?: string[]
   /** Proxy hosts for matching against containers */
   proxyHosts?: NpmProxyHost[]
+  /** Whether destructive actions should be hidden for all containers */
+  disableDestructive?: boolean
 }
 
 const props = defineProps<ContainerListProps>()
@@ -50,6 +52,7 @@ const emit = defineEmits<{
         :container="container"
         :loading="loadingIds?.includes(container.id) ?? false"
         :proxy-hosts="getContainerProxyHosts(container)"
+        :disable-destructive="disableDestructive"
         @select="emit('select', container.id)"
         @start="emit('start', container.id)"
         @stop="emit('stop', container.id)"

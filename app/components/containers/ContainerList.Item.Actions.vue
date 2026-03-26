@@ -6,6 +6,8 @@ interface ContainerListItemActionsProps {
   status: ContainerStatus
   /** Whether an action is currently in progress */
   loading: boolean
+  /** Whether destructive actions (stop, restart) should be hidden */
+  disableDestructive?: boolean
 }
 
 const props = defineProps<ContainerListItemActionsProps>()
@@ -33,7 +35,7 @@ const isStopped = computed(() =>
       @click="$emit('start')"
     />
     <UiButton
-      v-if="isRunning"
+      v-if="isRunning && !disableDestructive"
       variant="ghost"
       size="sm"
       icon="lucide:square"
@@ -41,7 +43,7 @@ const isStopped = computed(() =>
       @click="$emit('stop')"
     />
     <UiButton
-      v-if="isRunning"
+      v-if="isRunning && !disableDestructive"
       variant="ghost"
       size="sm"
       icon="lucide:refresh-cw"

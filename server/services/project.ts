@@ -33,9 +33,12 @@ const DEFAULT_METADATA: ProjectMetadata = {
 
 class ProjectService {
   private composeDir: string
+  private selfHostname: string | null
 
   constructor() {
     this.composeDir = resolve(process.env.COMPOSE_DIR || '/compose-files')
+    // Docker sets HOSTNAME to the container ID
+    this.selfHostname = process.env.HOSTNAME ?? null
   }
 
   /** List all projects by merging Docker/filesystem data with database metadata. */
@@ -50,8 +53,13 @@ class ProjectService {
     for (const project of dockerProjects) {
       seenNames.add(project.name)
       const metadata = metadataMap.get(project.name) ?? DEFAULT_METADATA
-      const source = metadata.role ? 'system' : this.resolveSource(project.workingDir)
-      result.push({ ...project, metadata, source })
+      const isSelf = this.isOwnProject(project.containers)
+
+      // Auto-assign system role if this is Labben itself
+      const effectiveRole = isSelf ? 'labben' : metadata.role
+      const source = effectiveRole ? 'system' : this.resolveSource(project.workingDir)
+
+      result.push({ ...project, metadata: { ...metadata, role: effectiveRole }, source, isSelf })
     }
 
     // Add DB-only projects as "missing" (exist in DB but not on disk/Docker)
@@ -66,10 +74,17 @@ class ProjectService {
         totalCount: 0,
         metadata,
         source: 'missing',
+        isSelf: false,
       })
     }
 
     return result
+  }
+
+  /** Check if any container in the project is the Labben app itself */
+  private isOwnProject(containers: Array<{ id: string }>): boolean {
+    if (!this.selfHostname) return false
+    return containers.some(c => c.id.startsWith(this.selfHostname!))
   }
 
   /** Determine if a project is managed (in COMPOSE_DIR) or external. */
