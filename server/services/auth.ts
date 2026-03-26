@@ -155,19 +155,19 @@ class AuthService {
 
   /** Create a session for a user */
   async createSession(event: H3Event, userId: string): Promise<void> {
-    const session = await useSession(event, { password: SESSION_PASSWORD })
+    const session = await useSession(event, { password: SESSION_PASSWORD, name: 'labben-auth' })
     await session.update({ userId })
   }
 
   /** Get the current session user ID */
   async getSessionUserId(event: H3Event): Promise<string | null> {
-    const session = await useSession(event, { password: SESSION_PASSWORD })
+    const session = await useSession(event, { password: SESSION_PASSWORD, name: 'labben-auth' })
     return (session.data as { userId?: string })?.userId ?? null
   }
 
   /** Destroy the current session */
   async destroySession(event: H3Event): Promise<void> {
-    const session = await useSession(event, { password: SESSION_PASSWORD })
+    const session = await useSession(event, { password: SESSION_PASSWORD, name: 'labben-auth' })
     await session.clear()
   }
 
