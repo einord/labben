@@ -1,6 +1,7 @@
 import Database from 'better-sqlite3'
 import { resolve } from 'node:path'
 import type { ProjectGroup, ProjectMetadata } from '~/types/project'
+import type { User } from '~/types/auth'
 
 class DatabaseService {
   private db: Database.Database
@@ -37,6 +38,34 @@ class DatabaseService {
         key TEXT PRIMARY KEY,
         value TEXT NOT NULL
       );
+
+      CREATE TABLE IF NOT EXISTS users (
+        id TEXT PRIMARY KEY,
+        username TEXT NOT NULL UNIQUE,
+        display_name TEXT NOT NULL,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+
+      CREATE TABLE IF NOT EXISTS webauthn_credentials (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        public_key BLOB NOT NULL,
+        counter INTEGER NOT NULL DEFAULT 0,
+        device_type TEXT,
+        backed_up INTEGER NOT NULL DEFAULT 0,
+        transports TEXT,
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+      );
+
+      CREATE TABLE IF NOT EXISTS invite_tokens (
+        token TEXT PRIMARY KEY,
+        created_by TEXT NOT NULL,
+        used_by TEXT,
+        expires_at TEXT NOT NULL,
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE
+      );
     `)
     this.migrate()
   }
@@ -53,6 +82,11 @@ class DatabaseService {
         this.db.exec('ALTER TABLE project_metadata ADD COLUMN role TEXT')
       }
       this.db.pragma('user_version = 1')
+    }
+
+    if (version < 2) {
+      // Tables are created with IF NOT EXISTS, so this is safe
+      this.db.pragma('user_version = 2')
     }
   }
 
@@ -200,6 +234,116 @@ class DatabaseService {
   /** Clear the role for all projects that have a specific role */
   clearRole(role: string): void {
     this.db.prepare("UPDATE project_metadata SET role = NULL, updated_at = datetime('now') WHERE role = ?").run(role)
+  }
+
+  // -- Users --
+
+  /** Get the total number of registered users */
+  getUserCount(): number {
+    const row = this.db.prepare('SELECT COUNT(*) as count FROM users').get() as { count: number }
+    return row.count
+  }
+
+  /** Create a new user */
+  createUser(id: string, username: string, displayName: string): User {
+    this.db.prepare(
+      'INSERT INTO users (id, username, display_name) VALUES (?, ?, ?)',
+    ).run(id, username, displayName)
+    return { id, username, displayName }
+  }
+
+  /** Get a user by ID */
+  getUserById(id: string): User | null {
+    const row = this.db.prepare(
+      'SELECT id, username, display_name as displayName FROM users WHERE id = ?',
+    ).get(id) as User | undefined
+    return row ?? null
+  }
+
+  /** Get a user by username */
+  getUserByUsername(username: string): User | null {
+    const row = this.db.prepare(
+      'SELECT id, username, display_name as displayName FROM users WHERE username = ?',
+    ).get(username) as User | undefined
+    return row ?? null
+  }
+
+  /** Get all users */
+  getAllUsers(): User[] {
+    return this.db.prepare(
+      'SELECT id, username, display_name as displayName FROM users ORDER BY created_at',
+    ).all() as User[]
+  }
+
+  /** Delete a user and their credentials */
+  deleteUser(id: string): void {
+    this.db.prepare('DELETE FROM users WHERE id = ?').run(id)
+  }
+
+  // -- WebAuthn Credentials --
+
+  /** Store a new WebAuthn credential */
+  addCredential(data: {
+    id: string
+    userId: string
+    publicKey: Buffer
+    counter: number
+    deviceType: string | null
+    backedUp: boolean
+    transports: string | null
+  }): void {
+    this.db.prepare(
+      'INSERT INTO webauthn_credentials (id, user_id, public_key, counter, device_type, backed_up, transports) VALUES (?, ?, ?, ?, ?, ?, ?)',
+    ).run(data.id, data.userId, data.publicKey, data.counter, data.deviceType, data.backedUp ? 1 : 0, data.transports)
+  }
+
+  /** Get a credential by ID */
+  getCredentialById(id: string): { id: string; userId: string; publicKey: Buffer; counter: number; deviceType: string | null; backedUp: boolean; transports: string | null } | null {
+    const row = this.db.prepare(
+      'SELECT id, user_id as userId, public_key as publicKey, counter, device_type as deviceType, backed_up as backedUp, transports FROM webauthn_credentials WHERE id = ?',
+    ).get(id) as { id: string; userId: string; publicKey: Buffer; counter: number; deviceType: string | null; backedUp: number; transports: string | null } | undefined
+    if (!row) return null
+    return { ...row, backedUp: row.backedUp === 1 }
+  }
+
+  /** Get all credentials for a user */
+  getCredentialsByUserId(userId: string): Array<{ id: string; userId: string; publicKey: Buffer; counter: number; deviceType: string | null; backedUp: boolean; transports: string | null; createdAt: string }> {
+    const rows = this.db.prepare(
+      'SELECT id, user_id as userId, public_key as publicKey, counter, device_type as deviceType, backed_up as backedUp, transports, created_at as createdAt FROM webauthn_credentials WHERE user_id = ?',
+    ).all(userId) as Array<{ id: string; userId: string; publicKey: Buffer; counter: number; deviceType: string | null; backedUp: number; transports: string | null; createdAt: string }>
+    return rows.map(r => ({ ...r, backedUp: r.backedUp === 1 }))
+  }
+
+  /** Update the counter for a credential */
+  updateCredentialCounter(id: string, counter: number): void {
+    this.db.prepare('UPDATE webauthn_credentials SET counter = ? WHERE id = ?').run(counter, id)
+  }
+
+  /** Delete a credential */
+  deleteCredential(id: string): void {
+    this.db.prepare('DELETE FROM webauthn_credentials WHERE id = ?').run(id)
+  }
+
+  // -- Invite Tokens --
+
+  /** Create an invite token */
+  createInviteToken(token: string, createdBy: string, expiresAt: string): void {
+    this.db.prepare(
+      'INSERT INTO invite_tokens (token, created_by, expires_at) VALUES (?, ?, ?)',
+    ).run(token, createdBy, expiresAt)
+  }
+
+  /** Get an invite token (only if not used and not expired) */
+  getValidInviteToken(token: string): { token: string; createdBy: string; expiresAt: string } | null {
+    const row = this.db.prepare(
+      "SELECT token, created_by as createdBy, expires_at as expiresAt FROM invite_tokens WHERE token = ? AND used_by IS NULL AND expires_at > datetime('now')",
+    ).get(token) as { token: string; createdBy: string; expiresAt: string } | undefined
+    return row ?? null
+  }
+
+  /** Mark an invite token as used */
+  markInviteUsed(token: string, usedBy: string): void {
+    this.db.prepare('UPDATE invite_tokens SET used_by = ? WHERE token = ?').run(usedBy, token)
   }
 }
 
