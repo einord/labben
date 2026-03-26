@@ -38,7 +38,8 @@
     "notFound": "Project not found",
     "notFoundDescription": "The requested project could not be found.",
     "containersRunning": "{running}/{total} containers running",
-    "publish": "Publish"
+    "publish": "Publish",
+    "update": "Update"
   },
   "createProject": {
     "title": "New project",
@@ -172,6 +173,8 @@
     "projectStopError": "Could not stop project",
     "projectRestarted": "Project restarted",
     "projectRestartError": "Could not restart project",
+    "projectUpdated": "Project updated",
+    "projectUpdateError": "Could not update project",
     "imagesUpdated": "Images updated",
     "imagesPullError": "Could not pull images",
     "projectCreated": "Project '{name}' created",

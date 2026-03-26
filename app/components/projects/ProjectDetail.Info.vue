@@ -21,6 +21,7 @@ defineEmits<{
   down: []
   restart: []
   pull: []
+  update: []
   settings: []
   publish: []
 }>()
@@ -41,13 +42,13 @@ const statusVariant = computed(() => {
     <UiPageHeader :title="project.name">
       <template #actions>
         <UiButton
-          variant="secondary"
+          variant="primary"
           size="sm"
-          icon="lucide:download"
-          :disabled="isMissing"
-          @click="$emit('pull')"
+          icon="lucide:package-check"
+          :disabled="isMissing || isSelf"
+          @click="$emit('update')"
         >
-          Pull
+          {{ $t('projects.update') }}
         </UiButton>
         <UiButton
           variant="secondary"

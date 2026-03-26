@@ -17,6 +17,7 @@ const {
   closeContainerDrawer,
   handleUp,
   handleDown,
+  handleUpdate,
   handleRestart,
   handlePull,
   handleStartContainer,
@@ -118,6 +119,7 @@ onMounted(async () => {
             :can-publish="!!npmStatus.connected && !!baseDomain"
             @up="handleUp"
             @down="handleDown"
+            @update="handleUpdate"
             @restart="handleRestart"
             @pull="handlePull"
             @settings="showSettings = true"

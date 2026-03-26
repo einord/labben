@@ -67,6 +67,19 @@ export function useProjects() {
     }
   }
 
+  /** Update a project (pull + down + up) — pull first to minimize downtime */
+  async function projectUpdate(name: string) {
+    try {
+      await $fetch(`/api/projects/${name}/pull`, { method: 'POST' })
+      await $fetch(`/api/projects/${name}/down`, { method: 'POST' })
+      await $fetch(`/api/projects/${name}/up`, { method: 'POST' })
+      toast.success(t('toast.projectUpdated'))
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : 'Failed to update project'
+      toast.error(t('toast.projectUpdateError'))
+    }
+  }
+
   /** Get the raw compose config for a project */
   async function getConfig(name: string): Promise<string> {
     try {
@@ -136,5 +149,5 @@ export function useProjects() {
     }
   }
 
-  return { projects, loading, error, fetchProjects, createProject, projectUp, projectDown, projectRestart, projectPull, getConfig, saveConfig, assignGroup, removeFromDatabase }
+  return { projects, loading, error, fetchProjects, createProject, projectUp, projectDown, projectRestart, projectUpdate, projectPull, getConfig, saveConfig, assignGroup, removeFromDatabase }
 }

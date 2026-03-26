@@ -12,6 +12,7 @@ export function useProjectsView() {
     projectUp,
     projectDown,
     projectRestart,
+    projectUpdate,
     projectPull,
     createProject,
     assignGroup,
@@ -102,6 +103,13 @@ export function useProjectsView() {
     await refreshAll()
   }
 
+  /** Update the selected project (pull + down + up) and refresh */
+  async function handleUpdate() {
+    if (!selectedProjectName.value) return
+    await projectUpdate(selectedProjectName.value)
+    await refreshAll()
+  }
+
   /** Restart the selected project and refresh */
   async function handleRestart() {
     if (!selectedProjectName.value) return
@@ -187,6 +195,7 @@ export function useProjectsView() {
     closeContainerDrawer,
     handleUp,
     handleDown,
+    handleUpdate,
     handleRestart,
     handlePull,
     handleStartContainer,
