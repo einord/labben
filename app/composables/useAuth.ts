@@ -96,7 +96,10 @@ export function useAuth() {
       // Ignore errors
     }
     user.value = null
-    navigateTo('/login')
+    // Hard reload to ensure layout resets (login page uses no layout)
+    if (import.meta.client) {
+      window.location.href = '/login'
+    }
   }
 
   /** Fetch registered credentials for current user */
