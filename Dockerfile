@@ -19,8 +19,8 @@ FROM node:22-alpine
 
 WORKDIR /app
 
-# Install runtime dependency for better-sqlite3
-RUN apk add --no-cache libstdc++
+# Install runtime dependencies
+RUN apk add --no-cache libstdc++ docker-cli docker-cli-compose
 
 COPY --from=build /app/.output ./.output
 
