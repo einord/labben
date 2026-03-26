@@ -84,14 +84,18 @@ export function useNpm() {
     }
   }
 
-  /** Fetch proxy hosts */
+  /** Fetch proxy hosts (only if NPM is connected) */
   async function fetchProxyHosts() {
+    if (!status.value.connected) {
+      proxyHosts.value = []
+      return
+    }
     loading.value = true
     try {
       const response = await $fetch<{ success: boolean; data: NpmProxyHost[] }>('/api/npm/proxy-hosts')
       proxyHosts.value = response.data
     } catch (err) {
-      toast.error(t('toast.proxyHostsFetchError'), extractErrorDetails(err))
+      proxyHosts.value = []
     } finally {
       loading.value = false
     }

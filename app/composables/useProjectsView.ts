@@ -81,7 +81,11 @@ export function useProjectsView() {
 
   /** Refresh projects, containers, groups, and proxy hosts from the API */
   async function refreshAll() {
-    await Promise.all([fetchProjects(), fetchContainers(), fetchGroups(), fetchProxyHosts()])
+    await Promise.all([fetchProjects(), fetchContainers(), fetchGroups()])
+    // Only fetch proxy hosts if NPM is connected (avoids error toasts)
+    if (npmStatus.value.connected) {
+      await fetchProxyHosts()
+    }
   }
 
   /** Bring the selected project up and refresh */
@@ -132,7 +136,15 @@ export function useProjectsView() {
 
   /** Initialize by fetching all data including NPM status and base domain */
   async function init() {
-    await Promise.all([refreshAll(), fetchNpmStatus(), fetchBaseDomain()])
+    await Promise.all([
+      Promise.all([fetchProjects(), fetchContainers(), fetchGroups()]),
+      fetchNpmStatus(),
+      fetchBaseDomain(),
+    ])
+    // Fetch proxy hosts after NPM status is known
+    if (npmStatus.value.connected) {
+      await fetchProxyHosts()
+    }
   }
 
   /** Open proxy form for a container with smart defaults */
