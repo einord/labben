@@ -222,6 +222,7 @@
     "displayName": "Display name",
     "displayNamePlaceholder": "John Doe",
     "registrationFailed": "Registration failed",
+    "alreadyRegistered": "This device is already registered. Try using a different device or authenticator.",
     "loginFailed": "Login failed",
     "passkeyRegistered": "Passkey registered",
     "credentialDeleted": "Passkey removed",

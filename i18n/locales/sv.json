@@ -222,6 +222,7 @@
     "displayName": "Visningsnamn",
     "displayNamePlaceholder": "John Doe",
     "registrationFailed": "Registrering misslyckades",
+    "alreadyRegistered": "Den här enheten är redan registrerad. Prova en annan enhet eller autentiserare.",
     "loginFailed": "Inloggning misslyckades",
     "passkeyRegistered": "Passkey registrerad",
     "credentialDeleted": "Passkey borttagen",

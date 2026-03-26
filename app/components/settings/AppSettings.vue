@@ -34,7 +34,11 @@ async function handleRegisterPasskey() {
     toast.success(t('auth.passkeyRegistered'))
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err)
-    if (!msg.includes('cancelled') && !msg.includes('canceled') && !msg.includes('AbortError')) {
+    if (msg.includes('cancelled') || msg.includes('canceled') || msg.includes('AbortError')) {
+      // User cancelled — do nothing
+    } else if (msg.includes('previously registered') || msg.includes('already registered')) {
+      toast.error(t('auth.alreadyRegistered'))
+    } else {
       toast.error(t('auth.registrationFailed'), msg)
     }
   } finally {
