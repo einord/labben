@@ -2,6 +2,7 @@
 definePageMeta({ layout: false })
 
 const { isSetup, isAuthenticated, register, login, fetchAuthState } = useAuth()
+const router = useRouter()
 const { t } = useI18n()
 const toast = useToast()
 
@@ -20,7 +21,8 @@ async function handleSetup() {
   registering.value = true
   try {
     await register(username.value.trim(), displayName.value.trim())
-    navigateTo('/')
+    isSetup.value = true
+    await router.push('/')
   } catch (err) {
     if (!isCancellation(err)) {
       toast.error(t('auth.registrationFailed'), err instanceof Error ? err.message : String(err))
@@ -34,7 +36,7 @@ async function handleLogin() {
   loggingIn.value = true
   try {
     await login()
-    navigateTo('/')
+    await router.push('/')
   } catch (err) {
     if (!isCancellation(err)) {
       toast.error(t('auth.loginFailed'), err instanceof Error ? err.message : String(err))
