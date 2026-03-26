@@ -9,25 +9,32 @@ export default defineEventHandler(async (event) => {
   }
 
   try {
-    // Create the user first (credential has a foreign key to user)
+    // Check if this is an existing user adding a passkey
+    const existingUser = databaseService.getUserById(body.userId)
+
+    if (existingUser) {
+      // Adding a new passkey to existing account
+      const verified = await authService.verifyAndStoreRegistration(body.userId, body.response as any)
+      if (!verified) {
+        throw createError({ statusCode: 400, message: 'Registration verification failed' })
+      }
+      return { success: true, data: existingUser }
+    }
+
+    // New user registration — create user first (credential has FK to user)
     const user = databaseService.createUser(body.userId, body.username.trim(), body.displayName.trim())
 
-    // Verify and store the credential
     const verified = await authService.verifyAndStoreRegistration(body.userId, body.response as any)
     if (!verified) {
-      // Rollback: remove the user if verification failed
       databaseService.deleteUser(body.userId)
       throw createError({ statusCode: 400, message: 'Registration verification failed' })
     }
 
-    // Mark invite token as used if provided
     if (body.inviteToken) {
       databaseService.markInviteUsed(body.inviteToken, user.id)
     }
 
-    // Create session
     await authService.createSession(event, user.id)
-
     return { success: true, data: user }
   } catch (error) {
     throw createError({ statusCode: 500, message: extractErrorMessage(error, 'Registration failed') })

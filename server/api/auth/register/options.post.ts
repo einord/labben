@@ -12,25 +12,31 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, message: 'Username and display name are required' })
   }
 
-  // Check if registration is allowed
-  const isSetup = !authService.isSetupRequired()
-  if (isSetup) {
-    // Require a valid invite token for subsequent registrations
-    if (!body?.inviteToken) {
-      throw createError({ statusCode: 403, message: 'Invite token is required' })
+  // Check if this is an authenticated user adding a new passkey
+  const sessionUserId = await authService.getSessionUserId(event)
+  const isAddingPasskey = sessionUserId && databaseService.getUserById(sessionUserId)
+
+  if (!isAddingPasskey) {
+    // New user registration — check if allowed
+    const isSetup = !authService.isSetupRequired()
+    if (isSetup) {
+      if (!body?.inviteToken) {
+        throw createError({ statusCode: 403, message: 'Invite token is required' })
+      }
+      const invite = databaseService.getValidInviteToken(body.inviteToken)
+      if (!invite) {
+        throw createError({ statusCode: 403, message: 'Invalid or expired invite token' })
+      }
     }
-    const invite = databaseService.getValidInviteToken(body.inviteToken)
-    if (!invite) {
-      throw createError({ statusCode: 403, message: 'Invalid or expired invite token' })
+
+    // Check username uniqueness for new users
+    if (databaseService.getUserByUsername(username)) {
+      throw createError({ statusCode: 409, message: 'Username already taken' })
     }
   }
 
-  // Check username uniqueness
-  if (databaseService.getUserByUsername(username)) {
-    throw createError({ statusCode: 409, message: 'Username already taken' })
-  }
-
-  const userId = randomUUID()
+  // Use existing user ID for adding passkey, or generate new one
+  const userId = sessionUserId ?? randomUUID()
 
   try {
     const options = await authService.getRegistrationOptions(userId, username, displayName)
