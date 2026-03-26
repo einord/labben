@@ -43,11 +43,11 @@ withDefaults(defineProps<UiBadgeProps>(), {
   }
 
   &.variant-success {
-    background-color: var(--color-accent-bg);
-    color: var(--color-accent);
+    background-color: var(--color-success-bg);
+    color: var(--color-success);
 
     > .dot {
-      background-color: var(--color-accent);
+      background-color: var(--color-success);
     }
   }
 

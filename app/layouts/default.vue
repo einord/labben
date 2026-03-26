@@ -1,5 +1,9 @@
 <script setup lang="ts">
 const sidebarOpen = ref(false)
+const showAppSettings = ref(false)
+
+const { initTheme } = useTheme()
+onMounted(() => initTheme())
 
 function toggleSidebar() {
   sidebarOpen.value = !sidebarOpen.value
@@ -40,6 +44,12 @@ function toggleSidebar() {
           <span class="nav-label">{{ item.label }}</span>
         </NuxtLink>
       </nav>
+      <div class="sidebar-footer">
+        <button class="settings-button" @click="showAppSettings = true">
+          <Icon name="lucide:settings" class="settings-icon" />
+          <span>Inställningar</span>
+        </button>
+      </div>
     </aside>
 
     <!-- Main content -->
@@ -49,6 +59,7 @@ function toggleSidebar() {
   </div>
 
   <UiToastContainer />
+  <AppSettings v-model="showAppSettings" />
 </template>
 
 <style scoped>
@@ -112,6 +123,37 @@ function toggleSidebar() {
 }
 
 .nav-icon {
+  font-size: var(--font-size-xl);
+  width: 1.5rem;
+  text-align: center;
+}
+
+.sidebar-footer {
+  margin-top: auto;
+  padding: var(--spacing-sm) 0;
+  border-top: 1px solid var(--color-border);
+}
+
+.settings-button {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  width: 100%;
+  padding: var(--spacing-sm) var(--spacing-lg);
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-md);
+  cursor: pointer;
+  transition: background-color var(--transition-fast), color var(--transition-fast);
+
+  &:hover {
+    background-color: var(--color-surface-hover);
+    color: var(--color-text);
+  }
+}
+
+.settings-icon {
   font-size: var(--font-size-xl);
   width: 1.5rem;
   text-align: center;

@@ -11,6 +11,12 @@ export default defineNuxtConfig({
   css: [
     '~/assets/css/reset.css',
     '~/assets/css/variables.css',
+    '~/assets/css/themes/standard.css',
+    '~/assets/css/themes/ocean.css',
+    '~/assets/css/themes/forest.css',
+    '~/assets/css/themes/sunset.css',
+    '~/assets/css/themes/neon.css',
+    '~/assets/css/themes/contrast.css',
     '~/assets/css/animations.css',
   ],
 

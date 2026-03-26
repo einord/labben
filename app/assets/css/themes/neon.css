@@ -1,0 +1,83 @@
+/* Theme: Neon — Black with electric neon green */
+
+[data-theme="neon-dark"] {
+  --color-bg: #0a0a0f;
+  --color-surface: #12121a;
+  --color-surface-hover: #1a1a24;
+  --color-sidebar: #060608;
+  --color-border: #22222e;
+
+  --color-accent: #00ff88;
+  --color-accent-dim: rgba(0, 255, 136, 0.08);
+
+  --color-text: #c8c8d0;
+  --color-text-bright: #eeeef2;
+  --color-text-muted: #555566;
+  --color-text-secondary: #8888a0;
+
+  --color-danger: #ff3366;
+  --color-warning: #ffaa00;
+  --color-info: #3388ff;
+  --color-success: #00ff88;
+
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.6);
+
+  --color-accent-bg: rgba(0, 255, 136, 0.08);
+  --color-danger-bg: rgba(255, 51, 102, 0.12);
+  --color-warning-bg: rgba(255, 170, 0, 0.12);
+  --color-info-bg: rgba(51, 136, 255, 0.12);
+  --color-success-bg: rgba(0, 255, 136, 0.1);
+  --color-neutral-bg: rgba(136, 136, 160, 0.1);
+
+  --color-accent-glow: rgba(0, 255, 136, 0.3);
+  --color-danger-glow: rgba(255, 51, 102, 0.3);
+
+  --color-overlay: rgba(0, 0, 0, 0.75);
+  --color-text-on-accent: #0a0a0f;
+  --color-text-on-danger: #fff;
+  --color-code-bg: #06060a;
+  --color-code-gutter: rgba(0, 255, 136, 0.05);
+}
+
+[data-theme="neon-light"] {
+  --color-bg: #f0f0f4;
+  --color-surface: #ffffff;
+  --color-surface-hover: #e8e8f0;
+  --color-sidebar: #e4e4ec;
+  --color-border: #d0d0da;
+
+  --color-accent: #009955;
+  --color-accent-dim: rgba(0, 153, 85, 0.1);
+
+  --color-text: #1a1a24;
+  --color-text-bright: #0a0a0f;
+  --color-text-muted: #8888a0;
+  --color-text-secondary: #4a4a60;
+
+  --color-danger: #cc2255;
+  --color-warning: #bb8800;
+  --color-info: #2266cc;
+  --color-success: #009955;
+
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.1);
+
+  --color-accent-bg: rgba(0, 153, 85, 0.1);
+  --color-danger-bg: rgba(204, 34, 85, 0.08);
+  --color-warning-bg: rgba(187, 136, 0, 0.08);
+  --color-info-bg: rgba(34, 102, 204, 0.08);
+  --color-success-bg: rgba(0, 153, 85, 0.08);
+  --color-neutral-bg: rgba(74, 74, 96, 0.06);
+
+  --color-accent-glow: rgba(0, 153, 85, 0.2);
+  --color-danger-glow: rgba(204, 34, 85, 0.2);
+
+  --color-overlay: rgba(0, 0, 0, 0.35);
+  --color-text-on-accent: #fff;
+  --color-text-on-danger: #fff;
+  --color-code-bg: #e8e8f0;
+  --color-code-gutter: rgba(0, 0, 0, 0.04);
+}

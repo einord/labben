@@ -60,14 +60,14 @@ const hasDetails = computed(() => !!props.toast.details)
   max-width: 420px;
 
   &.variant-success {
-    border-left-color: var(--color-accent);
+    border-left-color: var(--color-success);
 
     > .content > .icon {
-      color: var(--color-accent);
+      color: var(--color-success);
     }
 
     > .progress-track > .progress-bar {
-      background: var(--color-accent);
+      background: var(--color-success);
     }
   }
 
