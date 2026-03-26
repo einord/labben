@@ -266,10 +266,10 @@ class DockerService {
 
         // Check if this project already exists in Docker (from container labels)
         if (projectMap.has(effectiveName)) {
-          // Update the existing entry with filesystem paths if missing
+          // Always update to container-local paths (Docker labels may have host paths)
           const existing = projectMap.get(effectiveName)!
-          if (!existing.workingDir) existing.workingDir = projectDir
-          if (!existing.configFile) existing.configFile = configPath
+          existing.workingDir = projectDir
+          existing.configFile = configPath
           continue
         }
 
@@ -277,8 +277,8 @@ class DockerService {
         const caseMatch = [...projectMap.keys()].find(k => k.toLowerCase() === effectiveName.toLowerCase())
         if (caseMatch) {
           const existing = projectMap.get(caseMatch)!
-          if (!existing.workingDir) existing.workingDir = projectDir
-          if (!existing.configFile) existing.configFile = configPath
+          existing.workingDir = projectDir
+          existing.configFile = configPath
           continue
         }
 
