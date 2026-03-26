@@ -15,6 +15,10 @@ export default defineNuxtRouteMiddleware(async (to) => {
   // If authenticated, allow through (regardless of isSetup state)
   if (isAuthenticated.value) return
 
-  // Not authenticated — redirect to login
+  // Not authenticated — hard redirect to ensure layout resets
+  if (import.meta.client) {
+    window.location.href = '/login'
+    return abortNavigation()
+  }
   return navigateTo('/login')
 })
