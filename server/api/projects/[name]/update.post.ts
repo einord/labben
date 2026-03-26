@@ -7,12 +7,12 @@ export default defineEventHandler(async (event) => {
   }
 
   try {
-    const output = await dockerService.projectUp(name)
+    const output = await dockerService.projectUpdate(name)
     return { success: true, data: output }
   } catch (error) {
     throw createError({
       statusCode: 500,
-      message: extractErrorMessage(error, 'Failed to run docker compose up'),
+      message: extractErrorMessage(error, 'Failed to update project'),
     })
   }
 })

@@ -51,29 +51,35 @@ function toggleSidebar() {
           <Icon :name="item.icon" class="nav-icon" />
           <span class="nav-label">{{ $t(item.labelKey) }}</span>
         </NuxtLink>
-        <NuxtLink
-          v-if="showProxyNav"
-          :to="PROXY_NAV_ITEM.to"
-          class="nav-item"
-          @click="sidebarOpen = false"
-        >
-          <Icon :name="PROXY_NAV_ITEM.icon" class="nav-icon" />
-          <span class="nav-label">{{ $t(PROXY_NAV_ITEM.labelKey) }}</span>
-        </NuxtLink>
+        <ClientOnly>
+          <NuxtLink
+            v-if="showProxyNav"
+            :to="PROXY_NAV_ITEM.to"
+            class="nav-item"
+            @click="sidebarOpen = false"
+          >
+            <Icon :name="PROXY_NAV_ITEM.icon" class="nav-icon" />
+            <span class="nav-label">{{ $t(PROXY_NAV_ITEM.labelKey) }}</span>
+          </NuxtLink>
+        </ClientOnly>
       </nav>
       <div class="sidebar-footer">
-        <div v-if="user" class="user-info">
-          <Icon name="lucide:user" class="user-icon" />
-          <span class="user-name">{{ user.displayName }}</span>
-        </div>
+        <ClientOnly>
+          <div v-if="user" class="user-info">
+            <Icon name="lucide:user" class="user-icon" />
+            <span class="user-name">{{ user.displayName }}</span>
+          </div>
+        </ClientOnly>
         <button class="settings-button" @click="showAppSettings = true">
           <Icon name="lucide:settings" class="settings-icon" />
           <span>{{ $t('nav.settings') }}</span>
         </button>
-        <button class="settings-button" @click="logout">
-          <Icon name="lucide:log-out" class="settings-icon" />
-          <span>{{ $t('auth.logout') }}</span>
-        </button>
+        <ClientOnly>
+          <button class="settings-button" @click="logout">
+            <Icon name="lucide:log-out" class="settings-icon" />
+            <span>{{ $t('auth.logout') }}</span>
+          </button>
+        </ClientOnly>
       </div>
     </aside>
 

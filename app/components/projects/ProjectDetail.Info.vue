@@ -6,21 +6,26 @@ interface ProjectDetailInfoProps {
   project: ProjectWithMetadata
   /** Whether NPM is connected and base domain is configured */
   canPublish?: boolean
+  /** Which action is currently running (for loading spinners) */
+  activeAction?: string | null
 }
 
 const props = withDefaults(defineProps<ProjectDetailInfoProps>(), {
   canPublish: false,
+  activeAction: null,
 })
 
 const { t } = useI18n()
 const isMissing = computed(() => props.project.source === 'missing')
 const isSelf = computed(() => props.project.isSelf)
+const isLoading = (action: string) => props.activeAction === action
 
 defineEmits<{
   up: []
   down: []
   restart: []
   pull: []
+  update: []
   settings: []
   publish: []
 }>()
@@ -41,19 +46,21 @@ const statusVariant = computed(() => {
     <UiPageHeader :title="project.name">
       <template #actions>
         <UiButton
-          variant="secondary"
+          variant="primary"
           size="sm"
-          icon="lucide:download"
-          :disabled="isMissing"
-          @click="$emit('pull')"
+          icon="lucide:package-check"
+          :disabled="isMissing || isSelf || !!activeAction"
+          :loading="isLoading('update')"
+          @click="$emit('update')"
         >
-          Pull
+          {{ $t('projects.update') }}
         </UiButton>
         <UiButton
           variant="secondary"
           size="sm"
           icon="lucide:play"
-          :disabled="isMissing"
+          :disabled="isMissing || !!activeAction"
+          :loading="isLoading('up')"
           @click="$emit('up')"
         >
           Up
@@ -62,7 +69,8 @@ const statusVariant = computed(() => {
           variant="secondary"
           size="sm"
           icon="lucide:refresh-cw"
-          :disabled="isMissing || isSelf"
+          :disabled="isMissing || isSelf || !!activeAction"
+          :loading="isLoading('restart')"
           @click="$emit('restart')"
         >
           Restart
@@ -71,7 +79,8 @@ const statusVariant = computed(() => {
           variant="secondary"
           size="sm"
           icon="lucide:square"
-          :disabled="isMissing || isSelf"
+          :disabled="isMissing || isSelf || !!activeAction"
+          :loading="isLoading('down')"
           @click="$emit('down')"
         >
           Down

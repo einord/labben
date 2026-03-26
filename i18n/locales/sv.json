@@ -38,7 +38,8 @@
     "notFound": "Projektet hittades inte",
     "notFoundDescription": "Det gick inte att hitta det begärda projektet.",
     "containersRunning": "{running}/{total} containrar igång",
-    "publish": "Publicera"
+    "publish": "Publicera",
+    "update": "Uppdatera"
   },
   "createProject": {
     "title": "Nytt projekt",
@@ -172,6 +173,8 @@
     "projectStopError": "Kunde inte stoppa projekt",
     "projectRestarted": "Projekt omstartat",
     "projectRestartError": "Kunde inte starta om projekt",
+    "projectUpdated": "Projekt uppdaterat",
+    "projectUpdateError": "Kunde inte uppdatera projekt",
     "imagesUpdated": "Images uppdaterade",
     "imagesPullError": "Kunde inte hämta images",
     "projectCreated": "Projekt '{name}' skapat",

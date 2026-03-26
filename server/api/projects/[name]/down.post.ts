@@ -12,7 +12,7 @@ export default defineEventHandler(async (event) => {
   } catch (error) {
     throw createError({
       statusCode: 500,
-      message: 'Failed to run docker compose down',
+      message: extractErrorMessage(error, 'Failed to run docker compose down'),
     })
   }
 })

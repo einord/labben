@@ -12,6 +12,7 @@ export function useProjectsView() {
     projectUp,
     projectDown,
     projectRestart,
+    projectUpdate,
     projectPull,
     createProject,
     assignGroup,
@@ -62,6 +63,17 @@ export function useProjectsView() {
   )
 
   const loading = computed(() => projectsLoading.value || containersLoading.value)
+  const activeAction = ref<string | null>(null)
+
+  /** Run a project action with loading tracking */
+  async function withAction(action: string, fn: () => Promise<void>) {
+    activeAction.value = action
+    try {
+      await fn()
+    } finally {
+      activeAction.value = null
+    }
+  }
 
   /** Select a project by updating the URL query parameter */
   function selectProject(name: string) {
@@ -91,22 +103,37 @@ export function useProjectsView() {
   /** Bring the selected project up and refresh */
   async function handleUp() {
     if (!selectedProjectName.value) return
-    await projectUp(selectedProjectName.value)
-    await refreshAll()
+    await withAction('up', async () => {
+      await projectUp(selectedProjectName.value!)
+      await refreshAll()
+    })
   }
 
   /** Bring the selected project down and refresh */
   async function handleDown() {
     if (!selectedProjectName.value) return
-    await projectDown(selectedProjectName.value)
-    await refreshAll()
+    await withAction('down', async () => {
+      await projectDown(selectedProjectName.value!)
+      await refreshAll()
+    })
+  }
+
+  /** Update the selected project (pull + down + up) and refresh */
+  async function handleUpdate() {
+    if (!selectedProjectName.value) return
+    await withAction('update', async () => {
+      await projectUpdate(selectedProjectName.value!)
+      await refreshAll()
+    })
   }
 
   /** Restart the selected project and refresh */
   async function handleRestart() {
     if (!selectedProjectName.value) return
-    await projectRestart(selectedProjectName.value)
-    await refreshAll()
+    await withAction('restart', async () => {
+      await projectRestart(selectedProjectName.value!)
+      await refreshAll()
+    })
   }
 
   /** Pull latest images for the selected project and refresh */
@@ -174,6 +201,7 @@ export function useProjectsView() {
     projectContainers,
     selectedContainerId,
     loading,
+    activeAction,
     projectsLoading,
     containersLoading,
     createProject,
@@ -187,6 +215,7 @@ export function useProjectsView() {
     closeContainerDrawer,
     handleUp,
     handleDown,
+    handleUpdate,
     handleRestart,
     handlePull,
     handleStartContainer,

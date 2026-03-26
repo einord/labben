@@ -1,6 +1,6 @@
 <script setup lang="ts">
 const { status, baseDomain, fetchBaseDomain, fetchStatus, proxyHosts, fetchProxyHosts, detectUrl } = useNpm()
-const { proxyProject } = useProxy()
+const { proxyProject, fetchProxySettings } = useProxy()
 
 const showLabbenProxyForm = ref(false)
 const npmAdminUrl = ref<string | null>(null)
@@ -22,11 +22,11 @@ async function handleLabbenPublished() {
 }
 
 onMounted(async () => {
-  await Promise.all([fetchStatus(), fetchBaseDomain()])
+  await Promise.all([fetchStatus(), fetchBaseDomain(), fetchProxySettings()])
   if (status.value.connected) {
     await fetchProxyHosts()
-    npmAdminUrl.value = await detectUrl()
   }
+  npmAdminUrl.value = await detectUrl()
 })
 </script>
 

@@ -206,6 +206,21 @@ class DockerService {
     return this.runComposeCommand(name, 'pull')
   }
 
+  /** Update a project: pull + down + up in one operation (avoids findProject after down removes containers). */
+  async projectUpdate(name: string): Promise<string> {
+    const project = await this.findProject(name)
+    const run = (args: string[]) =>
+      execFileAsync('docker', ['compose', '-f', project.configPath, ...args], {
+        timeout: 120_000,
+        cwd: project.workingDir || undefined,
+      }).then(({ stdout, stderr }) => stdout + stderr)
+
+    const pullOutput = await run(['pull'])
+    const downOutput = await run(['down'])
+    const upOutput = await run(['up', '-d'])
+    return pullOutput + downOutput + upOutput
+  }
+
   /** Create a new compose project directory and write the docker-compose.yml file. */
   async createProject(name: string, content: string): Promise<{ name: string; configPath: string }> {
     const safeName = name.replace(/[^a-zA-Z0-9_-]/g, '')
