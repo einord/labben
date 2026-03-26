@@ -1,7 +1,6 @@
 <script setup lang="ts">
 const { status, baseDomain, fetchBaseDomain, fetchStatus, proxyHosts, fetchProxyHosts } = useNpm()
 const { proxyProject } = useProxy()
-const { t } = useI18n()
 
 const showLabbenProxyForm = ref(false)
 
@@ -36,10 +35,6 @@ onMounted(async () => {
       :subtitle="$t('proxy.subtitle')"
     />
     <div class="proxy-content">
-      <ProxySetup />
-      <ProxyCredentials />
-      <ProxyBaseDomain />
-
       <UiCard v-if="canPublishLabben && !labbenAlreadyPublished">
         <template #header>{{ $t('proxy.publishLabben') }}</template>
         <div class="publish-labben">
