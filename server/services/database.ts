@@ -345,6 +345,18 @@ class DatabaseService {
   markInviteUsed(token: string, usedBy: string): void {
     this.db.prepare('UPDATE invite_tokens SET used_by = ? WHERE token = ?').run(usedBy, token)
   }
+
+  /** Get all active (unused, non-expired) invite tokens */
+  getActiveInviteTokens(): Array<{ token: string; createdBy: string; expiresAt: string; createdAt: string }> {
+    return this.db.prepare(
+      "SELECT token, created_by as createdBy, expires_at as expiresAt, created_at as createdAt FROM invite_tokens WHERE used_by IS NULL AND expires_at > datetime('now') ORDER BY created_at DESC",
+    ).all() as Array<{ token: string; createdBy: string; expiresAt: string; createdAt: string }>
+  }
+
+  /** Delete an invite token */
+  deleteInviteToken(token: string): void {
+    this.db.prepare('DELETE FROM invite_tokens WHERE token = ?').run(token)
+  }
 }
 
 // Persist across HMR reloads in development

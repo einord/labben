@@ -14,7 +14,7 @@ const emit = defineEmits<{
 
 const { config, getPalettes, setPalette, setMode } = useTheme()
 const { locale, locales, setLocale, t } = useI18n()
-const { user, credentials, fetchCredentials, deleteCredential, registerAdditionalPasskey, createInvite } = useAuth()
+const { user, credentials, fetchCredentials, deleteCredential, registerAdditionalPasskey, invites, fetchInvites, deleteInvite, createInvite } = useAuth()
 const toast = useToast()
 
 const inviteLink = ref<string | null>(null)
@@ -59,12 +59,21 @@ async function handleCreateInvite() {
   try {
     const invite = await createInvite()
     inviteLink.value = invite.url
+    await fetchInvites()
     try {
       await navigator.clipboard.writeText(invite.url)
       toast.success(t('auth.inviteCopied'))
     } catch {
       // Clipboard access denied — link is still visible in the UI
     }
+  } catch (err) {
+    toast.error(t('auth.inviteError'), err instanceof Error ? err.message : String(err))
+  }
+}
+
+async function handleDeleteInvite(token: string) {
+  try {
+    await deleteInvite(token)
   } catch (err) {
     toast.error(t('auth.inviteError'), err instanceof Error ? err.message : String(err))
   }
@@ -99,10 +108,11 @@ const availableLocales = computed(() => {
 
 const palettes = getPalettes()
 
-// Load credentials when modal opens
+// Load credentials and invites when modal opens
 watch(() => props.modelValue, (open) => {
   if (open) {
     fetchCredentials()
+    fetchInvites()
     inviteLink.value = null
   }
 })
@@ -159,11 +169,26 @@ watch(() => props.modelValue, (open) => {
 
         <div class="setting-group">
           <h3 class="section-title">{{ $t('auth.inviteUser') }}</h3>
+
           <div v-if="inviteLink" class="invite-result">
             <code class="invite-url">{{ inviteLink }}</code>
             <UiButton variant="ghost" size="sm" icon="lucide:copy" @click="copyInviteLink" />
           </div>
-          <UiButton v-else variant="secondary" size="sm" icon="lucide:user-plus" @click="handleCreateInvite">
+
+          <div v-if="invites.length > 0" class="invite-list">
+            <div v-for="inv in invites" :key="inv.token" class="invite-item">
+              <div class="invite-info">
+                <Icon name="lucide:link" class="invite-icon" />
+                <div class="invite-details">
+                  <code class="invite-token">...{{ inv.token.slice(-8) }}</code>
+                  <span class="invite-expiry">{{ $t('auth.inviteExpires') }}: {{ new Date(inv.expiresAt).toLocaleDateString() }}</span>
+                </div>
+              </div>
+              <UiButton variant="ghost" size="sm" icon="lucide:trash-2" @click="handleDeleteInvite(inv.token)" />
+            </div>
+          </div>
+
+          <UiButton variant="secondary" size="sm" icon="lucide:user-plus" @click="handleCreateInvite">
             {{ $t('auth.inviteUser') }}
           </UiButton>
         </div>
@@ -451,5 +476,47 @@ watch(() => props.modelValue, (open) => {
   border-radius: var(--radius-sm);
   word-break: break-all;
   flex: 1;
+}
+
+.invite-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.invite-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-sm);
+  background-color: var(--color-bg);
+  border-radius: var(--radius-md);
+}
+
+.invite-info {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.invite-icon {
+  font-size: var(--font-size-lg);
+  color: var(--color-text-muted);
+}
+
+.invite-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.invite-token {
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+}
+
+.invite-expiry {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
 }
 </style>

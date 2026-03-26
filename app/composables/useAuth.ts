@@ -1,10 +1,17 @@
 import { startRegistration, startAuthentication } from '@simplewebauthn/browser'
 import type { User, AuthState, WebAuthnCredentialInfo, InviteInfo } from '~/types/auth'
 
+interface ActiveInvite {
+  token: string
+  expiresAt: string
+  createdAt: string
+}
+
 export function useAuth() {
   const user = useState<User | null>('auth-user', () => null)
   const isSetup = useState<boolean>('auth-setup', () => true)
   const credentials = ref<WebAuthnCredentialInfo[]>([])
+  const invites = ref<ActiveInvite[]>([])
 
   const isAuthenticated = computed(() => user.value !== null)
 
@@ -132,6 +139,22 @@ export function useAuth() {
     await fetchCredentials()
   }
 
+  /** Fetch active invite tokens */
+  async function fetchInvites() {
+    try {
+      const res = await $fetch<{ success: boolean; data: ActiveInvite[] }>('/api/auth/invites')
+      invites.value = res.data
+    } catch {
+      invites.value = []
+    }
+  }
+
+  /** Delete an invite token. Throws on failure. */
+  async function deleteInvite(token: string): Promise<void> {
+    await $fetch(`/api/auth/invites/${token}`, { method: 'DELETE' })
+    await fetchInvites()
+  }
+
   /** Create an invite link. Throws on failure. */
   async function createInvite(): Promise<InviteInfo> {
     const res = await $fetch<{ success: boolean; data: { token: string; expiresAt: string } }>(
@@ -158,6 +181,9 @@ export function useAuth() {
     fetchCredentials,
     deleteCredential,
     registerAdditionalPasskey,
+    invites,
+    fetchInvites,
+    deleteInvite,
     createInvite,
   }
 }
