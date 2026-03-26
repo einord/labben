@@ -249,7 +249,6 @@ class DockerService {
       const entries = await readdir(this.newProjectDir, { withFileTypes: true })
       for (const entry of entries) {
         if (!entry.isDirectory()) continue
-        if (projectMap.has(entry.name)) continue
 
         const projectDir = join(this.newProjectDir, entry.name)
         const configPath = join(projectDir, 'docker-compose.yml')
@@ -261,7 +260,29 @@ class DockerService {
           continue
         }
 
-        projectMap.set(entry.name, {
+        // Determine the effective project name: explicit name in compose file,
+        // or the directory name lowercased (Docker Compose default behavior)
+        const effectiveName = await this.resolveProjectName(configPath, entry.name)
+
+        // Check if this project already exists in Docker (from container labels)
+        if (projectMap.has(effectiveName)) {
+          // Update the existing entry with filesystem paths if missing
+          const existing = projectMap.get(effectiveName)!
+          if (!existing.workingDir) existing.workingDir = projectDir
+          if (!existing.configFile) existing.configFile = configPath
+          continue
+        }
+
+        // Also check case-insensitive match (e.g. "Stina" dir → "stina" in Docker)
+        const caseMatch = [...projectMap.keys()].find(k => k.toLowerCase() === effectiveName.toLowerCase())
+        if (caseMatch) {
+          const existing = projectMap.get(caseMatch)!
+          if (!existing.workingDir) existing.workingDir = projectDir
+          if (!existing.configFile) existing.configFile = configPath
+          continue
+        }
+
+        projectMap.set(effectiveName, {
           containers: [],
           workingDir: projectDir,
           configFile: configPath,
@@ -270,6 +291,22 @@ class DockerService {
     } catch {
       // Compose directory may not exist yet — that's fine
     }
+  }
+
+  /** Resolve the effective project name from a compose file or directory name. */
+  private async resolveProjectName(configPath: string, dirName: string): Promise<string> {
+    try {
+      const content = await readFile(configPath, 'utf-8')
+      const { parseCompose } = await import('../utils/compose')
+      const compose = parseCompose(content)
+      if (typeof compose.name === 'string' && compose.name.trim()) {
+        return compose.name.trim()
+      }
+    } catch {
+      // If we can't parse the file, fall back to directory name
+    }
+    // Docker Compose lowercases the directory name by default
+    return dirName.toLowerCase()
   }
 
   /** Run a docker compose command using the real project working directory. */

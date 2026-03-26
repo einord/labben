@@ -1,6 +1,8 @@
 import { parse, stringify } from 'yaml'
 
 interface ComposeFile {
+  /** Optional explicit project name */
+  name?: string
   services?: Record<string, { image?: string; [key: string]: unknown }>
   networks?: Record<string, unknown>
   volumes?: Record<string, unknown>

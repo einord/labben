@@ -57,7 +57,7 @@ class ProjectService {
 
       // Auto-assign system role if this is Labben itself
       const effectiveRole = isSelf ? 'labben' : metadata.role
-      const source = effectiveRole ? 'system' : this.resolveSource(project.workingDir)
+      const source = effectiveRole ? 'system' : this.resolveSource(project.workingDir, project.configPath)
 
       result.push({ ...project, metadata: { ...metadata, role: effectiveRole }, source, isSelf })
     }
@@ -88,10 +88,16 @@ class ProjectService {
   }
 
   /** Determine if a project is managed (in COMPOSE_DIR) or external. */
-  private resolveSource(workingDir: string): ProjectSource {
-    if (!workingDir) return 'external'
-    const resolved = resolve(workingDir)
-    return resolved.startsWith(this.composeDir) ? 'managed' : 'external'
+  private resolveSource(workingDir: string, configFile?: string): ProjectSource {
+    // Check if either workingDir or configFile is under COMPOSE_DIR
+    // This handles the case where Docker labels have host paths but
+    // the filesystem scanner has updated configFile to container paths
+    const paths = [workingDir, configFile].filter(Boolean) as string[]
+    for (const p of paths) {
+      const resolved = resolve(p)
+      if (resolved.startsWith(this.composeDir)) return 'managed'
+    }
+    return paths.length === 0 ? 'external' : 'external'
   }
 
   /** Create a new project (filesystem + database entry). */
