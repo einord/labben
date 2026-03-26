@@ -39,33 +39,14 @@ const portsDisplay = computed(() => {
 
 <template>
   <div class="item" @click="$emit('select')">
-    <div class="info">
-      <span class="name">{{ displayName }}</span>
-      <span class="image">{{ container.image }}</span>
-      <UiBadge :variant="variant" dot size="sm">
-        {{ container.status }}
-      </UiBadge>
-      <span v-if="portsDisplay" class="ports">{{ portsDisplay }}</span>
-      <span v-if="container.project" class="project">{{ container.project }}</span>
-    </div>
-    <div class="right-section" @click.prevent.stop>
-      <div v-if="hasProxyHosts" class="proxy-domains">
-        <a
-          v-for="host in matchedHosts"
-          :key="host.id"
-          :href="`${host.sslForced ? 'https' : 'http'}://${host.domainNames[0]}`"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="domain-link"
-          @click.stop
-        >
-          <UiBadge variant="info" size="sm">
-            <Icon name="lucide:globe" class="domain-icon" />
-            {{ host.domainNames[0] }}
-          </UiBadge>
-        </a>
+    <div class="header-row">
+      <div class="name-status">
+        <span class="name">{{ displayName }}</span>
+        <UiBadge :variant="variant" dot size="sm">
+          {{ container.status }}
+        </UiBadge>
       </div>
-      <div class="action-buttons">
+      <div class="actions" @click.prevent.stop>
         <UiButton
           v-if="hasPublicPorts"
           variant="ghost"
@@ -82,15 +63,36 @@ const portsDisplay = computed(() => {
         />
       </div>
     </div>
+
+    <div class="meta-row">
+      <span class="image">{{ container.image }}</span>
+      <span v-if="portsDisplay" class="ports">{{ portsDisplay }}</span>
+    </div>
+
+    <div v-if="hasProxyHosts" class="proxy-row" @click.prevent.stop>
+      <a
+        v-for="host in matchedHosts"
+        :key="host.id"
+        :href="`${host.sslForced ? 'https' : 'http'}://${host.domainNames[0]}`"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="domain-link"
+        @click.stop
+      >
+        <UiBadge variant="info" size="sm">
+          <Icon name="lucide:globe" class="domain-icon" />
+          {{ host.domainNames[0] }}
+        </UiBadge>
+      </a>
+    </div>
   </div>
 </template>
 
 <style scoped>
 .item {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--spacing-md);
+  flex-direction: column;
+  gap: var(--spacing-xs);
   padding: var(--spacing-sm) var(--spacing-md);
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
@@ -105,12 +107,18 @@ const portsDisplay = computed(() => {
   }
 }
 
-.info {
+.header-row {
   display: flex;
   align-items: center;
-  gap: var(--spacing-md);
+  justify-content: space-between;
+  gap: var(--spacing-sm);
+}
+
+.name-status {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
   min-width: 0;
-  flex: 1;
 }
 
 .name {
@@ -118,45 +126,43 @@ const portsDisplay = computed(() => {
   color: var(--color-text-bright);
   font-size: var(--font-size-md);
   white-space: nowrap;
-}
-
-.image {
-  color: var(--color-text-muted);
-  font-size: var(--font-size-sm);
-  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.ports {
-  color: var(--color-text-secondary);
-  font-size: var(--font-size-sm);
-  font-family: monospace;
-  white-space: nowrap;
-}
-
-.project {
-  color: var(--color-text-muted);
-  font-size: var(--font-size-xs);
-  background-color: var(--color-neutral-bg);
-  padding: var(--spacing-xs) var(--spacing-sm);
-  border-radius: 9999px;
-  white-space: nowrap;
-}
-
-.right-section {
+.actions {
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
+  align-items: center;
   gap: var(--spacing-xs);
   flex-shrink: 0;
 }
 
-.proxy-domains {
+.meta-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  flex-wrap: wrap;
+}
+
+.image {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ports {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  font-family: var(--font-family-mono);
+  white-space: nowrap;
+}
+
+.proxy-row {
   display: flex;
   flex-wrap: wrap;
   gap: var(--spacing-xs);
-  justify-content: flex-end;
 }
 
 .domain-link {
@@ -165,11 +171,5 @@ const portsDisplay = computed(() => {
 
 .domain-icon {
   font-size: var(--font-size-xs);
-}
-
-.action-buttons {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-xs);
 }
 </style>

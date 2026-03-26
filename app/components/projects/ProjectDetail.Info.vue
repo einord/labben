@@ -97,7 +97,7 @@ const statusVariant = computed(() => {
       <UiBadge :variant="statusVariant" dot>
         {{ statusLabel }}
       </UiBadge>
-      <span class="config-path">{{ project.configPath }}</span>
+      <span class="config-path" v-html="project.configPath.replace(/\//g, '/&#8203;')" />
     </div>
   </div>
 </template>
