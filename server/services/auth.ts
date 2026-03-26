@@ -51,7 +51,7 @@ class AuthService {
       rpID: this.rpID,
       userName: username,
       userDisplayName: displayName,
-      userID: userId,
+      userID: new TextEncoder().encode(userId),
       attestationType: 'none',
       excludeCredentials: existingCredentials.map(c => ({
         id: c.id,
