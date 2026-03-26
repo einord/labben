@@ -4,9 +4,13 @@ import type { ProjectWithMetadata } from '~/types/project'
 interface ProjectDetailInfoProps {
   /** The compose project to display details for */
   project: ProjectWithMetadata
+  /** Whether NPM is connected and base domain is configured */
+  canPublish?: boolean
 }
 
-const props = defineProps<ProjectDetailInfoProps>()
+const props = withDefaults(defineProps<ProjectDetailInfoProps>(), {
+  canPublish: false,
+})
 
 const isMissing = computed(() => props.project.source === 'missing')
 
@@ -16,6 +20,7 @@ defineEmits<{
   restart: []
   pull: []
   settings: []
+  publish: []
 }>()
 
 const statusLabel = computed(() => {
@@ -68,6 +73,15 @@ const statusVariant = computed(() => {
           @click="$emit('down')"
         >
           Down
+        </UiButton>
+        <UiButton
+          v-if="canPublish && !isMissing"
+          variant="secondary"
+          size="sm"
+          icon="lucide:globe"
+          @click="$emit('publish')"
+        >
+          Publicera
         </UiButton>
         <UiButton
           v-if="!isMissing"

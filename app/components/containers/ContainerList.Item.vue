@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { ContainerSummary } from '~/types/docker'
+import type { NpmProxyHost } from '~/types/npm'
 import { formatContainerName, statusToVariant } from '~/utils/docker'
 
 interface ContainerListItemProps {
@@ -7,6 +8,8 @@ interface ContainerListItemProps {
   container: ContainerSummary
   /** Whether an action is in progress for this container */
   loading?: boolean
+  /** Proxy hosts currently pointing to this container */
+  proxyHosts?: NpmProxyHost[]
 }
 
 const props = defineProps<ContainerListItemProps>()
@@ -20,6 +23,8 @@ defineEmits<{
 }>()
 
 const hasPublicPorts = computed(() => props.container.ports.some(p => p.public))
+const matchedHosts = computed(() => props.proxyHosts ?? [])
+const hasProxyHosts = computed(() => matchedHosts.value.length > 0)
 
 const displayName = computed(() => formatContainerName(props.container.name))
 const variant = computed(() => statusToVariant(props.container.status))
@@ -43,21 +48,39 @@ const portsDisplay = computed(() => {
       <span v-if="portsDisplay" class="ports">{{ portsDisplay }}</span>
       <span v-if="container.project" class="project">{{ container.project }}</span>
     </div>
-    <div class="actions" @click.prevent.stop>
-      <UiButton
-        v-if="hasPublicPorts"
-        variant="ghost"
-        size="sm"
-        icon="lucide:route"
-        @click="$emit('proxy')"
-      />
-      <ContainerListItemActions
-        :status="container.status"
-        :loading="loading ?? false"
-        @start="$emit('start')"
-        @stop="$emit('stop')"
-        @restart="$emit('restart')"
-      />
+    <div class="right-section" @click.prevent.stop>
+      <div v-if="hasProxyHosts" class="proxy-domains">
+        <a
+          v-for="host in matchedHosts"
+          :key="host.id"
+          :href="`${host.sslForced ? 'https' : 'http'}://${host.domainNames[0]}`"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="domain-link"
+          @click.stop
+        >
+          <UiBadge variant="info" size="sm">
+            <Icon name="lucide:globe" class="domain-icon" />
+            {{ host.domainNames[0] }}
+          </UiBadge>
+        </a>
+      </div>
+      <div class="action-buttons">
+        <UiButton
+          v-if="hasPublicPorts"
+          variant="ghost"
+          size="sm"
+          icon="lucide:route"
+          @click="$emit('proxy')"
+        />
+        <ContainerListItemActions
+          :status="container.status"
+          :loading="loading ?? false"
+          @start="$emit('start')"
+          @stop="$emit('stop')"
+          @restart="$emit('restart')"
+        />
+      </div>
     </div>
   </div>
 </template>
@@ -121,7 +144,32 @@ const portsDisplay = computed(() => {
   white-space: nowrap;
 }
 
-.actions {
+.right-section {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--spacing-xs);
   flex-shrink: 0;
+}
+
+.proxy-domains {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs);
+  justify-content: flex-end;
+}
+
+.domain-link {
+  text-decoration: none;
+}
+
+.domain-icon {
+  font-size: var(--font-size-xs);
+}
+
+.action-buttons {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
 }
 </style>

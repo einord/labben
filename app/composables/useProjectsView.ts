@@ -32,6 +32,15 @@ export function useProjectsView() {
     fetchGroups,
   } = useGroups()
 
+  const {
+    proxyHosts,
+    fetchProxyHosts,
+    baseDomain,
+    fetchBaseDomain,
+    status: npmStatus,
+    fetchStatus: fetchNpmStatus,
+  } = useNpm()
+
   // Selected project from query param
   const selectedProjectName = computed<string | undefined>(
     () => (route.query.selected as string) || undefined,
@@ -70,9 +79,9 @@ export function useProjectsView() {
     router.push({ query: rest })
   }
 
-  /** Refresh projects, containers, and groups from the API */
+  /** Refresh projects, containers, groups, and proxy hosts from the API */
   async function refreshAll() {
-    await Promise.all([fetchProjects(), fetchContainers(), fetchGroups()])
+    await Promise.all([fetchProjects(), fetchContainers(), fetchGroups(), fetchProxyHosts()])
   }
 
   /** Bring the selected project up and refresh */
@@ -121,9 +130,28 @@ export function useProjectsView() {
     await refreshAll()
   }
 
-  /** Initialize by fetching all data */
+  /** Initialize by fetching all data including NPM status and base domain */
   async function init() {
-    await refreshAll()
+    await Promise.all([refreshAll(), fetchNpmStatus(), fetchBaseDomain()])
+  }
+
+  /** Open proxy form for a container with smart defaults */
+  function getProxySuggestion(containerId: string): { domain: string; host: string; port: number; project: string } | null {
+    const container = projectContainers.value.find(c => c.id === containerId)
+    if (!container) return null
+
+    const publicPort = container.ports.find(p => p.public)
+    if (!publicPort?.public) return null
+
+    const name = container.name.replace(/^\//, '').replace(/[^a-z0-9-]/g, '-')
+    const domain = baseDomain.value ? `${name}.${baseDomain.value}` : ''
+
+    return {
+      domain,
+      host: 'host.docker.internal',
+      port: publicPort.public,
+      project: selectedProjectName.value ?? '',
+    }
   }
 
   return {
@@ -152,5 +180,9 @@ export function useProjectsView() {
     handleStartContainer,
     handleStopContainer,
     handleRestartContainer,
+    proxyHosts,
+    npmStatus,
+    baseDomain,
+    getProxySuggestion,
   }
 }

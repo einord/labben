@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { ContainerSummary } from '~/types/docker'
+import type { NpmProxyHost } from '~/types/npm'
 
 interface ContainerListProps {
   /** List of containers to display */
@@ -8,9 +9,19 @@ interface ContainerListProps {
   loading: boolean
   /** Container IDs currently performing an action */
   loadingIds?: string[]
+  /** Proxy hosts for matching against containers */
+  proxyHosts?: NpmProxyHost[]
 }
 
-defineProps<ContainerListProps>()
+const props = defineProps<ContainerListProps>()
+
+function getContainerProxyHosts(container: ContainerSummary): NpmProxyHost[] {
+  if (!props.proxyHosts?.length) return []
+  const publicPorts = container.ports.filter(p => p.public).map(p => p.public!)
+  return props.proxyHosts.filter(host =>
+    publicPorts.includes(host.forwardPort)
+  )
+}
 
 const emit = defineEmits<{
   start: [id: string]
@@ -38,6 +49,7 @@ const emit = defineEmits<{
         :key="container.id"
         :container="container"
         :loading="loadingIds?.includes(container.id) ?? false"
+        :proxy-hosts="getContainerProxyHosts(container)"
         @select="emit('select', container.id)"
         @start="emit('start', container.id)"
         @stop="emit('stop', container.id)"

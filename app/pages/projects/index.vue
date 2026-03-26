@@ -22,6 +22,10 @@ const {
   handleStartContainer,
   handleStopContainer,
   handleRestartContainer,
+  proxyHosts,
+  npmStatus,
+  baseDomain,
+  getProxySuggestion,
 } = useProjectsView()
 
 const showCreateModal = ref(false)
@@ -32,19 +36,33 @@ const proxyFormHost = ref('host.docker.internal')
 const proxyFormPort = ref(80)
 const proxyFormProject = ref('')
 
-const { baseDomain, fetchBaseDomain } = useNpm()
-
 function handleProxyContainer(containerId: string) {
-  const container = projectContainers.value.find(c => c.id === containerId)
+  const suggestion = getProxySuggestion(containerId)
+  if (!suggestion) return
+
+  proxyFormDomain.value = suggestion.domain
+  proxyFormHost.value = suggestion.host
+  proxyFormPort.value = suggestion.port
+  proxyFormProject.value = suggestion.project
+
+  showProxyForm.value = true
+}
+
+function handlePublish() {
+  if (!selectedProject.value || !baseDomain.value) return
+
+  // Use the first container with public ports as default
+  const container = projectContainers.value.find(c => c.ports.some(p => p.public))
   if (!container) return
 
-  const publicPort = container.ports.find(p => p.public)
-  proxyFormPort.value = publicPort?.public ?? 80
-  proxyFormHost.value = 'host.docker.internal'
-  proxyFormProject.value = selectedProjectName.value ?? ''
+  const suggestion = getProxySuggestion(container.id)
+  if (!suggestion) return
 
-  const name = container.name.replace(/^\//, '').replace(/[^a-z0-9-]/g, '-')
-  proxyFormDomain.value = baseDomain.value ? `${name}.${baseDomain.value}` : ''
+  // Use project name as domain prefix instead of container name
+  proxyFormDomain.value = `${selectedProject.value.name}.${baseDomain.value}`
+  proxyFormHost.value = suggestion.host
+  proxyFormPort.value = suggestion.port
+  proxyFormProject.value = selectedProject.value.name
 
   showProxyForm.value = true
 }
@@ -55,7 +73,6 @@ async function handleCreated() {
 
 onMounted(async () => {
   await init()
-  await fetchBaseDomain()
 })
 </script>
 
@@ -98,11 +115,13 @@ onMounted(async () => {
         <template v-if="selectedProject">
           <ProjectDetailInfo
             :project="selectedProject"
+            :can-publish="!!npmStatus.connected && !!baseDomain"
             @up="handleUp"
             @down="handleDown"
             @restart="handleRestart"
             @pull="handlePull"
             @settings="showSettings = true"
+            @publish="handlePublish"
           />
 
           <section class="containers-section">
@@ -110,6 +129,7 @@ onMounted(async () => {
             <ContainerList
               :containers="projectContainers"
               :loading="containersLoading"
+              :proxy-hosts="proxyHosts"
               @start="handleStartContainer"
               @stop="handleStopContainer"
               @restart="handleRestartContainer"
@@ -150,6 +170,7 @@ onMounted(async () => {
       :suggested-host="proxyFormHost"
       :suggested-port="proxyFormPort"
       :project-name="proxyFormProject"
+      @saved="refreshAll"
     />
   </div>
 </template>
