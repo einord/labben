@@ -67,12 +67,10 @@ export function useProjects() {
     }
   }
 
-  /** Update a project (pull + down + up) — pull first to minimize downtime */
+  /** Update a project (pull + down + up in one server-side operation) */
   async function projectUpdate(name: string) {
     try {
-      await $fetch(`/api/projects/${name}/pull`, { method: 'POST' })
-      await $fetch(`/api/projects/${name}/down`, { method: 'POST' })
-      await $fetch(`/api/projects/${name}/up`, { method: 'POST' })
+      await $fetch(`/api/projects/${name}/update`, { method: 'POST' })
       toast.success(t('toast.projectUpdated'))
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to update project'
