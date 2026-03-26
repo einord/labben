@@ -16,7 +16,10 @@ defineEmits<{
   stop: []
   restart: []
   select: []
+  proxy: []
 }>()
+
+const hasPublicPorts = computed(() => props.container.ports.some(p => p.public))
 
 const displayName = computed(() => formatContainerName(props.container.name))
 const variant = computed(() => statusToVariant(props.container.status))
@@ -41,6 +44,13 @@ const portsDisplay = computed(() => {
       <span v-if="container.project" class="project">{{ container.project }}</span>
     </div>
     <div class="actions" @click.prevent.stop>
+      <UiButton
+        v-if="hasPublicPorts"
+        variant="ghost"
+        size="sm"
+        icon="lucide:route"
+        @click="$emit('proxy')"
+      />
       <ContainerListItemActions
         :status="container.status"
         :loading="loading ?? false"

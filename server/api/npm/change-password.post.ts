@@ -18,6 +18,6 @@ export default defineEventHandler(async (event) => {
     await npmApiService.changePassword(oldPassword, newPassword)
     return { success: true }
   } catch (error) {
-    throw createError({ statusCode: 500, message: 'Failed to change password' })
+    throw createError({ statusCode: 500, message: extractErrorMessage(error, 'Failed to change password') })
   }
 })

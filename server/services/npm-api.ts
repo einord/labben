@@ -1,4 +1,4 @@
-import type { NpmConnectionStatus, NpmCredentials, NpmProxyHost, NpmTokenResponse, NpmUser } from '~/types/npm'
+import type { NpmConnectionStatus, NpmCredentials, NpmProxyHost, NpmTokenResponse, NpmUser, CreateProxyHostData } from '~/types/npm'
 import { databaseService } from './database'
 
 const NPM_DEFAULT_PASSWORD = 'changeme'
@@ -153,18 +153,66 @@ class NpmApiService {
 
   /** List all proxy hosts from NPM */
   async listProxyHosts(): Promise<NpmProxyHost[]> {
-    const raw = await this.apiRequest<Array<Record<string, unknown>>>('GET', '/proxy-hosts')
-    return raw.map(host => ({
-      id: host.id as number,
-      domainNames: host.domain_names as string[],
-      forwardHost: host.forward_host as string,
-      forwardPort: host.forward_port as number,
-      forwardScheme: host.forward_scheme as string,
-      enabled: (host.enabled as number) === 1,
-      sslForced: (host.ssl_forced as number) === 1,
-      certificateId: (host.certificate_id as number) ?? 0,
-      meta: (host.meta as Record<string, unknown>) ?? {},
-    }))
+    const raw = await this.apiRequest<Array<Record<string, unknown>>>('GET', '/nginx/proxy-hosts')
+    return raw.map(host => this.mapProxyHost(host))
+  }
+
+  /** Create a new proxy host in NPM */
+  async createProxyHost(data: CreateProxyHostData): Promise<NpmProxyHost> {
+    const raw = await this.apiRequest<Record<string, unknown>>('POST', '/nginx/proxy-hosts', {
+      domain_names: data.domainNames,
+      forward_scheme: data.forwardScheme,
+      forward_host: data.forwardHost,
+      forward_port: data.forwardPort,
+      access_list_id: 0,
+      certificate_id: 0,
+      ssl_forced: data.sslForced ? 1 : 0,
+      http2_support: data.http2Support ? 1 : 0,
+      block_exploits: data.blockExploits ? 1 : 0,
+      allow_websocket_upgrade: data.allowWebsocketUpgrade ? 1 : 0,
+      advanced_config: '',
+      meta: data.meta ?? {},
+    })
+    return this.mapProxyHost(raw)
+  }
+
+  /** Update an existing proxy host in NPM */
+  async updateProxyHost(id: number, data: CreateProxyHostData): Promise<NpmProxyHost> {
+    const raw = await this.apiRequest<Record<string, unknown>>('PUT', `/nginx/proxy-hosts/${id}`, {
+      domain_names: data.domainNames,
+      forward_scheme: data.forwardScheme,
+      forward_host: data.forwardHost,
+      forward_port: data.forwardPort,
+      access_list_id: 0,
+      certificate_id: 0,
+      ssl_forced: data.sslForced ? 1 : 0,
+      http2_support: data.http2Support ? 1 : 0,
+      block_exploits: data.blockExploits ? 1 : 0,
+      allow_websocket_upgrade: data.allowWebsocketUpgrade ? 1 : 0,
+      advanced_config: '',
+      meta: data.meta ?? {},
+    })
+    return this.mapProxyHost(raw)
+  }
+
+  /** Delete a proxy host from NPM */
+  async deleteProxyHost(id: number): Promise<void> {
+    await this.apiRequest('DELETE', `/nginx/proxy-hosts/${id}`)
+  }
+
+  /** Get the configured base domain for proxy host suggestions */
+  getBaseDomain(): string | null {
+    return databaseService.getSetting('base_domain')
+  }
+
+  /** Set the base domain for proxy host suggestions */
+  setBaseDomain(domain: string): void {
+    databaseService.setSetting('base_domain', domain)
+  }
+
+  /** Clear the base domain setting */
+  clearBaseDomain(): void {
+    databaseService.deleteSetting('base_domain')
   }
 
   /** Detect the NPM API URL from the proxy project's container ports */
@@ -187,6 +235,21 @@ class NpmApiService {
     }
 
     return null
+  }
+
+  /** Map raw NPM API response to typed NpmProxyHost */
+  private mapProxyHost(raw: Record<string, unknown>): NpmProxyHost {
+    return {
+      id: raw.id as number,
+      domainNames: raw.domain_names as string[],
+      forwardHost: raw.forward_host as string,
+      forwardPort: raw.forward_port as number,
+      forwardScheme: raw.forward_scheme as string,
+      enabled: (raw.enabled as number) === 1,
+      sslForced: (raw.ssl_forced as number) === 1,
+      certificateId: (raw.certificate_id as number) ?? 0,
+      meta: (raw.meta as Record<string, unknown>) ?? {},
+    }
   }
 
   private isUnauthorized(error: unknown): boolean {

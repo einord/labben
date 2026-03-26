@@ -3,6 +3,10 @@ export interface Toast {
   message: string
   variant: 'success' | 'error' | 'warning' | 'info'
   duration: number
+  /** Optional error details shown on expand */
+  details?: string
+  /** Whether this toast persists until manually dismissed */
+  persistent: boolean
 }
 
 type ToastVariant = Toast['variant']
@@ -14,10 +18,12 @@ const MAX_TOASTS = 5
 export function useToast() {
   const toasts = useState<Toast[]>('toasts', () => [])
 
-  /** Add a toast and auto-remove it after the given duration */
-  function addToast(message: string, variant: ToastVariant, duration = DEFAULT_DURATION): string {
+  /** Add a toast and auto-remove it after the given duration (unless persistent) */
+  function addToast(message: string, variant: ToastVariant, options?: { duration?: number; details?: string; persistent?: boolean }): string {
     const id = `toast-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
-    const toast: Toast = { id, message, variant, duration }
+    const persistent = options?.persistent ?? variant === 'error'
+    const duration = persistent ? 0 : (options?.duration ?? DEFAULT_DURATION)
+    const toast: Toast = { id, message, variant, duration, details: options?.details, persistent }
 
     toasts.value.push(toast)
 
@@ -26,10 +32,12 @@ export function useToast() {
       toasts.value.shift()
     }
 
-    // Auto-dismiss after duration
-    setTimeout(() => {
-      removeToast(id)
-    }, duration)
+    // Auto-dismiss after duration (unless persistent)
+    if (!persistent && duration > 0) {
+      setTimeout(() => {
+        removeToast(id)
+      }, duration)
+    }
 
     return id
   }
@@ -47,9 +55,9 @@ export function useToast() {
     return addToast(message, 'success')
   }
 
-  /** Convenience: show an error toast */
-  function error(message: string) {
-    return addToast(message, 'error')
+  /** Convenience: show an error toast (persistent by default, with optional details) */
+  function error(message: string, details?: string) {
+    return addToast(message, 'error', { details })
   }
 
   /** Convenience: show a warning toast */

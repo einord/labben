@@ -5,6 +5,6 @@ export default defineEventHandler(async () => {
     const hosts = await npmApiService.listProxyHosts()
     return { success: true, data: hosts }
   } catch (error) {
-    throw createError({ statusCode: 500, message: 'Failed to list proxy hosts' })
+    throw createError({ statusCode: 500, message: extractErrorMessage(error, 'Failed to list proxy hosts') })
   }
 })

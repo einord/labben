@@ -15,6 +15,6 @@ export default defineEventHandler(async (event) => {
     const connected = await npmApiService.testConnection(url, email, password)
     return { success: true, data: { connected } }
   } catch (error) {
-    throw createError({ statusCode: 500, message: 'Failed to test connection' })
+    throw createError({ statusCode: 500, message: extractErrorMessage(error, 'Failed to test connection') })
   }
 })

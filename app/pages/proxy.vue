@@ -10,6 +10,7 @@
     <div class="proxy-content">
       <ProxySetup />
       <ProxyCredentials />
+      <ProxyBaseDomain />
       <ProxyHosts />
     </div>
   </div>

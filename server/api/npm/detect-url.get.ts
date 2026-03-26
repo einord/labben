@@ -5,6 +5,6 @@ export default defineEventHandler(async () => {
     const url = await npmApiService.detectNpmUrl()
     return { success: true, data: { url } }
   } catch (error) {
-    throw createError({ statusCode: 500, message: 'Failed to detect NPM URL' })
+    throw createError({ statusCode: 500, message: extractErrorMessage(error, 'Failed to detect NPM URL') })
   }
 })

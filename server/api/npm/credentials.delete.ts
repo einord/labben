@@ -5,6 +5,6 @@ export default defineEventHandler(() => {
     npmApiService.clearCredentials()
     return { success: true }
   } catch (error) {
-    throw createError({ statusCode: 500, message: 'Failed to clear credentials' })
+    throw createError({ statusCode: 500, message: extractErrorMessage(error, 'Failed to clear credentials') })
   }
 })

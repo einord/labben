@@ -5,6 +5,6 @@ export default defineEventHandler(async () => {
     const status = await npmApiService.getStatus()
     return { success: true, data: status }
   } catch (error) {
-    throw createError({ statusCode: 500, message: 'Failed to get NPM status' })
+    throw createError({ statusCode: 500, message: extractErrorMessage(error, 'Failed to get NPM status') })
   }
 })

@@ -26,12 +26,37 @@ const {
 
 const showCreateModal = ref(false)
 const showSettings = ref(false)
+const showProxyForm = ref(false)
+const proxyFormDomain = ref('')
+const proxyFormHost = ref('host.docker.internal')
+const proxyFormPort = ref(80)
+const proxyFormProject = ref('')
+
+const { baseDomain, fetchBaseDomain } = useNpm()
+
+function handleProxyContainer(containerId: string) {
+  const container = projectContainers.value.find(c => c.id === containerId)
+  if (!container) return
+
+  const publicPort = container.ports.find(p => p.public)
+  proxyFormPort.value = publicPort?.public ?? 80
+  proxyFormHost.value = 'host.docker.internal'
+  proxyFormProject.value = selectedProjectName.value ?? ''
+
+  const name = container.name.replace(/^\//, '').replace(/[^a-z0-9-]/g, '-')
+  proxyFormDomain.value = baseDomain.value ? `${name}.${baseDomain.value}` : ''
+
+  showProxyForm.value = true
+}
 
 async function handleCreated() {
   await refreshAll()
 }
 
-onMounted(() => init())
+onMounted(async () => {
+  await init()
+  await fetchBaseDomain()
+})
 </script>
 
 <template>
@@ -89,6 +114,7 @@ onMounted(() => init())
               @stop="handleStopContainer"
               @restart="handleRestartContainer"
               @select="selectContainer"
+              @proxy="handleProxyContainer"
             />
           </section>
         </template>
@@ -116,6 +142,14 @@ onMounted(() => init())
     <ProjectContainerDrawer
       :container-id="selectedContainerId"
       @close="closeContainerDrawer"
+    />
+
+    <ProxyHostForm
+      v-model="showProxyForm"
+      :suggested-domain="proxyFormDomain"
+      :suggested-host="proxyFormHost"
+      :suggested-port="proxyFormPort"
+      :project-name="proxyFormProject"
     />
   </div>
 </template>

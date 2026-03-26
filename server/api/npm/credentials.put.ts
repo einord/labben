@@ -24,6 +24,6 @@ export default defineEventHandler(async (event) => {
     if (error && typeof error === 'object' && 'statusCode' in error) {
       throw error
     }
-    throw createError({ statusCode: 500, message: 'Failed to save credentials' })
+    throw createError({ statusCode: 500, message: extractErrorMessage(error, 'Failed to save credentials') })
   }
 })

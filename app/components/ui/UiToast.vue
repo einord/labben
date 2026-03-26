@@ -17,6 +17,8 @@ const VARIANT_ICONS: Record<Toast['variant'], string> = {
 }
 
 const icon = computed(() => VARIANT_ICONS[props.toast.variant])
+const expanded = ref(false)
+const hasDetails = computed(() => !!props.toast.details)
 </script>
 
 <template>
@@ -24,11 +26,21 @@ const icon = computed(() => VARIANT_ICONS[props.toast.variant])
     <div class="content">
       <Icon :name="icon" class="icon" />
       <span class="message">{{ toast.message }}</span>
+      <button
+        v-if="hasDetails"
+        class="toggle-details"
+        @click="expanded = !expanded"
+      >
+        <Icon :name="expanded ? 'lucide:chevron-up' : 'lucide:chevron-down'" />
+      </button>
       <button class="dismiss" @click="emit('dismiss')">
         <Icon name="lucide:x" />
       </button>
     </div>
-    <div class="progress-track">
+    <div v-if="expanded && toast.details" class="details">
+      <pre class="details-text">{{ toast.details }}</pre>
+    </div>
+    <div v-if="!toast.persistent && toast.duration > 0" class="progress-track">
       <div
         class="progress-bar"
         :style="{ animationDuration: `${toast.duration}ms` }"
@@ -115,6 +127,7 @@ const icon = computed(() => VARIANT_ICONS[props.toast.variant])
   line-height: 1.4;
 }
 
+.toggle-details,
 .dismiss {
   flex-shrink: 0;
   background: none;
@@ -132,6 +145,25 @@ const icon = computed(() => VARIANT_ICONS[props.toast.variant])
     color: var(--color-text);
     background-color: var(--color-surface-hover);
   }
+}
+
+.details {
+  padding: 0 var(--spacing-md) var(--spacing-sm);
+}
+
+.details-text {
+  margin: 0;
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  line-height: 1.4;
+  white-space: pre-wrap;
+  word-break: break-all;
+  max-height: 150px;
+  overflow-y: auto;
+  background-color: var(--color-bg);
+  padding: var(--spacing-sm);
+  border-radius: var(--radius-sm);
 }
 
 .progress-track {

@@ -17,6 +17,7 @@ const emit = defineEmits<{
   stop: [id: string]
   restart: [id: string]
   select: [id: string]
+  proxy: [id: string]
 }>()
 </script>
 
@@ -41,6 +42,7 @@ const emit = defineEmits<{
         @start="emit('start', container.id)"
         @stop="emit('stop', container.id)"
         @restart="emit('restart', container.id)"
+        @proxy="emit('proxy', container.id)"
       />
     </div>
   </div>

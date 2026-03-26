@@ -26,6 +26,19 @@ export interface NpmProxyHost {
   meta: Record<string, unknown>
 }
 
+/** Data for creating or updating a proxy host in NPM */
+export interface CreateProxyHostData {
+  domainNames: string[]
+  forwardScheme: 'http' | 'https'
+  forwardHost: string
+  forwardPort: number
+  sslForced: boolean
+  allowWebsocketUpgrade: boolean
+  blockExploits: boolean
+  http2Support: boolean
+  meta?: Record<string, unknown>
+}
+
 /** NPM token response from POST /api/tokens */
 export interface NpmTokenResponse {
   token: string
