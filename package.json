@@ -11,6 +11,8 @@
   },
   "dependencies": {
     "@nuxtjs/i18n": "^10.2.4",
+    "@simplewebauthn/browser": "^13.3.0",
+    "@simplewebauthn/server": "^13.3.0",
     "better-sqlite3": "^12.8.0",
     "dockerode": "^4.0.10",
     "nuxt": "^4.4.2",

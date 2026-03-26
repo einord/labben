@@ -84,7 +84,7 @@ onUnmounted(() => document.removeEventListener('keydown', handleKeydown))
 .settings-dialog {
   width: 100%;
   max-width: 900px;
-  max-height: 85vh;
+  height: 70vh;
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);

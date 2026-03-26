@@ -3,6 +3,7 @@ const sidebarOpen = ref(false)
 const showAppSettings = ref(false)
 
 const { initTheme } = useTheme()
+const { user, logout } = useAuth()
 onMounted(() => initTheme())
 
 function toggleSidebar() {
@@ -45,9 +46,17 @@ function toggleSidebar() {
         </NuxtLink>
       </nav>
       <div class="sidebar-footer">
+        <div v-if="user" class="user-info">
+          <Icon name="lucide:user" class="user-icon" />
+          <span class="user-name">{{ user.displayName }}</span>
+        </div>
         <button class="settings-button" @click="showAppSettings = true">
           <Icon name="lucide:settings" class="settings-icon" />
           <span>{{ $t('nav.settings') }}</span>
+        </button>
+        <button class="settings-button" @click="logout">
+          <Icon name="lucide:log-out" class="settings-icon" />
+          <span>{{ $t('auth.logout') }}</span>
         </button>
       </div>
     </aside>
@@ -157,6 +166,27 @@ function toggleSidebar() {
   font-size: var(--font-size-xl);
   width: 1.5rem;
   text-align: center;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-lg);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.user-icon {
+  font-size: var(--font-size-lg);
+  width: 1.5rem;
+  text-align: center;
+}
+
+.user-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* Main content */
