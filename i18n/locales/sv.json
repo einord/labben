@@ -238,6 +238,8 @@
     "inviteLink": "Inbjudningslänk",
     "inviteCopied": "Kopierad till urklipp",
     "inviteExpires": "Går ut",
+    "passkeyMultiDevice": "Synkad passkey",
+    "passkeySingleDevice": "Enhetsbunden passkey",
     "noPasskeys": "Inga passkeys registrerade.",
     "lastPasskeyWarning": "Kan inte ta bort den sista passkeyn.",
     "logout": "Logga ut",

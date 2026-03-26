@@ -143,7 +143,7 @@ watch(() => props.modelValue, (open) => {
               <div class="credential-info">
                 <Icon name="lucide:fingerprint" class="credential-icon" />
                 <div class="credential-details">
-                  <span class="credential-type">{{ cred.deviceType || 'Passkey' }}</span>
+                  <span class="credential-type">{{ cred.deviceType === 'multiDevice' ? $t('auth.passkeyMultiDevice') : cred.deviceType === 'singleDevice' ? $t('auth.passkeySingleDevice') : 'Passkey' }}</span>
                   <span class="credential-date">{{ new Date(cred.createdAt).toLocaleDateString() }}</span>
                 </div>
               </div>

@@ -238,6 +238,8 @@
     "inviteLink": "Invite link",
     "inviteCopied": "Copied to clipboard",
     "inviteExpires": "Expires",
+    "passkeyMultiDevice": "Synced passkey",
+    "passkeySingleDevice": "Device-bound passkey",
     "noPasskeys": "No passkeys registered.",
     "lastPasskeyWarning": "Cannot remove the last passkey.",
     "logout": "Log out",
