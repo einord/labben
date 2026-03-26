@@ -83,7 +83,9 @@
     "select": "Select",
     "createNewProxy": "Create new proxy",
     "createNewDescription": "Create a new Nginx Proxy Manager project with default configuration.",
-    "createNew": "Create new"
+    "createNew": "Create new",
+    "publishLabben": "Publish Labben",
+    "publishLabbenDescription": "Make Labben accessible via your domain by creating a proxy host."
   },
   "proxyHosts": {
     "title": "Proxy Hosts",
