@@ -1,7 +1,7 @@
 import type { ProjectWithMetadata, SystemSettings } from '~/types/project'
 
 export function useProxy() {
-  const proxyProject = ref<string | null>(null)
+  const proxyProject = useState<string | null>('proxy-project', () => null)
   const npmCandidates = ref<ProjectWithMetadata[]>([])
   const loading = ref(false)
   const toast = useToast()
@@ -13,7 +13,7 @@ export function useProxy() {
       const response = await $fetch<{ success: boolean; data: SystemSettings }>('/api/settings/proxy')
       proxyProject.value = response.data.proxyProject
     } catch {
-      toast.error(t('toast.proxySettingsFetchError'))
+      proxyProject.value = null
     }
   }
 
@@ -24,7 +24,7 @@ export function useProxy() {
       const response = await $fetch<{ success: boolean; data: ProjectWithMetadata[] }>('/api/projects/npm-candidates')
       npmCandidates.value = response.data
     } catch {
-      toast.error(t('toast.proxySettingsFetchError'))
+      npmCandidates.value = []
     } finally {
       loading.value = false
     }

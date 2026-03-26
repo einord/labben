@@ -4,7 +4,14 @@ const showAppSettings = ref(false)
 
 const { initTheme } = useTheme()
 const { user, logout } = useAuth()
-onMounted(() => initTheme())
+const { proxyProject, fetchProxySettings } = useProxy()
+
+const showProxyNav = computed(() => !!proxyProject.value)
+
+onMounted(async () => {
+  initTheme()
+  await fetchProxySettings()
+})
 
 function toggleSidebar() {
   sidebarOpen.value = !sidebarOpen.value
@@ -43,6 +50,15 @@ function toggleSidebar() {
         >
           <Icon :name="item.icon" class="nav-icon" />
           <span class="nav-label">{{ $t(item.labelKey) }}</span>
+        </NuxtLink>
+        <NuxtLink
+          v-if="showProxyNav"
+          :to="PROXY_NAV_ITEM.to"
+          class="nav-item"
+          @click="sidebarOpen = false"
+        >
+          <Icon :name="PROXY_NAV_ITEM.icon" class="nav-icon" />
+          <span class="nav-label">{{ $t(PROXY_NAV_ITEM.labelKey) }}</span>
         </NuxtLink>
       </nav>
       <div class="sidebar-footer">

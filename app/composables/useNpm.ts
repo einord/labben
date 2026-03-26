@@ -16,9 +16,9 @@ function extractErrorDetails(err: unknown): string {
 }
 
 export function useNpm() {
-  const status = ref<NpmConnectionStatus>({ connected: false, url: null, email: null, isDefault: false })
-  const proxyHosts = ref<NpmProxyHost[]>([])
-  const baseDomain = ref<string | null>(null)
+  const status = useState<NpmConnectionStatus>('npm-status', () => ({ connected: false, url: null, email: null, isDefault: false }))
+  const proxyHosts = useState<NpmProxyHost[]>('npm-proxy-hosts', () => [])
+  const baseDomain = useState<string | null>('npm-base-domain', () => null)
   const loading = ref(false)
   const toast = useToast()
   const { t } = useI18n()
@@ -84,14 +84,18 @@ export function useNpm() {
     }
   }
 
-  /** Fetch proxy hosts */
+  /** Fetch proxy hosts (only if NPM is connected) */
   async function fetchProxyHosts() {
+    if (!status.value.connected) {
+      proxyHosts.value = []
+      return
+    }
     loading.value = true
     try {
       const response = await $fetch<{ success: boolean; data: NpmProxyHost[] }>('/api/npm/proxy-hosts')
       proxyHosts.value = response.data
     } catch (err) {
-      toast.error(t('toast.proxyHostsFetchError'), extractErrorDetails(err))
+      proxyHosts.value = []
     } finally {
       loading.value = false
     }

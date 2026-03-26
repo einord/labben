@@ -70,9 +70,13 @@ watch(() => status.value.connected, async (connected) => {
             {{ host.enabled ? $t('proxy.active') : $t('proxy.inactive') }}
           </UiBadge>
           <UiBadge v-if="host.sslForced" variant="success" size="sm">SSL</UiBadge>
-          <span v-if="host.meta?.labben_project" class="project-tag">
+          <NuxtLink
+            v-if="host.meta?.labben_project"
+            :to="`/projects?selected=${host.meta.labben_project}`"
+            class="project-tag"
+          >
             {{ host.meta.labben_project }}
-          </span>
+          </NuxtLink>
         </div>
         <div class="host-actions">
           <UiButton variant="ghost" size="sm" icon="lucide:pencil" @click="handleEdit(host)" />
@@ -164,6 +168,14 @@ watch(() => status.value.connected, async (connected) => {
   background-color: var(--color-neutral-bg);
   padding: var(--spacing-xs) var(--spacing-sm);
   border-radius: 9999px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: color var(--transition-fast), background-color var(--transition-fast);
+
+  &:hover {
+    color: var(--color-accent);
+    background-color: var(--color-accent-dim);
+  }
 }
 
 .host-actions {

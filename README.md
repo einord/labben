@@ -8,9 +8,11 @@ A self-hosted homelab management dashboard for Docker. Manage your Compose proje
 - **Container overview** — Monitor status, ports, volumes, environment variables, and live logs for all your containers
 - **Nginx Proxy Manager integration** — Connect to NPM's API to create and manage proxy hosts directly from your project view
 - **Smart proxy suggestions** — Configurable base domain with one-click "Publish" to expose services
+- **Passkey authentication** — Passwordless login with WebAuthn. First user creates an account on setup, invite others via shareable links
 - **Project grouping** — Organize projects into custom groups, with automatic detection of external and system projects
 - **Self-aware** — Labben detects its own container and prevents accidental self-shutdown
 - **Themes** — 6 color palettes (Standard, Ocean, Forest, Sunset, Neon, Contrast) with dark/light/auto modes
+- **Internationalization** — English and Swedish, with more languages easy to add
 - **SQLite metadata** — Persistent project metadata, groups, and settings with zero configuration
 
 ## Installation
@@ -32,6 +34,11 @@ services:
       - COMPOSE_DIR=/data/compose
       - DATA_DIR=/data
       - DOCKER_SOCKET=/var/run/docker.sock
+      # Required for production — set to your domain and URL:
+      - AUTH_RP_ID=labben.example.com
+      - AUTH_ORIGIN=https://labben.example.com
+      # Recommended — set a stable secret so sessions survive restarts:
+      - AUTH_SESSION_SECRET=replace-with-a-random-64-char-string
     restart: unless-stopped
 
 volumes:
@@ -44,7 +51,21 @@ Then run:
 docker compose up -d
 ```
 
-Labben is now available at `http://localhost:3005`.
+Labben is now available at `http://localhost:3005`. On first visit you'll be asked to create your account with a passkey.
+
+### Mounting existing Compose projects
+
+To manage Compose projects that already exist on the host, bind-mount the directory:
+
+```yaml
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /path/to/your/compose/projects:/data/compose
+      - labben-data:/data/db
+    environment:
+      - COMPOSE_DIR=/data/compose
+      - DATA_DIR=/data/db
+```
 
 ### Environment variables
 
@@ -54,6 +75,11 @@ Labben is now available at `http://localhost:3005`.
 | `DATA_DIR` | `/data` | Directory for application data (SQLite database) |
 | `DOCKER_SOCKET` | `/var/run/docker.sock` | Path to Docker socket |
 | `PORT` | `3005` | Port the app listens on |
+| `AUTH_RP_ID` | `localhost` | WebAuthn Relying Party ID — set to your domain in production (e.g. `labben.example.com`) |
+| `AUTH_ORIGIN` | `http://localhost:3005` | Full origin URL — must match how users access Labben (e.g. `https://labben.example.com`) |
+| `AUTH_SESSION_SECRET` | Auto-generated | Secret for encrypting session cookies. Set a stable value in production so sessions survive container restarts |
+
+> **Note:** Passkeys require HTTPS in production. `localhost` is exempted for development.
 
 ## Development
 
@@ -68,6 +94,7 @@ The dev server starts at `http://localhost:3005`. Create a `.env` file for local
 
 - **Frontend:** Nuxt 3, Vue 3, TypeScript
 - **Backend:** Nitro server routes
+- **Auth:** WebAuthn passkeys via SimpleWebAuthn
 - **Database:** SQLite (better-sqlite3)
 - **Docker:** Dockerode for container management
 - **Package manager:** pnpm

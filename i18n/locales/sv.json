@@ -83,7 +83,9 @@
     "select": "Välj",
     "createNewProxy": "Skapa ny proxy",
     "createNewDescription": "Skapa ett nytt Nginx Proxy Manager-projekt med standardkonfiguration.",
-    "createNew": "Skapa ny"
+    "createNew": "Skapa ny",
+    "publishLabben": "Publicera Labben",
+    "publishLabbenDescription": "Gör Labben tillgänglig via din domän genom att skapa en proxy host."
   },
   "proxyHosts": {
     "title": "Proxy Hosts",
