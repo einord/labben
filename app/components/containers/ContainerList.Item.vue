@@ -170,6 +170,12 @@ const portsDisplay = computed(() => {
 
 .domain-link {
   text-decoration: none;
+  cursor: pointer;
+  transition: opacity var(--transition-fast);
+
+  &:hover {
+    opacity: 0.8;
+  }
 }
 
 .domain-icon {
