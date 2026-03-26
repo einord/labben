@@ -245,8 +245,8 @@ class NpmApiService {
       forwardHost: raw.forward_host as string,
       forwardPort: raw.forward_port as number,
       forwardScheme: raw.forward_scheme as string,
-      enabled: (raw.enabled as number) === 1,
-      sslForced: (raw.ssl_forced as number) === 1,
+      enabled: raw.enabled === 1 || raw.enabled === true,
+      sslForced: raw.ssl_forced === 1 || raw.ssl_forced === true,
       certificateId: (raw.certificate_id as number) ?? 0,
       meta: (raw.meta as Record<string, unknown>) ?? {},
     }
