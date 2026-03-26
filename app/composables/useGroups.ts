@@ -4,6 +4,7 @@ export function useGroups() {
   const groups = ref<ProjectGroup[]>([])
   const loading = ref(false)
   const toast = useToast()
+  const { t } = useI18n()
 
   /** Fetch all groups from the API */
   async function fetchGroups() {
@@ -12,7 +13,7 @@ export function useGroups() {
       const response = await $fetch<{ success: boolean; data: ProjectGroup[] }>('/api/groups')
       groups.value = response.data
     } catch {
-      toast.error('Kunde inte hämta grupper')
+      toast.error(t('toast.groupsFetchError'))
     } finally {
       loading.value = false
     }
@@ -22,11 +23,11 @@ export function useGroups() {
   async function createGroup(name: string): Promise<boolean> {
     try {
       await $fetch('/api/groups', { method: 'POST', body: { name } })
-      toast.success('Grupp skapad')
+      toast.success(t('toast.groupCreated'))
       await fetchGroups()
       return true
     } catch {
-      toast.error('Kunde inte skapa grupp')
+      toast.error(t('toast.groupCreateError'))
       return false
     }
   }
@@ -35,10 +36,10 @@ export function useGroups() {
   async function updateGroup(id: number, data: { name?: string; sortOrder?: number }) {
     try {
       await $fetch(`/api/groups/${id}`, { method: 'PUT', body: data })
-      toast.success('Grupp uppdaterad')
+      toast.success(t('toast.groupUpdated'))
       await fetchGroups()
     } catch {
-      toast.error('Kunde inte uppdatera grupp')
+      toast.error(t('toast.groupUpdateError'))
     }
   }
 
@@ -46,10 +47,10 @@ export function useGroups() {
   async function deleteGroup(id: number) {
     try {
       await $fetch(`/api/groups/${id}`, { method: 'DELETE' })
-      toast.success('Grupp borttagen')
+      toast.success(t('toast.groupDeleted'))
       await fetchGroups()
     } catch {
-      toast.error('Kunde inte ta bort grupp')
+      toast.error(t('toast.groupDeleteError'))
     }
   }
 

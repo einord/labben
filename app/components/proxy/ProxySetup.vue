@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const { t } = useI18n()
 const {
   proxyProject,
   npmCandidates,
@@ -56,10 +57,10 @@ onMounted(() => refresh())
   <div class="proxy-setup">
     <!-- Current proxy -->
     <UiCard v-if="proxyProject">
-      <template #header>Aktiv proxy</template>
+      <template #header>{{ $t('proxy.activeProxy') }}</template>
       <div class="current-proxy">
         <div class="proxy-info">
-          <UiBadge variant="success" dot>Aktiv</UiBadge>
+          <UiBadge variant="success" dot>{{ $t('proxy.active') }}</UiBadge>
           <span class="proxy-name">{{ proxyProject }}</span>
         </div>
         <div class="proxy-actions">
@@ -71,11 +72,11 @@ onMounted(() => refresh())
             class="admin-link"
           >
             <UiButton variant="secondary" size="sm" icon="lucide:external-link">
-              Öppna admin
+              {{ $t('proxy.openAdmin') }}
             </UiButton>
           </a>
           <UiButton variant="ghost" size="sm" icon="lucide:x" @click="handleClear">
-            Ta bort
+            {{ $t('common.remove') }}
           </UiButton>
         </div>
       </div>
@@ -83,22 +84,22 @@ onMounted(() => refresh())
 
     <!-- No proxy set -->
     <UiCard v-else>
-      <template #header>Proxy</template>
+      <template #header>{{ $t('proxy.noProxy') }}</template>
       <UiEmptyState
         icon="lucide:route"
-        title="Ingen proxy konfigurerad"
-        description="Valj ett befintligt Nginx Proxy Manager-projekt eller skapa ett nytt."
+        :title="$t('proxy.noProxyTitle')"
+        :description="$t('proxy.noProxyDescription')"
       />
     </UiCard>
 
     <!-- NPM Candidates -->
     <UiCard v-if="!proxyProject">
-      <template #header>Tillgangliga proxy-projekt</template>
+      <template #header>{{ $t('proxy.availableProjects') }}</template>
       <div v-if="loading" class="loading-wrapper">
         <UiSpinner size="md" />
       </div>
       <div v-else-if="npmCandidates.length === 0" class="empty-message">
-        Inga projekt med Nginx Proxy Manager-image hittades.
+        {{ $t('proxy.noNpmFound') }}
       </div>
       <div v-else class="candidate-list">
         <div v-for="candidate in npmCandidates" :key="candidate.name" class="candidate-item">
@@ -109,11 +110,11 @@ onMounted(() => refresh())
               dot
               size="sm"
             >
-              {{ candidate.runningCount > 0 ? 'Igang' : 'Stoppad' }}
+              {{ candidate.runningCount > 0 ? $t('proxy.running') : $t('proxy.stopped') }}
             </UiBadge>
           </div>
           <UiButton variant="primary" size="sm" @click="handleSelect(candidate.name)">
-            Valj
+            {{ $t('proxy.select') }}
           </UiButton>
         </div>
       </div>
@@ -121,24 +122,24 @@ onMounted(() => refresh())
 
     <!-- Create new NPM -->
     <UiCard v-if="!proxyProject">
-      <template #header>Skapa ny proxy</template>
+      <template #header>{{ $t('proxy.createNewProxy') }}</template>
       <div v-if="!showCreateForm" class="create-prompt">
         <p class="create-description">
-          Skapa ett nytt Nginx Proxy Manager-projekt med standardkonfiguration.
+          {{ $t('proxy.createNewDescription') }}
         </p>
         <UiButton variant="secondary" icon="lucide:plus" @click="showCreateForm = true">
-          Skapa ny
+          {{ $t('proxy.createNew') }}
         </UiButton>
       </div>
       <div v-else class="create-form">
         <UiInput
           v-model="newProjectName"
-          label="Projektnamn"
+          :label="$t('common.projectName')"
           placeholder="nginx-proxy-manager"
         />
         <div class="form-actions">
           <UiButton variant="ghost" @click="showCreateForm = false">
-            Avbryt
+            {{ $t('common.cancel') }}
           </UiButton>
           <UiButton
             variant="primary"
@@ -147,7 +148,7 @@ onMounted(() => refresh())
             :disabled="!newProjectName.trim()"
             @click="handleCreate"
           >
-            Skapa
+            {{ $t('common.create') }}
           </UiButton>
         </div>
       </div>

@@ -4,8 +4,8 @@
 <template>
   <div>
     <UiPageHeader
-      title="Proxy Manager"
-      subtitle="Hantera Nginx Proxy Manager för dina projekt."
+      :title="$t('proxy.title')"
+      :subtitle="$t('proxy.subtitle')"
     />
     <div class="proxy-content">
       <ProxySetup />

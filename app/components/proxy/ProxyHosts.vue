@@ -41,9 +41,9 @@ watch(() => status.value.connected, async (connected) => {
   <UiCard v-if="status.connected">
     <template #header>
       <div class="hosts-header">
-        <span>Proxy Hosts</span>
+        <span>{{ $t('proxyHosts.title') }}</span>
         <UiButton variant="primary" size="sm" icon="lucide:plus" @click="handleAdd">
-          Lägg till
+          {{ $t('proxyHosts.add') }}
         </UiButton>
       </div>
     </template>
@@ -51,7 +51,7 @@ watch(() => status.value.connected, async (connected) => {
       <UiSpinner size="md" />
     </div>
     <div v-else-if="proxyHosts.length === 0" class="empty-message">
-      Inga proxy hosts konfigurerade i NPM.
+      {{ $t('proxyHosts.noHosts') }}
     </div>
     <div v-else class="host-list">
       <div v-for="host in proxyHosts" :key="host.id" class="host-item">
@@ -67,7 +67,7 @@ watch(() => status.value.connected, async (connected) => {
         </div>
         <div class="host-meta">
           <UiBadge :variant="host.enabled ? 'success' : 'neutral'" dot size="sm">
-            {{ host.enabled ? 'Aktiv' : 'Inaktiv' }}
+            {{ host.enabled ? $t('proxy.active') : $t('proxy.inactive') }}
           </UiBadge>
           <UiBadge v-if="host.sslForced" variant="success" size="sm">SSL</UiBadge>
           <span v-if="host.meta?.labben_project" class="project-tag">

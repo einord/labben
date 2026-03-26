@@ -5,6 +5,7 @@ export function useProjects() {
   const loading = ref(false)
   const error = ref<string | null>(null)
   const toast = useToast()
+  const { t } = useI18n()
 
   /** Fetch all compose projects */
   async function fetchProjects() {
@@ -15,7 +16,7 @@ export function useProjects() {
       projects.value = response.data
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to fetch projects'
-      toast.error('Kunde inte hämta projekt')
+      toast.error(t('toast.projectsFetchError'))
     } finally {
       loading.value = false
     }
@@ -25,10 +26,10 @@ export function useProjects() {
   async function projectUp(name: string) {
     try {
       await $fetch(`/api/projects/${name}/up`, { method: 'POST' })
-      toast.success('Projekt startat')
+      toast.success(t('toast.projectStarted'))
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to start project'
-      toast.error('Kunde inte starta projekt')
+      toast.error(t('toast.projectStartError'))
     }
   }
 
@@ -36,10 +37,10 @@ export function useProjects() {
   async function projectDown(name: string) {
     try {
       await $fetch(`/api/projects/${name}/down`, { method: 'POST' })
-      toast.success('Projekt stoppat')
+      toast.success(t('toast.projectStopped'))
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to stop project'
-      toast.error('Kunde inte stoppa projekt')
+      toast.error(t('toast.projectStopError'))
     }
   }
 
@@ -47,10 +48,10 @@ export function useProjects() {
   async function projectPull(name: string) {
     try {
       await $fetch(`/api/projects/${name}/pull`, { method: 'POST' })
-      toast.success('Images uppdaterade')
+      toast.success(t('toast.imagesUpdated'))
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to pull project images'
-      toast.error('Kunde inte hämta images')
+      toast.error(t('toast.imagesPullError'))
     }
   }
 
@@ -59,10 +60,10 @@ export function useProjects() {
     try {
       await $fetch(`/api/projects/${name}/down`, { method: 'POST' })
       await $fetch(`/api/projects/${name}/up`, { method: 'POST' })
-      toast.success('Projekt omstartat')
+      toast.success(t('toast.projectRestarted'))
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to restart project'
-      toast.error('Kunde inte starta om projekt')
+      toast.error(t('toast.projectRestartError'))
     }
   }
 
@@ -73,7 +74,7 @@ export function useProjects() {
       return response.data
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to get config'
-      toast.error('Kunde inte hämta konfiguration')
+      toast.error(t('toast.configFetchError'))
       return ''
     }
   }
@@ -85,10 +86,10 @@ export function useProjects() {
         method: 'PUT',
         body: { content },
       })
-      toast.success('Konfiguration sparad')
+      toast.success(t('toast.configSaved'))
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to save config'
-      toast.error('Kunde inte spara konfiguration')
+      toast.error(t('toast.configSaveError'))
     }
   }
 
@@ -99,12 +100,12 @@ export function useProjects() {
         method: 'POST',
         body: { name, content },
       })
-      toast.success(`Projekt '${name}' skapat`)
+      toast.success(t('toast.projectCreated', { name }))
       return true
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to create project'
       error.value = message
-      toast.error('Kunde inte skapa projekt')
+      toast.error(t('toast.projectCreateError'))
       return false
     }
   }
@@ -116,9 +117,9 @@ export function useProjects() {
         method: 'PUT',
         body: { groupId },
       })
-      toast.success(groupId ? 'Projekt tilldelat grupp' : 'Projekt borttaget från grupp')
+      toast.success(groupId ? t('toast.groupAssigned') : t('toast.groupUnassigned'))
     } catch {
-      toast.error('Kunde inte uppdatera grupp')
+      toast.error(t('toast.groupAssignError'))
     }
   }
 
@@ -129,9 +130,9 @@ export function useProjects() {
         method: 'PUT',
         body: { groupId: null, displayName: null },
       })
-      toast.success('Projekt borttaget från databasen')
+      toast.success(t('toast.projectRemovedFromDb'))
     } catch {
-      toast.error('Kunde inte ta bort projekt')
+      toast.error(t('toast.projectRemoveError'))
     }
   }
 

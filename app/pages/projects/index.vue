@@ -78,7 +78,7 @@ onMounted(async () => {
 
 <template>
   <div class="projects-page">
-    <UiPageHeader title="Projekt">
+    <UiPageHeader :title="$t('projects.title')">
       <template #actions>
         <UiButton
           variant="primary"
@@ -86,7 +86,7 @@ onMounted(async () => {
           icon="lucide:plus"
           @click="showCreateModal = true"
         >
-          Nytt projekt
+          {{ $t('projects.newProject') }}
         </UiButton>
         <UiButton
           variant="secondary"
@@ -95,7 +95,7 @@ onMounted(async () => {
           :loading="loading"
           @click="refreshAll"
         >
-          Uppdatera
+          {{ $t('projects.refresh') }}
         </UiButton>
       </template>
     </UiPageHeader>
@@ -125,7 +125,7 @@ onMounted(async () => {
           />
 
           <section class="containers-section">
-            <h3 class="section-title">Containrar</h3>
+            <h3 class="section-title">{{ $t('projects.containers') }}</h3>
             <ContainerList
               :containers="projectContainers"
               :loading="containersLoading"
@@ -143,8 +143,8 @@ onMounted(async () => {
         <UiEmptyState
           v-else
           icon="lucide:folder-open"
-          title="Välj ett projekt"
-          description="Välj ett projekt i listan till vänster för att se detaljer."
+          :title="$t('projects.selectProject')"
+          :description="$t('projects.selectProjectDescription')"
         />
       </main>
     </div>

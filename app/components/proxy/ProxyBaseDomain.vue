@@ -19,10 +19,10 @@ onMounted(async () => {
 
 <template>
   <UiCard>
-    <template #header>Basdomän</template>
+    <template #header>{{ $t('baseDomain.title') }}</template>
     <div class="domain-form">
       <p class="description">
-        Används som förslag vid skapande av nya proxy hosts, t.ex. <code>projektnamn.{{ domainInput || 'example.com' }}</code>
+        {{ $t('baseDomain.description') }} <code>projektnamn.{{ domainInput || 'example.com' }}</code>
       </p>
       <div class="input-row">
         <UiInput
@@ -36,7 +36,7 @@ onMounted(async () => {
           :disabled="!domainInput.trim()"
           @click="handleSave"
         >
-          Spara
+          {{ $t('common.save') }}
         </UiButton>
       </div>
     </div>

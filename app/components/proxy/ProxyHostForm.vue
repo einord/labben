@@ -29,6 +29,7 @@ const emit = defineEmits<{
   saved: []
 }>()
 
+const { t } = useI18n()
 const { createProxyHost, updateProxyHost } = useNpm()
 
 const domain = ref('')
@@ -42,7 +43,7 @@ const http2 = ref(true)
 const saving = ref(false)
 
 const isEditing = computed(() => props.editHost !== null)
-const title = computed(() => isEditing.value ? 'Redigera proxy host' : 'Ny proxy host')
+const title = computed(() => isEditing.value ? t('proxyHosts.editHost') : t('proxyHosts.newHost'))
 
 const isValid = computed(() => {
   return domain.value.trim().length > 0
@@ -121,13 +122,13 @@ function close() {
     <div class="form">
       <UiInput
         v-model="domain"
-        label="Domännamn"
+        :label="$t('proxyHosts.domainName')"
         placeholder="app.example.com"
       />
 
       <div class="forward-row">
         <div class="scheme-select">
-          <label class="field-label">Protokoll</label>
+          <label class="field-label">{{ $t('proxyHosts.protocol') }}</label>
           <select v-model="forwardScheme" class="select-input">
             <option value="http">HTTP</option>
             <option value="https">HTTPS</option>
@@ -135,11 +136,11 @@ function close() {
         </div>
         <UiInput
           v-model="forwardHost"
-          label="Forward host"
+          :label="$t('proxyHosts.forwardHost')"
           placeholder="host.docker.internal"
         />
         <div class="port-field">
-          <label class="field-label">Port</label>
+          <label class="field-label">{{ $t('proxyHosts.port') }}</label>
           <input
             v-model.number="forwardPort"
             type="number"
@@ -153,15 +154,15 @@ function close() {
       <div class="options">
         <label class="checkbox-label">
           <input v-model="sslForced" type="checkbox" />
-          <span>Tvinga SSL</span>
+          <span>{{ $t('proxyHosts.forceSSL') }}</span>
         </label>
         <label class="checkbox-label">
           <input v-model="websocket" type="checkbox" />
-          <span>WebSocket-stöd</span>
+          <span>{{ $t('proxyHosts.websocketSupport') }}</span>
         </label>
         <label class="checkbox-label">
           <input v-model="blockExploits" type="checkbox" />
-          <span>Blockera exploits</span>
+          <span>{{ $t('proxyHosts.blockExploits') }}</span>
         </label>
         <label class="checkbox-label">
           <input v-model="http2" type="checkbox" />
@@ -171,14 +172,14 @@ function close() {
     </div>
 
     <template #footer>
-      <UiButton variant="ghost" @click="close">Avbryt</UiButton>
+      <UiButton variant="ghost" @click="close">{{ $t('common.cancel') }}</UiButton>
       <UiButton
         variant="primary"
         :disabled="!isValid"
         :loading="saving"
         @click="handleSave"
       >
-        {{ isEditing ? 'Uppdatera' : 'Skapa' }}
+        {{ isEditing ? $t('proxyHosts.update') : $t('common.create') }}
       </UiButton>
     </template>
   </UiModal>

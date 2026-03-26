@@ -21,6 +21,7 @@ export function useNpm() {
   const baseDomain = ref<string | null>(null)
   const loading = ref(false)
   const toast = useToast()
+  const { t } = useI18n()
 
   /** Fetch NPM connection status */
   async function fetchStatus() {
@@ -49,11 +50,11 @@ export function useNpm() {
   async function saveCredentials(url: string, email: string, password: string): Promise<boolean> {
     try {
       await $fetch('/api/npm/credentials', { method: 'PUT', body: { url, email, password } })
-      toast.success('Inloggningsuppgifter sparade')
+      toast.success(t('toast.credentialsSaved'))
       await fetchStatus()
       return true
     } catch (err) {
-      toast.error('Kunde inte ansluta med angivna uppgifter', extractErrorDetails(err))
+      toast.error(t('toast.credentialsSaveError'), extractErrorDetails(err))
       return false
     }
   }
@@ -64,9 +65,9 @@ export function useNpm() {
       await $fetch('/api/npm/credentials', { method: 'DELETE' })
       status.value = { connected: false, url: null, email: null, isDefault: false }
       proxyHosts.value = []
-      toast.success('Uppgifter borttagna')
+      toast.success(t('toast.credentialsCleared'))
     } catch (err) {
-      toast.error('Kunde inte ta bort uppgifter', extractErrorDetails(err))
+      toast.error(t('toast.credentialsClearError'), extractErrorDetails(err))
     }
   }
 
@@ -74,11 +75,11 @@ export function useNpm() {
   async function changePassword(oldPassword: string, newPassword: string): Promise<boolean> {
     try {
       await $fetch('/api/npm/change-password', { method: 'POST', body: { oldPassword, newPassword } })
-      toast.success('Lösenord ändrat')
+      toast.success(t('toast.passwordChanged'))
       await fetchStatus()
       return true
     } catch (err) {
-      toast.error('Kunde inte ändra lösenord', extractErrorDetails(err))
+      toast.error(t('toast.passwordChangeError'), extractErrorDetails(err))
       return false
     }
   }
@@ -90,7 +91,7 @@ export function useNpm() {
       const response = await $fetch<{ success: boolean; data: NpmProxyHost[] }>('/api/npm/proxy-hosts')
       proxyHosts.value = response.data
     } catch (err) {
-      toast.error('Kunde inte hämta proxy hosts', extractErrorDetails(err))
+      toast.error(t('toast.proxyHostsFetchError'), extractErrorDetails(err))
     } finally {
       loading.value = false
     }
@@ -100,11 +101,11 @@ export function useNpm() {
   async function createProxyHost(data: CreateProxyHostData): Promise<boolean> {
     try {
       await $fetch('/api/npm/proxy-hosts', { method: 'POST', body: data })
-      toast.success('Proxy host skapad')
+      toast.success(t('toast.proxyHostCreated'))
       await fetchProxyHosts()
       return true
     } catch (err) {
-      toast.error('Kunde inte skapa proxy host', extractErrorDetails(err))
+      toast.error(t('toast.proxyHostCreateError'), extractErrorDetails(err))
       return false
     }
   }
@@ -113,11 +114,11 @@ export function useNpm() {
   async function updateProxyHost(id: number, data: CreateProxyHostData): Promise<boolean> {
     try {
       await $fetch(`/api/npm/proxy-hosts/${id}`, { method: 'PUT', body: data })
-      toast.success('Proxy host uppdaterad')
+      toast.success(t('toast.proxyHostUpdated'))
       await fetchProxyHosts()
       return true
     } catch (err) {
-      toast.error('Kunde inte uppdatera proxy host', extractErrorDetails(err))
+      toast.error(t('toast.proxyHostUpdateError'), extractErrorDetails(err))
       return false
     }
   }
@@ -126,11 +127,11 @@ export function useNpm() {
   async function deleteProxyHost(id: number): Promise<boolean> {
     try {
       await $fetch(`/api/npm/proxy-hosts/${id}`, { method: 'DELETE' })
-      toast.success('Proxy host borttagen')
+      toast.success(t('toast.proxyHostDeleted'))
       await fetchProxyHosts()
       return true
     } catch (err) {
-      toast.error('Kunde inte ta bort proxy host', extractErrorDetails(err))
+      toast.error(t('toast.proxyHostDeleteError'), extractErrorDetails(err))
       return false
     }
   }
@@ -150,10 +151,10 @@ export function useNpm() {
     try {
       await $fetch('/api/settings/base-domain', { method: 'PUT', body: { baseDomain: domain } })
       baseDomain.value = domain
-      toast.success('Basdomän sparad')
+      toast.success(t('toast.baseDomainSaved'))
       return true
     } catch (err) {
-      toast.error('Kunde inte spara basdomän', extractErrorDetails(err))
+      toast.error(t('toast.baseDomainSaveError'), extractErrorDetails(err))
       return false
     }
   }

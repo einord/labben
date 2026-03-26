@@ -74,7 +74,7 @@ onMounted(async () => {
         :icon="connected ? 'lucide:radio' : 'lucide:circle'"
         @click="toggleLive"
       >
-        {{ connected ? 'Live' : 'Anslut' }}
+        {{ connected ? $t('logs.live') : $t('logs.connect') }}
       </UiButton>
       <UiButton
         variant="ghost"
@@ -82,7 +82,7 @@ onMounted(async () => {
         icon="lucide:trash-2"
         @click="clear"
       >
-        Rensa
+        {{ $t('logs.clear') }}
       </UiButton>
       <UiButton
         v-if="!connected"
@@ -91,7 +91,7 @@ onMounted(async () => {
         icon="lucide:chevrons-up"
         @click="loadMore"
       >
-        Ladda fler
+        {{ $t('logs.loadMore') }}
       </UiButton>
     </div>
     <div
@@ -99,7 +99,7 @@ onMounted(async () => {
       class="log-output"
       @scroll="handleScroll"
     >
-      <pre><code>{{ displayedLogs || 'Inga loggar att visa.' }}</code></pre>
+      <pre><code>{{ displayedLogs || $t('logs.noLogs') }}</code></pre>
     </div>
   </div>
 </template>

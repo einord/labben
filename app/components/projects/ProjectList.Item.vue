@@ -10,6 +10,7 @@ interface ProjectListItemProps {
 
 const props = defineProps<ProjectListItemProps>()
 defineEmits<{ select: [] }>()
+const { t } = useI18n()
 
 const displayName = computed(() => props.project.metadata.displayName ?? props.project.name)
 
@@ -25,8 +26,8 @@ const statusLabel = computed(() => {
 
 const roleLabel = computed(() => {
   const roles: Record<string, string> = {
-    proxy: 'Proxy',
-    labben: 'Labben',
+    proxy: t('roles.proxy'),
+    labben: t('roles.labben'),
   }
   return props.project.metadata.role ? roles[props.project.metadata.role] ?? props.project.metadata.role : ''
 })

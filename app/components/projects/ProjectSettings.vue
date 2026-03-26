@@ -14,15 +14,16 @@ const emit = defineEmits<{
   'update:modelValue': [value: boolean]
 }>()
 
+const { t } = useI18n()
 const { getConfig, saveConfig } = useProjects()
 
 const composeContent = ref('')
 const loadingConfig = ref(false)
 
-const sections: SettingsSection[] = [
-  { id: 'compose', label: 'Compose', icon: 'lucide:file-code' },
-  { id: 'general', label: 'Allmänt', icon: 'lucide:settings' },
-]
+const sections = computed<SettingsSection[]>(() => [
+  { id: 'compose', label: t('projectSettings.compose'), icon: 'lucide:file-code' },
+  { id: 'general', label: t('projectSettings.general'), icon: 'lucide:settings' },
+])
 
 /** Load compose config when modal opens */
 watch(() => props.modelValue, async (open) => {
@@ -41,7 +42,7 @@ async function handleSave() {
 <template>
   <UiSettingsModal
     :model-value="modelValue"
-    :title="`${projectName} — Inställningar`"
+    :title="t('projectSettings.title', { name: projectName })"
     :sections="sections"
     @update:model-value="emit('update:modelValue', $event)"
   >
@@ -61,8 +62,8 @@ async function handleSave() {
       <div v-if="activeSection === 'general'" class="general-section">
         <UiEmptyState
           icon="lucide:construction"
-          title="Kommer snart"
-          description="Allmänna inställningar för projektet."
+          :title="$t('projectSettings.comingSoon')"
+          :description="$t('projectSettings.generalDescription')"
         />
       </div>
     </template>

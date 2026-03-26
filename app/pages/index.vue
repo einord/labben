@@ -7,40 +7,42 @@ interface DashboardCard {
   featured?: boolean
 }
 
-const cards: DashboardCard[] = [
+const { t } = useI18n()
+
+const cards = computed<DashboardCard[]>(() => [
   {
-    title: 'Projekt',
+    title: t('dashboard.projects'),
     icon: 'lucide:folder-open',
-    description: 'Hantera Docker Compose-projekt, containrar och konfiguration.',
+    description: t('dashboard.projectsDescription'),
     to: '/projects',
     featured: true,
   },
   {
-    title: 'Static Sites',
+    title: t('dashboard.staticSites'),
     icon: 'lucide:globe',
-    description: 'Deploy and manage static sites served from your homelab.',
+    description: t('dashboard.staticSitesDescription'),
     to: '/sites',
   },
   {
-    title: 'Proxy Manager',
+    title: t('dashboard.proxyManager'),
     icon: 'lucide:route',
-    description: 'Configure reverse proxy rules, SSL certificates, and routing.',
+    description: t('dashboard.proxyManagerDescription'),
     to: '/proxy',
   },
   {
-    title: 'Backup Status',
+    title: t('dashboard.backupStatus'),
     icon: 'lucide:hard-drive-download',
-    description: 'View backup schedules, history, and restore points.',
+    description: t('dashboard.backupStatusDescription'),
     to: '/backup',
   },
-]
+])
 </script>
 
 <template>
   <div class="dashboard">
     <UiPageHeader
-      title="Dashboard"
-      subtitle="Välkommen till Labben — ditt homelab i överblick."
+      :title="$t('dashboard.title')"
+      :subtitle="$t('dashboard.subtitle')"
     />
 
     <div class="card-grid">

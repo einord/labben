@@ -12,6 +12,7 @@ const props = withDefaults(defineProps<ProjectDetailInfoProps>(), {
   canPublish: false,
 })
 
+const { t } = useI18n()
 const isMissing = computed(() => props.project.source === 'missing')
 const isSelf = computed(() => props.project.isSelf)
 
@@ -25,7 +26,7 @@ defineEmits<{
 }>()
 
 const statusLabel = computed(() => {
-  return `${props.project.runningCount}/${props.project.totalCount} containrar igång`
+  return t('projects.containersRunning', { running: props.project.runningCount, total: props.project.totalCount })
 })
 
 const statusVariant = computed(() => {
@@ -82,7 +83,7 @@ const statusVariant = computed(() => {
           icon="lucide:globe"
           @click="$emit('publish')"
         >
-          Publicera
+          {{ $t('projects.publish') }}
         </UiButton>
         <UiButton
           v-if="!isMissing"

@@ -19,6 +19,7 @@ const DEFAULT_TEMPLATE = `services:
     restart: unless-stopped
 `
 
+const { t } = useI18n()
 const { createProject } = useProjects()
 
 const projectName = ref('')
@@ -30,7 +31,7 @@ const NAME_PATTERN = /^[a-zA-Z0-9_-]+$/
 const nameError = computed(() => {
   const name = projectName.value.trim()
   if (!name) return ''
-  if (!NAME_PATTERN.test(name)) return 'Namn får bara innehålla bokstäver, siffror, bindestreck och understreck'
+  if (!NAME_PATTERN.test(name)) return t('createProject.nameError')
   return ''
 })
 
@@ -66,19 +67,19 @@ function resetForm() {
 <template>
   <UiModal
     :model-value="modelValue"
-    title="Nytt projekt"
+    :title="$t('createProject.title')"
     size="lg"
     @update:model-value="$emit('update:modelValue', $event)"
   >
     <div class="form">
       <UiInput
         v-model="projectName"
-        label="Projektnamn"
-        placeholder="mitt-projekt"
+        :label="$t('createProject.nameLabel')"
+        :placeholder="$t('createProject.namePlaceholder')"
         :error="nameError"
       />
       <div class="editor-section">
-        <label class="editor-label">docker-compose.yml</label>
+        <label class="editor-label">{{ $t('createProject.composeLabel') }}</label>
         <UiComposeEditor
           v-model="composeContent"
           :show-footer="false"
@@ -87,7 +88,7 @@ function resetForm() {
     </div>
     <template #footer>
       <UiButton variant="ghost" @click="close">
-        Avbryt
+        {{ $t('common.cancel') }}
       </UiButton>
       <UiButton
         variant="primary"
@@ -96,7 +97,7 @@ function resetForm() {
         :loading="creating"
         @click="handleCreate"
       >
-        Skapa
+        {{ $t('common.create') }}
       </UiButton>
     </template>
   </UiModal>
