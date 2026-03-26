@@ -30,73 +30,55 @@ export function useAuth() {
     return { user: user.value, isSetup: isSetup.value }
   }
 
-  /** Register a new passkey */
-  async function register(username: string, displayName: string, inviteToken?: string): Promise<boolean> {
-    try {
-      const optionsRes = await $fetch<{ success: boolean; data: { options: unknown; userId: string } }>(
-        '/api/auth/register/options',
-        { method: 'POST', body: { username, displayName, inviteToken } },
-      )
+  /** Register a new passkey. Returns the user on success, throws on failure. */
+  async function register(username: string, displayName: string, inviteToken?: string): Promise<User> {
+    const optionsRes = await $fetch<{ success: boolean; data: { options: unknown; userId: string } }>(
+      '/api/auth/register/options',
+      { method: 'POST', body: { username, displayName, inviteToken } },
+    )
 
-      const credential = await startRegistration({ optionsJSON: optionsRes.data.options as any })
+    const credential = await startRegistration({ optionsJSON: optionsRes.data.options as any })
 
-      const verifyRes = await $fetch<{ success: boolean; data: User }>(
-        '/api/auth/register/verify',
-        {
-          method: 'POST',
-          body: {
-            userId: optionsRes.data.userId,
-            username,
-            displayName,
-            response: credential,
-            inviteToken,
-          },
+    const verifyRes = await $fetch<{ success: boolean; data: User }>(
+      '/api/auth/register/verify',
+      {
+        method: 'POST',
+        body: {
+          userId: optionsRes.data.userId,
+          username,
+          displayName,
+          response: credential,
+          inviteToken,
         },
-      )
+      },
+    )
 
-      user.value = verifyRes.data
-      return true
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err)
-      if (!message.includes('cancelled') && !message.includes('canceled')) {
-        const { toast, t } = useToastWithI18n()
-        toast.error(t('auth.registrationFailed'), message)
-      }
-      return false
-    }
+    user.value = verifyRes.data
+    return verifyRes.data
   }
 
-  /** Login with passkey */
-  async function login(): Promise<boolean> {
-    try {
-      const optionsRes = await $fetch<{ success: boolean; data: { options: unknown; challengeKey: string } }>(
-        '/api/auth/login/options',
-        { method: 'POST' },
-      )
+  /** Login with passkey. Returns the user on success, throws on failure. */
+  async function login(): Promise<User> {
+    const optionsRes = await $fetch<{ success: boolean; data: { options: unknown; challengeKey: string } }>(
+      '/api/auth/login/options',
+      { method: 'POST' },
+    )
 
-      const credential = await startAuthentication({ optionsJSON: optionsRes.data.options as any })
+    const credential = await startAuthentication({ optionsJSON: optionsRes.data.options as any })
 
-      const verifyRes = await $fetch<{ success: boolean; data: User }>(
-        '/api/auth/login/verify',
-        {
-          method: 'POST',
-          body: {
-            challengeKey: optionsRes.data.challengeKey,
-            response: credential,
-          },
+    const verifyRes = await $fetch<{ success: boolean; data: User }>(
+      '/api/auth/login/verify',
+      {
+        method: 'POST',
+        body: {
+          challengeKey: optionsRes.data.challengeKey,
+          response: credential,
         },
-      )
+      },
+    )
 
-      user.value = verifyRes.data
-      return true
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err)
-      if (!message.includes('cancelled') && !message.includes('canceled')) {
-        const { toast, t } = useToastWithI18n()
-        toast.error(t('auth.loginFailed'), message)
-      }
-      return false
-    }
+    user.value = verifyRes.data
+    return verifyRes.data
   }
 
   /** Logout */
@@ -120,73 +102,47 @@ export function useAuth() {
     }
   }
 
-  /** Delete a credential */
-  async function deleteCredential(id: string): Promise<boolean> {
-    try {
-      await $fetch(`/api/auth/credentials/${id}`, { method: 'DELETE' })
-      const { toast, t } = useToastWithI18n()
-      toast.success(t('auth.credentialDeleted'))
-      await fetchCredentials()
-      return true
-    } catch (err) {
-      const { toast, t } = useToastWithI18n()
-      toast.error(t('auth.credentialDeleteError'), err instanceof Error ? err.message : String(err))
-      return false
-    }
+  /** Delete a credential. Throws on failure. */
+  async function deleteCredential(id: string): Promise<void> {
+    await $fetch(`/api/auth/credentials/${id}`, { method: 'DELETE' })
+    await fetchCredentials()
   }
 
-  /** Register an additional passkey for the current user */
-  async function registerAdditionalPasskey(): Promise<boolean> {
-    if (!user.value) return false
-    try {
-      const optionsRes = await $fetch<{ success: boolean; data: { options: unknown; userId: string } }>(
-        '/api/auth/register/options',
-        { method: 'POST', body: { username: user.value.username, displayName: user.value.displayName } },
-      )
+  /** Register an additional passkey for the current user. Throws on failure. */
+  async function registerAdditionalPasskey(): Promise<void> {
+    if (!user.value) throw new Error('Not authenticated')
 
-      const credential = await startRegistration({ optionsJSON: optionsRes.data.options as any })
+    const optionsRes = await $fetch<{ success: boolean; data: { options: unknown; userId: string } }>(
+      '/api/auth/register/options',
+      { method: 'POST', body: { username: user.value.username, displayName: user.value.displayName } },
+    )
 
-      await $fetch('/api/auth/register/verify', {
-        method: 'POST',
-        body: {
-          userId: user.value.id,
-          username: user.value.username,
-          displayName: user.value.displayName,
-          response: credential,
-        },
-      })
+    const credential = await startRegistration({ optionsJSON: optionsRes.data.options as any })
 
-      const { toast, t } = useToastWithI18n()
-      toast.success(t('auth.passkeyRegistered'))
-      await fetchCredentials()
-      return true
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err)
-      if (!message.includes('cancelled') && !message.includes('canceled')) {
-        const { toast, t } = useToastWithI18n()
-        toast.error(t('auth.registrationFailed'), message)
-      }
-      return false
-    }
+    await $fetch('/api/auth/register/verify', {
+      method: 'POST',
+      body: {
+        userId: user.value.id,
+        username: user.value.username,
+        displayName: user.value.displayName,
+        response: credential,
+      },
+    })
+
+    await fetchCredentials()
   }
 
-  /** Create an invite link */
-  async function createInvite(): Promise<InviteInfo | null> {
-    try {
-      const res = await $fetch<{ success: boolean; data: { token: string; expiresAt: string } }>(
-        '/api/auth/invite',
-        { method: 'POST' },
-      )
-      const origin = window.location.origin
-      return {
-        token: res.data.token,
-        url: `${origin}/invite/${res.data.token}`,
-        expiresAt: res.data.expiresAt,
-      }
-    } catch (err) {
-      const { toast, t } = useToastWithI18n()
-      toast.error(t('auth.inviteError'), err instanceof Error ? err.message : String(err))
-      return null
+  /** Create an invite link. Throws on failure. */
+  async function createInvite(): Promise<InviteInfo> {
+    const res = await $fetch<{ success: boolean; data: { token: string; expiresAt: string } }>(
+      '/api/auth/invite',
+      { method: 'POST' },
+    )
+    const origin = import.meta.client ? window.location.origin : ''
+    return {
+      token: res.data.token,
+      url: `${origin}/invite/${res.data.token}`,
+      expiresAt: res.data.expiresAt,
     }
   }
 
@@ -204,9 +160,4 @@ export function useAuth() {
     registerAdditionalPasskey,
     createInvite,
   }
-}
-
-/** Helper to get toast and i18n inside async functions called from component context */
-function useToastWithI18n() {
-  return { toast: useToast(), t: useI18n().t }
 }

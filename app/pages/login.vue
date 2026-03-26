@@ -3,28 +3,44 @@ definePageMeta({ layout: false })
 
 const { isSetup, isAuthenticated, register, login, fetchAuthState } = useAuth()
 const { t } = useI18n()
+const toast = useToast()
 
 const username = ref('')
 const displayName = ref('')
 const registering = ref(false)
 const loggingIn = ref(false)
 
+function isCancellation(err: unknown): boolean {
+  const msg = err instanceof Error ? err.message : String(err)
+  return msg.includes('cancelled') || msg.includes('canceled') || msg.includes('AbortError')
+}
+
 async function handleSetup() {
   if (!username.value.trim() || !displayName.value.trim()) return
   registering.value = true
-  const success = await register(username.value.trim(), displayName.value.trim())
-  registering.value = false
-  if (success) {
+  try {
+    await register(username.value.trim(), displayName.value.trim())
     navigateTo('/')
+  } catch (err) {
+    if (!isCancellation(err)) {
+      toast.error(t('auth.registrationFailed'), err instanceof Error ? err.message : String(err))
+    }
+  } finally {
+    registering.value = false
   }
 }
 
 async function handleLogin() {
   loggingIn.value = true
-  const success = await login()
-  loggingIn.value = false
-  if (success) {
+  try {
+    await login()
     navigateTo('/')
+  } catch (err) {
+    if (!isCancellation(err)) {
+      toast.error(t('auth.loginFailed'), err instanceof Error ? err.message : String(err))
+    }
+  } finally {
+    loggingIn.value = false
   }
 }
 

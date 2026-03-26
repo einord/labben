@@ -4,6 +4,7 @@ definePageMeta({ layout: false })
 const route = useRoute()
 const { register } = useAuth()
 const { t } = useI18n()
+const toast = useToast()
 
 const token = route.params.token as string
 const valid = ref<boolean | null>(null)
@@ -23,10 +24,16 @@ async function validateToken() {
 async function handleRegister() {
   if (!username.value.trim() || !displayName.value.trim()) return
   registering.value = true
-  const success = await register(username.value.trim(), displayName.value.trim(), token)
-  registering.value = false
-  if (success) {
+  try {
+    await register(username.value.trim(), displayName.value.trim(), token)
     navigateTo('/')
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    if (!msg.includes('cancelled') && !msg.includes('canceled') && !msg.includes('AbortError')) {
+      toast.error(t('auth.registrationFailed'), msg)
+    }
+  } finally {
+    registering.value = false
   }
 }
 
