@@ -13,6 +13,7 @@ interface ProjectListProps {
 }
 
 const props = defineProps<ProjectListProps>()
+const { t } = useI18n()
 
 const emit = defineEmits<{
   select: [name: string]
@@ -35,7 +36,7 @@ const sections = computed<ListSection[]>(() => {
 
   // System projects (proxy, monitoring, etc.)
   if (systemProjects.value.length > 0) {
-    result.push({ key: 'system', label: 'System', icon: 'lucide:server', projects: systemProjects.value })
+    result.push({ key: 'system', label: t('projects.system'), icon: 'lucide:server', projects: systemProjects.value })
   }
 
   // Managed projects: group by user-defined groups
@@ -48,7 +49,7 @@ const sections = computed<ListSection[]>(() => {
     }
     const ungrouped = managedProjects.value.filter(p => !p.metadata.groupId)
     if (ungrouped.length > 0) {
-      const label = result.length > 0 ? 'Ogrupperade' : ''
+      const label = result.length > 0 ? t('projects.ungrouped') : ''
       result.push({ key: 'ungrouped', label, icon: 'lucide:inbox', projects: ungrouped })
     }
   } else {
@@ -59,12 +60,12 @@ const sections = computed<ListSection[]>(() => {
 
   // External projects (from Docker, not in COMPOSE_DIR)
   if (externalProjects.value.length > 0) {
-    result.push({ key: 'external', label: 'Externa', icon: 'lucide:external-link', projects: externalProjects.value })
+    result.push({ key: 'external', label: t('projects.external'), icon: 'lucide:external-link', projects: externalProjects.value })
   }
 
   // Missing projects (in DB but not on disk/Docker)
   if (missingProjects.value.length > 0) {
-    result.push({ key: 'missing', label: 'Saknade', icon: 'lucide:alert-triangle', projects: missingProjects.value })
+    result.push({ key: 'missing', label: t('projects.missing'), icon: 'lucide:alert-triangle', projects: missingProjects.value })
   }
 
   return result
@@ -79,8 +80,8 @@ const sections = computed<ListSection[]>(() => {
     <UiEmptyState
       v-else-if="projects.length === 0"
       icon="lucide:folder-open"
-      title="Inga projekt"
-      description="Skapa ett nytt projekt för att komma igång."
+      :title="$t('projects.noProjects')"
+      :description="$t('projects.noProjectsDescription')"
     />
     <template v-else>
       <div v-for="section in sections" :key="section.key" class="group-section">

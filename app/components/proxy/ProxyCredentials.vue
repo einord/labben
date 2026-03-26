@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const { t } = useI18n()
 const {
   status,
   fetchStatus,
@@ -103,22 +104,22 @@ onMounted(async () => {
   <div class="proxy-credentials">
     <!-- Connected state -->
     <UiCard v-if="status.connected && !showForm">
-      <template #header>API-anslutning</template>
+      <template #header>{{ $t('proxyCredentials.title') }}</template>
       <div class="connected-status">
         <div class="status-row">
-          <UiBadge variant="success" dot>Ansluten</UiBadge>
+          <UiBadge variant="success" dot>{{ $t('proxyCredentials.connected') }}</UiBadge>
           <span class="status-detail">{{ status.url }}</span>
         </div>
         <div class="status-row">
-          <span class="status-label">Konto</span>
+          <span class="status-label">{{ $t('proxyCredentials.account') }}</span>
           <span class="status-detail">{{ status.email }}</span>
         </div>
         <div class="status-actions">
           <UiButton variant="ghost" size="sm" @click="editCredentials">
-            Ändra
+            {{ $t('proxyCredentials.change') }}
           </UiButton>
           <UiButton variant="ghost" size="sm" icon="lucide:trash-2" @click="clearCredentials">
-            Ta bort
+            {{ $t('common.remove') }}
           </UiButton>
         </div>
       </div>
@@ -127,20 +128,20 @@ onMounted(async () => {
       <div v-if="status.isDefault" class="default-warning">
         <div class="warning-header">
           <Icon name="lucide:alert-triangle" class="warning-icon" />
-          <span>Du använder standardlösenordet — byt det för säkerhetens skull.</span>
+          <span>{{ $t('proxyCredentials.defaultWarning') }}</span>
         </div>
         <div class="password-form">
           <UiInput
             v-model="newPassword"
-            label="Nytt lösenord"
+            :label="$t('proxyCredentials.newPassword')"
             type="password"
-            placeholder="Minst 8 tecken"
+            :placeholder="$t('proxyCredentials.newPasswordPlaceholder')"
           />
           <UiInput
             v-model="confirmPassword"
-            label="Bekräfta lösenord"
+            :label="$t('proxyCredentials.confirmPassword')"
             type="password"
-            :error="confirmPassword && !passwordsMatch ? 'Lösenorden matchar inte' : ''"
+            :error="confirmPassword && !passwordsMatch ? t('proxyCredentials.passwordMismatch') : ''"
           />
           <UiButton
             variant="primary"
@@ -149,7 +150,7 @@ onMounted(async () => {
             :loading="changingPassword"
             @click="handleChangePassword"
           >
-            Byt lösenord
+            {{ $t('proxyCredentials.changePassword') }}
           </UiButton>
         </div>
       </div>
@@ -157,33 +158,33 @@ onMounted(async () => {
 
     <!-- Setup / Edit form -->
     <UiCard v-if="showForm || (!status.connected && !status.url)">
-      <template #header>Anslut till Nginx Proxy Manager</template>
+      <template #header>{{ $t('proxyCredentials.connectTitle') }}</template>
       <div class="setup-form">
         <div class="url-row">
           <UiInput
             v-model="formUrl"
-            label="API URL"
+            :label="$t('proxyCredentials.apiUrl')"
             placeholder="http://localhost:81"
           />
           <UiButton variant="ghost" size="sm" icon="lucide:search" @click="autoDetect">
-            Detektera
+            {{ $t('proxyCredentials.detect') }}
           </UiButton>
         </div>
         <UiInput
           v-model="formEmail"
-          label="E-post"
+          :label="$t('proxyCredentials.email')"
           placeholder="admin@example.com"
         />
         <UiInput
           v-model="formPassword"
-          label="Lösenord"
+          :label="$t('proxyCredentials.password')"
           type="password"
-          placeholder="Lösenord"
+          :placeholder="$t('proxyCredentials.password')"
         />
 
         <div class="form-actions">
           <UiButton variant="ghost" size="sm" @click="useDefaults">
-            Fyll i standarduppgifter
+            {{ $t('proxyCredentials.defaultCredentials') }}
           </UiButton>
           <div class="form-actions-right">
             <UiButton
@@ -193,7 +194,7 @@ onMounted(async () => {
               :disabled="!formUrl || !formEmail || !formPassword"
               @click="handleTest"
             >
-              Testa
+              {{ $t('proxyCredentials.test') }}
             </UiButton>
             <UiButton
               variant="primary"
@@ -202,19 +203,19 @@ onMounted(async () => {
               :disabled="!formUrl || !formEmail || !formPassword"
               @click="handleSave"
             >
-              Spara
+              {{ $t('common.save') }}
             </UiButton>
           </div>
         </div>
 
         <div v-if="testResult !== null" class="test-result">
           <UiBadge :variant="testResult ? 'success' : 'danger'" dot>
-            {{ testResult ? 'Anslutning lyckades' : 'Anslutning misslyckades' }}
+            {{ testResult ? $t('proxyCredentials.connectionSuccess') : $t('proxyCredentials.connectionFailed') }}
           </UiBadge>
         </div>
 
         <UiButton v-if="showForm && status.url" variant="ghost" size="sm" @click="showForm = false">
-          Avbryt
+          {{ $t('common.cancel') }}
         </UiButton>
       </div>
     </UiCard>

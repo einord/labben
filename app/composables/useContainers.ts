@@ -5,6 +5,7 @@ export function useContainers() {
   const loading = ref(false)
   const error = ref<string | null>(null)
   const toast = useToast()
+  const { t } = useI18n()
 
   /** Fetch all containers from the API */
   async function fetchContainers() {
@@ -15,7 +16,7 @@ export function useContainers() {
       containers.value = response.data
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to fetch containers'
-      toast.error('Kunde inte hämta containers')
+      toast.error(t('toast.containersFetchError'))
     } finally {
       loading.value = false
     }
@@ -25,10 +26,10 @@ export function useContainers() {
   async function startContainer(id: string) {
     try {
       await $fetch(`/api/containers/${id}/start`, { method: 'POST' })
-      toast.success('Container startad')
+      toast.success(t('toast.containerStarted'))
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to start container'
-      toast.error('Kunde inte starta container')
+      toast.error(t('toast.containerStartError'))
     }
   }
 
@@ -36,10 +37,10 @@ export function useContainers() {
   async function stopContainer(id: string) {
     try {
       await $fetch(`/api/containers/${id}/stop`, { method: 'POST' })
-      toast.success('Container stoppad')
+      toast.success(t('toast.containerStopped'))
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to stop container'
-      toast.error('Kunde inte stoppa container')
+      toast.error(t('toast.containerStopError'))
     }
   }
 
@@ -47,10 +48,10 @@ export function useContainers() {
   async function restartContainer(id: string) {
     try {
       await $fetch(`/api/containers/${id}/restart`, { method: 'POST' })
-      toast.success('Container omstartad')
+      toast.success(t('toast.containerRestarted'))
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to restart container'
-      toast.error('Kunde inte starta om container')
+      toast.error(t('toast.containerRestartError'))
     }
   }
 

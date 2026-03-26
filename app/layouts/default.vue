@@ -41,13 +41,13 @@ function toggleSidebar() {
           @click="sidebarOpen = false"
         >
           <Icon :name="item.icon" class="nav-icon" />
-          <span class="nav-label">{{ item.label }}</span>
+          <span class="nav-label">{{ $t(item.labelKey) }}</span>
         </NuxtLink>
       </nav>
       <div class="sidebar-footer">
         <button class="settings-button" @click="showAppSettings = true">
           <Icon name="lucide:settings" class="settings-icon" />
-          <span>Inställningar</span>
+          <span>{{ $t('nav.settings') }}</span>
         </button>
       </div>
     </aside>

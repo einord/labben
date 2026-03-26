@@ -5,6 +5,7 @@ export function useProxy() {
   const npmCandidates = ref<ProjectWithMetadata[]>([])
   const loading = ref(false)
   const toast = useToast()
+  const { t } = useI18n()
 
   /** Fetch the current proxy settings */
   async function fetchProxySettings() {
@@ -12,7 +13,7 @@ export function useProxy() {
       const response = await $fetch<{ success: boolean; data: SystemSettings }>('/api/settings/proxy')
       proxyProject.value = response.data.proxyProject
     } catch {
-      toast.error('Kunde inte hamta proxy-installningar')
+      toast.error(t('toast.proxySettingsFetchError'))
     }
   }
 
@@ -23,7 +24,7 @@ export function useProxy() {
       const response = await $fetch<{ success: boolean; data: ProjectWithMetadata[] }>('/api/projects/npm-candidates')
       npmCandidates.value = response.data
     } catch {
-      toast.error('Kunde inte hamta proxy-kandidater')
+      toast.error(t('toast.proxySettingsFetchError'))
     } finally {
       loading.value = false
     }
@@ -34,9 +35,9 @@ export function useProxy() {
     try {
       await $fetch('/api/settings/proxy', { method: 'PUT', body: { projectName: name } })
       proxyProject.value = name
-      toast.success('Proxy-projekt valt')
+      toast.success(t('toast.proxyProjectSet'))
     } catch {
-      toast.error('Kunde inte satta proxy-projekt')
+      toast.error(t('toast.proxyProjectSetError'))
     }
   }
 
@@ -45,10 +46,10 @@ export function useProxy() {
     try {
       await $fetch('/api/projects/npm', { method: 'POST', body: { name } })
       proxyProject.value = name
-      toast.success(`Proxy-projekt '${name}' skapat`)
+      toast.success(t('toast.proxyProjectCreated', { name }))
       return true
     } catch {
-      toast.error('Kunde inte skapa proxy-projekt')
+      toast.error(t('toast.proxyProjectCreateError'))
       return false
     }
   }
@@ -58,9 +59,9 @@ export function useProxy() {
     try {
       await $fetch('/api/settings/proxy', { method: 'DELETE' })
       proxyProject.value = null
-      toast.success('Proxy-installning borttagen')
+      toast.success(t('toast.proxyCleared'))
     } catch {
-      toast.error('Kunde inte ta bort proxy-installning')
+      toast.error(t('toast.proxyClearError'))
     }
   }
 

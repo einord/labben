@@ -16,23 +16,28 @@ const STORAGE_KEY = 'labben-theme'
 const DEFAULT_CONFIG: ThemeConfig = { palette: 'standard', mode: 'dark' }
 
 const PALETTES: PaletteInfo[] = [
-  { id: 'standard', label: 'Standard', description: 'Varm amber och blågrå' },
-  { id: 'ocean', label: 'Ocean', description: 'Djupt havsblått med cyan' },
-  { id: 'forest', label: 'Forest', description: 'Skogsgrön med smaragd' },
-  { id: 'sunset', label: 'Sunset', description: 'Varm lila med orange' },
-  { id: 'neon', label: 'Neon', description: 'Svart med elektrisk neongrön' },
-  { id: 'contrast', label: 'Kontrast', description: 'Hög kontrast för tillgänglighet' },
+  { id: 'standard', label: 'Standard', description: 'themes.standardDescription' },
+  { id: 'ocean', label: 'Ocean', description: 'themes.oceanDescription' },
+  { id: 'forest', label: 'Forest', description: 'themes.forestDescription' },
+  { id: 'sunset', label: 'Sunset', description: 'themes.sunsetDescription' },
+  { id: 'neon', label: 'Neon', description: 'themes.neonDescription' },
+  { id: 'contrast', label: 'Contrast', description: 'themes.contrastDescription' },
 ]
 
 export function useTheme() {
   const config = useState<ThemeConfig>('theme-config', () => DEFAULT_CONFIG)
   const resolvedVariant = useState<'dark' | 'light'>('theme-resolved', () => 'dark')
+  const { t } = useI18n()
 
   let mediaQuery: MediaQueryList | null = null
 
-  /** Get the available palettes */
+  /** Get the available palettes with translated labels and descriptions */
   function getPalettes(): PaletteInfo[] {
-    return PALETTES
+    return PALETTES.map(p => ({
+      ...p,
+      label: t(`themes.${p.id}`),
+      description: t(p.description),
+    }))
   }
 
   /** Resolve the actual variant (dark/light) based on mode and OS preference */

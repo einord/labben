@@ -13,17 +13,23 @@ const emit = defineEmits<{
 }>()
 
 const { config, getPalettes, setPalette, setMode } = useTheme()
+const { locale, locales, setLocale, t } = useI18n()
 
-const sections: SettingsSection[] = [
-  { id: 'appearance', label: 'Utseende', icon: 'lucide:palette' },
-  { id: 'about', label: 'Om Labben', icon: 'lucide:info' },
-]
+const sections = computed<SettingsSection[]>(() => [
+  { id: 'appearance', label: t('settings.appearance'), icon: 'lucide:palette' },
+  { id: 'language', label: t('settings.language'), icon: 'lucide:languages' },
+  { id: 'about', label: t('settings.about'), icon: 'lucide:info' },
+])
 
-const modes: Array<{ value: ThemeMode; label: string; icon: string }> = [
-  { value: 'light', label: 'Ljust', icon: 'lucide:sun' },
-  { value: 'dark', label: 'Mörkt', icon: 'lucide:moon' },
-  { value: 'auto', label: 'Auto', icon: 'lucide:monitor' },
-]
+const modes = computed(() => [
+  { value: 'light' as ThemeMode, label: t('settings.light'), icon: 'lucide:sun' },
+  { value: 'dark' as ThemeMode, label: t('settings.dark'), icon: 'lucide:moon' },
+  { value: 'auto' as ThemeMode, label: t('settings.auto'), icon: 'lucide:monitor' },
+])
+
+const availableLocales = computed(() => {
+  return (locales.value as Array<{ code: string; name: string }>)
+})
 
 const palettes = getPalettes()
 </script>
@@ -31,14 +37,14 @@ const palettes = getPalettes()
 <template>
   <UiSettingsModal
     :model-value="modelValue"
-    title="Inställningar"
+    :title="$t('settings.title')"
     :sections="sections"
     @update:model-value="emit('update:modelValue', $event)"
   >
     <template #default="{ activeSection }">
       <div v-if="activeSection === 'appearance'" class="appearance-section">
         <div class="setting-group">
-          <h3 class="section-title">Läge</h3>
+          <h3 class="section-title">{{ $t('settings.mode') }}</h3>
           <div class="mode-options">
             <button
               v-for="m in modes"
@@ -54,7 +60,7 @@ const palettes = getPalettes()
         </div>
 
         <div class="setting-group">
-          <h3 class="section-title">Tema</h3>
+          <h3 class="section-title">{{ $t('settings.theme') }}</h3>
           <div class="palette-options">
             <button
               v-for="p in palettes"
@@ -70,10 +76,25 @@ const palettes = getPalettes()
         </div>
       </div>
 
+      <div v-if="activeSection === 'language'" class="language-section">
+        <h3 class="section-title">{{ $t('settings.language') }}</h3>
+        <div class="language-options">
+          <button
+            v-for="loc in availableLocales"
+            :key="loc.code"
+            class="language-option"
+            :class="{ active: locale === loc.code }"
+            @click="setLocale(loc.code)"
+          >
+            <span class="language-label">{{ loc.name }}</span>
+          </button>
+        </div>
+      </div>
+
       <div v-if="activeSection === 'about'" class="about-section">
-        <h3 class="section-title">Om Labben</h3>
+        <h3 class="section-title">{{ $t('settings.about') }}</h3>
         <p class="about-text">
-          Labben är ett verktyg för att hantera Docker-projekt, containrar och proxykonfiguration i ditt homelab.
+          {{ $t('app.description') }}
         </p>
       </div>
     </template>
@@ -174,6 +195,46 @@ const palettes = getPalettes()
 
 .mode-label {
   font-size: var(--font-size-sm);
+  font-weight: 600;
+}
+
+.language-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.language-options {
+  display: flex;
+  gap: var(--spacing-md);
+}
+
+.language-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md) var(--spacing-xl);
+  background-color: var(--color-bg);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: border-color var(--transition-fast), background-color var(--transition-fast);
+  color: var(--color-text-secondary);
+
+  &:hover {
+    border-color: var(--color-text-muted);
+    background-color: var(--color-surface-hover);
+  }
+
+  &.active {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+  }
+}
+
+.language-label {
+  font-size: var(--font-size-md);
   font-weight: 600;
 }
 

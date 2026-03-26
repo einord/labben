@@ -1,12 +1,12 @@
 export interface NavItem {
-  label: string
+  labelKey: string
   icon: string
   to: string
 }
 
 export const NAV_ITEMS: readonly NavItem[] = [
-  { label: 'Dashboard', icon: 'lucide:layout-dashboard', to: '/' },
-  { label: 'Projekt', icon: 'lucide:folder-open', to: '/projects' },
-  { label: 'Proxy', icon: 'lucide:route', to: '/proxy' },
-  { label: 'Backup', icon: 'lucide:hard-drive-download', to: '/backup' },
+  { labelKey: 'nav.dashboard', icon: 'lucide:layout-dashboard', to: '/' },
+  { labelKey: 'nav.projects', icon: 'lucide:folder-open', to: '/projects' },
+  { labelKey: 'nav.proxy', icon: 'lucide:route', to: '/proxy' },
+  { labelKey: 'nav.backup', icon: 'lucide:hard-drive-download', to: '/backup' },
 ] as const
