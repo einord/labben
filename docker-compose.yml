@@ -1,8 +1,17 @@
 services:
   labben:
+    image: ghcr.io/einord/labben:latest
     build: .
     ports:
       - "3005:3005"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+      - labben-data:/data
+    environment:
+      - COMPOSE_DIR=/data/compose
+      - DATA_DIR=/data
+      - DOCKER_SOCKET=/var/run/docker.sock
     restart: unless-stopped
+
+volumes:
+  labben-data:
