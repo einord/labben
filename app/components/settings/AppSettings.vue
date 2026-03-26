@@ -59,10 +59,24 @@ async function handleCreateInvite() {
   try {
     const invite = await createInvite()
     inviteLink.value = invite.url
-    await navigator.clipboard.writeText(invite.url)
-    toast.success(t('auth.inviteCopied'))
+    try {
+      await navigator.clipboard.writeText(invite.url)
+      toast.success(t('auth.inviteCopied'))
+    } catch {
+      // Clipboard access denied — link is still visible in the UI
+    }
   } catch (err) {
     toast.error(t('auth.inviteError'), err instanceof Error ? err.message : String(err))
+  }
+}
+
+async function copyInviteLink() {
+  if (!inviteLink.value) return
+  try {
+    await navigator.clipboard.writeText(inviteLink.value)
+    toast.success(t('auth.inviteCopied'))
+  } catch {
+    // Clipboard not available
   }
 }
 
@@ -147,7 +161,7 @@ watch(() => props.modelValue, (open) => {
           <h3 class="section-title">{{ $t('auth.inviteUser') }}</h3>
           <div v-if="inviteLink" class="invite-result">
             <code class="invite-url">{{ inviteLink }}</code>
-            <UiButton variant="ghost" size="sm" icon="lucide:copy" @click="navigator.clipboard.writeText(inviteLink!); toast.success($t('auth.inviteCopied'))" />
+            <UiButton variant="ghost" size="sm" icon="lucide:copy" @click="copyInviteLink" />
           </div>
           <UiButton v-else variant="secondary" size="sm" icon="lucide:user-plus" @click="handleCreateInvite">
             {{ $t('auth.inviteUser') }}
