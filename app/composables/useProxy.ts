@@ -1,7 +1,7 @@
 import type { ProjectWithMetadata, SystemSettings } from '~/types/project'
 
 export function useProxy() {
-  const proxyProject = ref<string | null>(null)
+  const proxyProject = useState<string | null>('proxy-project', () => null)
   const npmCandidates = ref<ProjectWithMetadata[]>([])
   const loading = ref(false)
   const toast = useToast()
