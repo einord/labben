@@ -21,7 +21,7 @@ export default defineEventHandler(async (event) => {
   } catch (error) {
     throw createError({
       statusCode: 500,
-      message: 'Failed to save project config',
+      message: extractErrorMessage(error, 'Failed to save project config'),
     })
   }
 })
