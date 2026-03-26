@@ -15,7 +15,19 @@ import type { H3Event } from 'h3'
 import { useSession } from 'h3'
 import { databaseService } from './database'
 
-const SESSION_PASSWORD = process.env.AUTH_SESSION_SECRET || randomBytes(32).toString('hex')
+/** Get or create a stable session password that survives HMR reloads */
+function getSessionPassword(): string {
+  if (process.env.AUTH_SESSION_SECRET) return process.env.AUTH_SESSION_SECRET
+
+  const globalKey = '__labben_session_password'
+  const g = globalThis as Record<string, string | undefined>
+  if (!g[globalKey]) {
+    g[globalKey] = randomBytes(32).toString('hex')
+  }
+  return g[globalKey]
+}
+
+const SESSION_PASSWORD = getSessionPassword()
 
 interface ChallengeEntry {
   challenge: string
