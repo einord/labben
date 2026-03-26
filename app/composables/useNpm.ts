@@ -16,9 +16,9 @@ function extractErrorDetails(err: unknown): string {
 }
 
 export function useNpm() {
-  const status = ref<NpmConnectionStatus>({ connected: false, url: null, email: null, isDefault: false })
-  const proxyHosts = ref<NpmProxyHost[]>([])
-  const baseDomain = ref<string | null>(null)
+  const status = useState<NpmConnectionStatus>('npm-status', () => ({ connected: false, url: null, email: null, isDefault: false }))
+  const proxyHosts = useState<NpmProxyHost[]>('npm-proxy-hosts', () => [])
+  const baseDomain = useState<string | null>('npm-base-domain', () => null)
   const loading = ref(false)
   const toast = useToast()
   const { t } = useI18n()
