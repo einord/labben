@@ -215,9 +215,13 @@ class NpmApiService {
     databaseService.deleteSetting('base_domain')
   }
 
-  /** Detect the NPM API URL from the proxy project's container ports */
+  /** Get the NPM admin URL — uses stored credentials URL if available, otherwise detects from container ports */
   async detectNpmUrl(): Promise<string | null> {
-    // Import here to avoid circular dependency
+    // Prefer the URL the user already configured in credentials
+    const creds = this.getCredentials()
+    if (creds?.url) return creds.url
+
+    // Fallback: detect from container ports (for initial setup)
     const { projectService } = await import('./project')
     const proxyName = projectService.getProxyProject()
     if (!proxyName) return null
@@ -226,7 +230,6 @@ class NpmApiService {
     const proxyProject = projects.find(p => p.name === proxyName)
     if (!proxyProject) return null
 
-    // Find a container with port 81 mapped (NPM admin panel)
     for (const container of proxyProject.containers) {
       const adminPort = container.ports.find(p => p.private === 81 && p.public)
       if (adminPort) {
