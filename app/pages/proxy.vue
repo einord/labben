@@ -1,8 +1,9 @@
 <script setup lang="ts">
-const { status, baseDomain, fetchBaseDomain, fetchStatus, proxyHosts, fetchProxyHosts } = useNpm()
+const { status, baseDomain, fetchBaseDomain, fetchStatus, proxyHosts, fetchProxyHosts, detectUrl } = useNpm()
 const { proxyProject } = useProxy()
 
 const showLabbenProxyForm = ref(false)
+const npmAdminUrl = ref<string | null>(null)
 
 const canPublishLabben = computed(() =>
   proxyProject.value && status.value.connected && baseDomain.value,
@@ -24,6 +25,7 @@ onMounted(async () => {
   await Promise.all([fetchStatus(), fetchBaseDomain()])
   if (status.value.connected) {
     await fetchProxyHosts()
+    npmAdminUrl.value = await detectUrl()
   }
 })
 </script>
@@ -33,7 +35,15 @@ onMounted(async () => {
     <UiPageHeader
       :title="$t('proxy.title')"
       :subtitle="$t('proxy.subtitle')"
-    />
+    >
+      <template v-if="npmAdminUrl" #actions>
+        <a :href="npmAdminUrl" target="_blank" rel="noopener noreferrer" class="admin-link">
+          <UiButton variant="secondary" size="sm" icon="lucide:external-link">
+            {{ $t('proxy.openAdmin') }}
+          </UiButton>
+        </a>
+      </template>
+    </UiPageHeader>
     <div class="proxy-content">
       <UiCard v-if="canPublishLabben && !labbenAlreadyPublished">
         <template #header>{{ $t('proxy.publishLabben') }}</template>
@@ -65,6 +75,10 @@ onMounted(async () => {
 </template>
 
 <style scoped>
+.admin-link {
+  text-decoration: none;
+}
+
 .proxy-content {
   display: flex;
   flex-direction: column;
