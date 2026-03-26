@@ -7,6 +7,7 @@ const {
   projectContainers,
   selectedContainerId,
   loading,
+  activeAction,
   projectsLoading,
   containersLoading,
   createProject,
@@ -117,6 +118,7 @@ onMounted(async () => {
           <ProjectDetailInfo
             :project="selectedProject"
             :can-publish="!!npmStatus.connected && !!baseDomain"
+            :active-action="activeAction"
             @up="handleUp"
             @down="handleDown"
             @update="handleUpdate"

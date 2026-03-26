@@ -28,6 +28,7 @@ defineProps<UiPageHeaderProps>()
   justify-content: space-between;
   gap: var(--spacing-md);
   margin-bottom: var(--spacing-xl);
+  flex-wrap: wrap;
 }
 
 .text {
@@ -51,6 +52,6 @@ defineProps<UiPageHeaderProps>()
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
-  flex-shrink: 0;
+  flex-wrap: wrap;
 }
 </style>
