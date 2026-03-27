@@ -1,10 +1,24 @@
+<script setup lang="ts">
+</script>
+
 <template>
   <div>
-    <UiPageHeader title="Backup" />
-    <UiEmptyState
-      icon="lucide:hard-drive-download"
-      title="Backup"
-      description="Backup scheduling and monitoring coming soon."
+    <UiPageHeader
+      :title="$t('nav.backup')"
+      :subtitle="$t('backup.subtitle')"
     />
+    <div class="backup-content">
+      <BackupStatus />
+      <BackupConfig />
+      <BackupHistory />
+    </div>
   </div>
 </template>
+
+<style scoped>
+.backup-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xl);
+}
+</style>

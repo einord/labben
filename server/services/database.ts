@@ -2,6 +2,7 @@ import Database from 'better-sqlite3'
 import { resolve } from 'node:path'
 import type { ProjectGroup, ProjectMetadata } from '~/types/project'
 import type { User } from '~/types/auth'
+import type { BackupConfig, BackupHistoryEntry } from '~/types/backup'
 
 class DatabaseService {
   private db: Database.Database
@@ -66,6 +67,26 @@ class DatabaseService {
         created_at TEXT NOT NULL DEFAULT (datetime('now')),
         FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE
       );
+
+      CREATE TABLE IF NOT EXISTS backup_config (
+        id TEXT PRIMARY KEY DEFAULT 'default',
+        destination TEXT NOT NULL,
+        schedule_days TEXT NOT NULL DEFAULT '0,1,2,3,4,5,6',
+        schedule_hour INTEGER NOT NULL DEFAULT 3,
+        schedule_minute INTEGER NOT NULL DEFAULT 0,
+        retention_count INTEGER NOT NULL DEFAULT 30,
+        enabled INTEGER NOT NULL DEFAULT 1,
+        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+
+      CREATE TABLE IF NOT EXISTS backup_history (
+        id TEXT PRIMARY KEY,
+        status TEXT NOT NULL,
+        started_at TEXT NOT NULL,
+        finished_at TEXT,
+        size_bytes INTEGER,
+        error_message TEXT
+      );
     `)
     this.migrate()
   }
@@ -87,6 +108,10 @@ class DatabaseService {
     if (version < 2) {
       // Tables are created with IF NOT EXISTS, so this is safe
       this.db.pragma('user_version = 2')
+    }
+
+    if (version < 3) {
+      this.db.pragma('user_version = 3')
     }
   }
 
@@ -356,6 +381,80 @@ class DatabaseService {
   /** Delete an invite token */
   deleteInviteToken(token: string): void {
     this.db.prepare('DELETE FROM invite_tokens WHERE token = ?').run(token)
+  }
+
+  // -- Backup --
+
+  /** Get the backup configuration */
+  getBackupConfig(): BackupConfig | null {
+    const row = this.db.prepare(
+      'SELECT destination, schedule_days as scheduleDays, schedule_hour as scheduleHour, schedule_minute as scheduleMinute, retention_count as retentionCount, enabled FROM backup_config WHERE id = ?',
+    ).get('default') as { destination: string; scheduleDays: string; scheduleHour: number; scheduleMinute: number; retentionCount: number; enabled: number } | undefined
+    if (!row) return null
+    return {
+      destination: row.destination,
+      scheduleDays: row.scheduleDays.split(',').map(Number),
+      scheduleHour: row.scheduleHour,
+      scheduleMinute: row.scheduleMinute,
+      retentionCount: row.retentionCount,
+      enabled: row.enabled === 1,
+    }
+  }
+
+  /** Save backup configuration (upsert) */
+  saveBackupConfig(config: BackupConfig): void {
+    const days = config.scheduleDays.join(',')
+    this.db.prepare(`
+      INSERT INTO backup_config (id, destination, schedule_days, schedule_hour, schedule_minute, retention_count, enabled, updated_at)
+      VALUES ('default', ?, ?, ?, ?, ?, ?, datetime('now'))
+      ON CONFLICT(id) DO UPDATE SET
+        destination = ?, schedule_days = ?, schedule_hour = ?, schedule_minute = ?,
+        retention_count = ?, enabled = ?, updated_at = datetime('now')
+    `).run(
+      config.destination, days, config.scheduleHour, config.scheduleMinute, config.retentionCount, config.enabled ? 1 : 0,
+      config.destination, days, config.scheduleHour, config.scheduleMinute, config.retentionCount, config.enabled ? 1 : 0,
+    )
+  }
+
+  /** Add a backup history entry */
+  addBackupHistory(id: string, status: string, startedAt: string): void {
+    this.db.prepare(
+      'INSERT INTO backup_history (id, status, started_at) VALUES (?, ?, ?)',
+    ).run(id, status, startedAt)
+  }
+
+  /** Update a backup history entry */
+  updateBackupHistory(id: string, status: string, finishedAt: string, sizeBytes: number | null, errorMessage: string | null): void {
+    this.db.prepare(
+      'UPDATE backup_history SET status = ?, finished_at = ?, size_bytes = ?, error_message = ? WHERE id = ?',
+    ).run(status, finishedAt, sizeBytes, errorMessage, id)
+  }
+
+  /** Get backup history entries, newest first */
+  getBackupHistory(limit: number = 20): BackupHistoryEntry[] {
+    return this.db.prepare(
+      'SELECT id, status, started_at as startedAt, finished_at as finishedAt, size_bytes as sizeBytes, error_message as errorMessage FROM backup_history ORDER BY started_at DESC LIMIT ?',
+    ).all(limit) as BackupHistoryEntry[]
+  }
+
+  /** Get the latest backup entry */
+  getLatestBackup(): BackupHistoryEntry | null {
+    const row = this.db.prepare(
+      "SELECT id, status, started_at as startedAt, finished_at as finishedAt, size_bytes as sizeBytes, error_message as errorMessage FROM backup_history WHERE status != 'running' ORDER BY started_at DESC LIMIT 1",
+    ).get() as BackupHistoryEntry | undefined
+    return row ?? null
+  }
+
+  /** Delete old backup history entries beyond retention count */
+  deleteOldBackupHistory(retentionCount: number): void {
+    this.db.prepare(
+      'DELETE FROM backup_history WHERE id NOT IN (SELECT id FROM backup_history ORDER BY started_at DESC LIMIT ?)',
+    ).run(retentionCount)
+  }
+
+  /** Create an atomic backup of the SQLite database */
+  backupDatabase(destPath: string): void {
+    this.db.backup(destPath)
   }
 }
 
