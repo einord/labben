@@ -59,7 +59,7 @@ export default defineNuxtConfig({
     preset: 'node-server',
     externals: {
       inline: [],
-      external: ['dockerode', 'better-sqlite3', '@simplewebauthn/server', 'node-cron'],
+      external: ['dockerode', 'better-sqlite3', '@simplewebauthn/server'],
     },
   },
 })

@@ -22,7 +22,7 @@ export default defineEventHandler(async (event) => {
 
   // Restart scheduler with new config
   if (config.enabled) {
-    backupService.startScheduler(config)
+    backupService.startScheduler()
   } else {
     backupService.stopScheduler()
   }

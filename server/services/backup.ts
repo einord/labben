@@ -3,7 +3,6 @@ import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
 import { resolve, join } from 'node:path'
 import { mkdir, readdir, rm } from 'node:fs/promises'
-import cron, { type ScheduledTask } from 'node-cron'
 import { databaseService } from './database'
 import type { BackupConfig } from '~/types/backup'
 
@@ -12,7 +11,8 @@ const execFileAsync = promisify(execFile)
 class BackupService {
   private composeDir: string
   private dataDir: string
-  private cronTask: ScheduledTask | null = null
+  private schedulerInterval: ReturnType<typeof setInterval> | null = null
+  private lastCheckedMinute = -1
   private isRunning = false
 
   constructor() {
@@ -27,7 +27,7 @@ class BackupService {
   private initScheduler(): void {
     const config = databaseService.getBackupConfig()
     if (config?.enabled) {
-      this.startScheduler(config)
+      this.startScheduler()
     }
   }
 
@@ -36,7 +36,6 @@ class BackupService {
     try {
       const resolved = resolve(destPath)
       await mkdir(resolved, { recursive: true })
-      // Try writing a test file
       const testFile = join(resolved, '.labben-backup-test')
       await execFileAsync('touch', [testFile])
       await rm(testFile)
@@ -65,12 +64,10 @@ class BackupService {
       const timestamp = new Date().toISOString().replace(/[:.]/g, '').replace('T', '_').slice(0, 15)
       const historyDir = join(dest, 'history', timestamp)
 
-      // Ensure directories exist
       await mkdir(join(latestDir, 'compose'), { recursive: true })
       await mkdir(join(dest, 'history'), { recursive: true })
 
       // 1. SQLite backup (atomic snapshot)
-      const dbPath = join(this.dataDir, 'labben.db')
       const dbBackupPath = join(latestDir, 'labben.db')
       databaseService.backupDatabase(dbBackupPath)
 
@@ -103,28 +100,47 @@ class BackupService {
     }
   }
 
-  /** Start the cron scheduler */
-  startScheduler(config: BackupConfig): void {
+  /** Start the scheduler (checks every 30 seconds if it's time to run) */
+  startScheduler(): void {
     this.stopScheduler()
-    if (!config.enabled || config.scheduleDays.length === 0) return
+    this.schedulerInterval = setInterval(() => this.checkSchedule(), 30_000)
+  }
 
-    const days = config.scheduleDays.join(',')
-    const cronExpr = `${config.scheduleMinute} ${config.scheduleHour} * * ${days}`
+  /** Stop the scheduler */
+  stopScheduler(): void {
+    if (this.schedulerInterval) {
+      clearInterval(this.schedulerInterval)
+      this.schedulerInterval = null
+    }
+  }
 
-    this.cronTask = cron.schedule(cronExpr, async () => {
+  /** Check if it's time to run a backup based on config */
+  private async checkSchedule(): Promise<void> {
+    if (this.isRunning) return
+
+    const config = databaseService.getBackupConfig()
+    if (!config?.enabled) return
+
+    const now = new Date()
+    const currentDay = now.getDay()
+    const currentHour = now.getHours()
+    const currentMinute = now.getMinutes()
+
+    // Only trigger once per minute
+    const minuteKey = currentDay * 10000 + currentHour * 100 + currentMinute
+    if (minuteKey === this.lastCheckedMinute) return
+
+    if (
+      config.scheduleDays.includes(currentDay)
+      && currentHour === config.scheduleHour
+      && currentMinute === config.scheduleMinute
+    ) {
+      this.lastCheckedMinute = minuteKey
       try {
         await this.runBackup()
       } catch {
         // Error already logged in backup history
       }
-    })
-  }
-
-  /** Stop the cron scheduler */
-  stopScheduler(): void {
-    if (this.cronTask) {
-      this.cronTask.stop()
-      this.cronTask = null
     }
   }
 
