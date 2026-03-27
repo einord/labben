@@ -23,6 +23,7 @@ const registeringPasskey = ref(false)
 const sections = computed<SettingsSection[]>(() => [
   { id: 'account', label: t('auth.account'), icon: 'lucide:user' },
   { id: 'proxy', label: t('nav.proxy'), icon: 'lucide:route' },
+  { id: 'backup', label: t('nav.backup'), icon: 'lucide:hard-drive-download' },
   { id: 'appearance', label: t('settings.appearance'), icon: 'lucide:palette' },
   { id: 'language', label: t('settings.language'), icon: 'lucide:languages' },
   { id: 'about', label: t('settings.about'), icon: 'lucide:info' },
@@ -197,6 +198,9 @@ watch(() => props.modelValue, (open) => {
 
       <!-- Proxy section -->
       <ProxySettings v-if="activeSection === 'proxy'" />
+
+      <!-- Backup section -->
+      <BackupSettings v-if="activeSection === 'backup'" />
 
       <div v-if="activeSection === 'appearance'" class="appearance-section">
         <div class="setting-group">

@@ -1,7 +1,7 @@
 import type { BackupConfig, BackupHistoryEntry } from '~/types/backup'
 
 export function useBackup() {
-  const config = ref<BackupConfig | null>(null)
+  const config = useState<BackupConfig | null>('backup-config', () => null)
   const history = ref<BackupHistoryEntry[]>([])
   const running = ref(false)
   const toast = useToast()

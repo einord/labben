@@ -9,7 +9,6 @@
     />
     <div class="backup-content">
       <BackupStatus />
-      <BackupConfig />
       <BackupHistory />
     </div>
   </div>

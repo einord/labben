@@ -5,12 +5,14 @@ const showAppSettings = ref(false)
 const { initTheme } = useTheme()
 const { user, logout } = useAuth()
 const { proxyProject, fetchProxySettings } = useProxy()
+const { config: backupConfig, fetchConfig: fetchBackupConfig } = useBackup()
 
 const showProxyNav = computed(() => !!proxyProject.value)
+const showBackupNav = computed(() => !!backupConfig.value?.destination)
 
 onMounted(async () => {
   initTheme()
-  await fetchProxySettings()
+  await Promise.all([fetchProxySettings(), fetchBackupConfig()])
 })
 
 function toggleSidebar() {
@@ -60,6 +62,15 @@ function toggleSidebar() {
           >
             <Icon :name="PROXY_NAV_ITEM.icon" class="nav-icon" />
             <span class="nav-label">{{ $t(PROXY_NAV_ITEM.labelKey) }}</span>
+          </NuxtLink>
+          <NuxtLink
+            v-if="showBackupNav"
+            :to="BACKUP_NAV_ITEM.to"
+            class="nav-item"
+            @click="sidebarOpen = false"
+          >
+            <Icon :name="BACKUP_NAV_ITEM.icon" class="nav-icon" />
+            <span class="nav-label">{{ $t(BACKUP_NAV_ITEM.labelKey) }}</span>
           </NuxtLink>
         </ClientOnly>
       </nav>
