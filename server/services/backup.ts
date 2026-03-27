@@ -19,8 +19,8 @@ class BackupService {
     this.composeDir = resolve(process.env.COMPOSE_DIR || '/data/compose')
     this.dataDir = resolve(process.env.DATA_DIR || '/data')
 
-    // Auto-start scheduler if config exists
-    this.initScheduler()
+    // Defer scheduler init to avoid module loading order issues
+    setTimeout(() => this.initScheduler(), 1000)
   }
 
   /** Initialize scheduler from saved config */
