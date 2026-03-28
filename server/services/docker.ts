@@ -29,9 +29,12 @@ function toContainerStatus(state: string): ContainerStatus {
 class DockerService {
   private _docker: Docker | null = null
   private newProjectDir: string
+  private hostComposeDir: string | null
 
   constructor() {
     this.newProjectDir = resolve(process.env.COMPOSE_DIR || '/compose-files')
+    // Host-side path for COMPOSE_DIR — needed so Docker daemon can resolve volume mounts
+    this.hostComposeDir = process.env.COMPOSE_HOST_DIR || null
   }
 
   /** Lazy-initialize Docker connection to avoid HMR issues */
@@ -221,13 +224,9 @@ class DockerService {
   /** Update a project: pull + down + up in one operation (avoids findProject after down removes containers). */
   async projectUpdate(name: string): Promise<string> {
     const project = await this.findProject(name)
-    const baseArgs = ['compose']
-    if (project.hostWorkingDir) {
-      baseArgs.push('--project-directory', project.hostWorkingDir)
-    }
-    baseArgs.push('-f', project.configPath)
+    const configPath = this.toHostPath(project.configPath) || project.configPath
     const run = (args: string[]) =>
-      execFileAsync('docker', [...baseArgs, ...args], { timeout: 120_000 })
+      execFileAsync('docker', ['compose', '-f', configPath, ...args], { timeout: 120_000 })
         .then(({ stdout, stderr }) => stdout + stderr)
 
     const pullOutput = await run(['pull'])
@@ -342,16 +341,23 @@ class DockerService {
     return dirName.toLowerCase()
   }
 
-  /** Run a docker compose command. Uses container path for -f (readable by CLI) and host path for --project-directory (used by Docker daemon for volume mounts). */
+  /** Run a docker compose command using the appropriate paths. */
   private async runComposeCommand(name: string, ...args: string[]): Promise<string> {
     const project = await this.findProject(name)
-    const composeArgs = ['compose']
-    if (project.hostWorkingDir) {
-      composeArgs.push('--project-directory', project.hostWorkingDir)
-    }
-    composeArgs.push('-f', project.configPath, ...args)
-    const { stdout, stderr } = await execFileAsync('docker', composeArgs, { timeout: 120_000 })
+    const configPath = this.toHostPath(project.configPath) || project.configPath
+    const { stdout, stderr } = await execFileAsync(
+      'docker',
+      ['compose', '-f', configPath, ...args],
+      { timeout: 120_000 },
+    )
     return stdout + stderr
+  }
+
+  /** Map a container-local path to its host equivalent using COMPOSE_HOST_DIR. */
+  private toHostPath(containerPath: string): string | null {
+    if (!this.hostComposeDir) return null
+    if (!containerPath.startsWith(this.newProjectDir)) return null
+    return containerPath.replace(this.newProjectDir, this.hostComposeDir)
   }
 
   private mapPorts(ports: Docker.Port[] | null): ContainerPort[] {

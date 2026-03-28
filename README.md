@@ -56,7 +56,7 @@ Labben is now available at `http://localhost:3005`. On first visit you'll be ask
 
 ### Mounting existing Compose projects
 
-To manage Compose projects that already exist on the host, bind-mount the directory:
+To manage Compose projects that already exist on the host, bind-mount the directory and set `COMPOSE_HOST_DIR` to the host-side path:
 
 ```yaml
     volumes:
@@ -65,8 +65,11 @@ To manage Compose projects that already exist on the host, bind-mount the direct
       - labben-data:/data/db
     environment:
       - COMPOSE_DIR=/data/compose
+      - COMPOSE_HOST_DIR=/path/to/your/compose/projects
       - DATA_DIR=/data/db
 ```
+
+> **Important:** `COMPOSE_HOST_DIR` must match the host-side path of your bind-mount. This is needed because Docker Compose commands run inside the container but the Docker daemon resolves volume mounts from the host filesystem.
 
 ### Backups
 
