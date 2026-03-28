@@ -1,7 +1,7 @@
 import Docker from 'dockerode'
 import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
-import { readFile, writeFile, mkdir, access, readdir, stat } from 'node:fs/promises'
+import { readFile, writeFile, mkdir, access, readdir, stat, symlink } from 'node:fs/promises'
 import { join, resolve } from 'node:path'
 import type { Readable } from 'node:stream'
 import type {
@@ -35,6 +35,22 @@ class DockerService {
     this.newProjectDir = resolve(process.env.COMPOSE_DIR || '/compose-files')
     // Host-side path for COMPOSE_DIR — needed so Docker daemon can resolve volume mounts
     this.hostComposeDir = process.env.COMPOSE_HOST_DIR || null
+    // Create a symlink so the host path is accessible inside the container
+    this.ensureHostPathSymlink()
+  }
+
+  /** Create a symlink from host path to container path so compose CLI can read files via host paths. */
+  private async ensureHostPathSymlink(): Promise<void> {
+    if (!this.hostComposeDir || this.hostComposeDir === this.newProjectDir) return
+    try {
+      await access(this.hostComposeDir)
+      // Already exists (or is already a symlink)
+    } catch {
+      // Create parent directories and symlink
+      const parentDir = resolve(this.hostComposeDir, '..')
+      await mkdir(parentDir, { recursive: true })
+      await symlink(this.newProjectDir, this.hostComposeDir)
+    }
   }
 
   /** Lazy-initialize Docker connection to avoid HMR issues */
@@ -224,7 +240,7 @@ class DockerService {
   /** Update a project: pull + down + up in one operation (avoids findProject after down removes containers). */
   async projectUpdate(name: string): Promise<string> {
     const project = await this.findProject(name)
-    const configPath = this.toHostPath(project.configPath) || project.configPath
+    const configPath = this.resolveComposePath(project.configPath)
     const run = (args: string[]) =>
       execFileAsync('docker', ['compose', '-f', configPath, ...args], { timeout: 120_000 })
         .then(({ stdout, stderr }) => stdout + stderr)
@@ -341,10 +357,10 @@ class DockerService {
     return dirName.toLowerCase()
   }
 
-  /** Run a docker compose command using the appropriate paths. */
+  /** Run a docker compose command using host-side paths (symlinked inside container). */
   private async runComposeCommand(name: string, ...args: string[]): Promise<string> {
     const project = await this.findProject(name)
-    const configPath = this.toHostPath(project.configPath) || project.configPath
+    const configPath = this.resolveComposePath(project.configPath)
     const { stdout, stderr } = await execFileAsync(
       'docker',
       ['compose', '-f', configPath, ...args],
@@ -353,10 +369,10 @@ class DockerService {
     return stdout + stderr
   }
 
-  /** Map a container-local path to its host equivalent using COMPOSE_HOST_DIR. */
-  private toHostPath(containerPath: string): string | null {
-    if (!this.hostComposeDir) return null
-    if (!containerPath.startsWith(this.newProjectDir)) return null
+  /** Resolve a compose file path — use host path if available (symlinked in container). */
+  private resolveComposePath(containerPath: string): string {
+    if (!this.hostComposeDir) return containerPath
+    if (!containerPath.startsWith(this.newProjectDir)) return containerPath
     return containerPath.replace(this.newProjectDir, this.hostComposeDir)
   }
 
