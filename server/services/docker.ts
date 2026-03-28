@@ -222,9 +222,8 @@ class DockerService {
   async projectUpdate(name: string): Promise<string> {
     const project = await this.findProject(name)
     const run = (args: string[]) =>
-      execFileAsync('docker', ['compose', '-f', project.hostConfigPath, ...args], {
+      execFileAsync('docker', ['compose', '--project-directory', project.hostWorkingDir, '-f', project.hostConfigPath, ...args], {
         timeout: 120_000,
-        cwd: project.hostWorkingDir || undefined,
       }).then(({ stdout, stderr }) => stdout + stderr)
 
     const pullOutput = await run(['pull'])
@@ -344,8 +343,8 @@ class DockerService {
     const project = await this.findProject(name)
     const { stdout, stderr } = await execFileAsync(
       'docker',
-      ['compose', '-f', project.hostConfigPath, ...args],
-      { timeout: 120_000, cwd: project.hostWorkingDir || undefined },
+      ['compose', '--project-directory', project.hostWorkingDir, '-f', project.hostConfigPath, ...args],
+      { timeout: 120_000 },
     )
     return stdout + stderr
   }
