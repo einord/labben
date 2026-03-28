@@ -1,5 +1,20 @@
 import type { ProjectWithMetadata } from '~/types/project'
 
+/** Extract a human-readable error message from a fetch error */
+function extractErrorDetails(err: unknown): string {
+  if (err && typeof err === 'object') {
+    const e = err as Record<string, unknown>
+    if (e.data && typeof e.data === 'object') {
+      const data = e.data as Record<string, unknown>
+      if (typeof data.message === 'string') return data.message
+      if (typeof data.statusMessage === 'string') return data.statusMessage
+    }
+    if (typeof e.message === 'string') return e.message
+    if (typeof e.statusMessage === 'string') return e.statusMessage
+  }
+  return String(err)
+}
+
 export function useProjects() {
   const projects = ref<ProjectWithMetadata[]>([])
   const loading = ref(false)
@@ -28,8 +43,7 @@ export function useProjects() {
       await $fetch(`/api/projects/${name}/up`, { method: 'POST' })
       toast.success(t('toast.projectStarted'))
     } catch (err) {
-      error.value = err instanceof Error ? err.message : 'Failed to start project'
-      toast.error(t('toast.projectStartError'))
+      toast.error(t('toast.projectStartError'), extractErrorDetails(err))
     }
   }
 
@@ -39,8 +53,7 @@ export function useProjects() {
       await $fetch(`/api/projects/${name}/down`, { method: 'POST' })
       toast.success(t('toast.projectStopped'))
     } catch (err) {
-      error.value = err instanceof Error ? err.message : 'Failed to stop project'
-      toast.error(t('toast.projectStopError'))
+      toast.error(t('toast.projectStopError'), extractErrorDetails(err))
     }
   }
 
@@ -50,8 +63,7 @@ export function useProjects() {
       await $fetch(`/api/projects/${name}/pull`, { method: 'POST' })
       toast.success(t('toast.imagesUpdated'))
     } catch (err) {
-      error.value = err instanceof Error ? err.message : 'Failed to pull project images'
-      toast.error(t('toast.imagesPullError'))
+      toast.error(t('toast.imagesPullError'), extractErrorDetails(err))
     }
   }
 
@@ -62,8 +74,7 @@ export function useProjects() {
       await $fetch(`/api/projects/${name}/up`, { method: 'POST' })
       toast.success(t('toast.projectRestarted'))
     } catch (err) {
-      error.value = err instanceof Error ? err.message : 'Failed to restart project'
-      toast.error(t('toast.projectRestartError'))
+      toast.error(t('toast.projectRestartError'), extractErrorDetails(err))
     }
   }
 
@@ -73,8 +84,7 @@ export function useProjects() {
       await $fetch(`/api/projects/${name}/update`, { method: 'POST' })
       toast.success(t('toast.projectUpdated'))
     } catch (err) {
-      error.value = err instanceof Error ? err.message : 'Failed to update project'
-      toast.error(t('toast.projectUpdateError'))
+      toast.error(t('toast.projectUpdateError'), extractErrorDetails(err))
     }
   }
 
@@ -84,8 +94,7 @@ export function useProjects() {
       const response = await $fetch<{ success: boolean; data: string }>(`/api/projects/${name}/config`)
       return response.data
     } catch (err) {
-      error.value = err instanceof Error ? err.message : 'Failed to get config'
-      toast.error(t('toast.configFetchError'))
+      toast.error(t('toast.configFetchError'), extractErrorDetails(err))
       return ''
     }
   }
@@ -99,8 +108,7 @@ export function useProjects() {
       })
       toast.success(t('toast.configSaved'))
     } catch (err) {
-      error.value = err instanceof Error ? err.message : 'Failed to save config'
-      toast.error(t('toast.configSaveError'))
+      toast.error(t('toast.configSaveError'), extractErrorDetails(err))
     }
   }
 
@@ -114,9 +122,7 @@ export function useProjects() {
       toast.success(t('toast.projectCreated', { name }))
       return true
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to create project'
-      error.value = message
-      toast.error(t('toast.projectCreateError'))
+      toast.error(t('toast.projectCreateError'), extractErrorDetails(err))
       return false
     }
   }
@@ -129,8 +135,8 @@ export function useProjects() {
         body: { groupId },
       })
       toast.success(groupId ? t('toast.groupAssigned') : t('toast.groupUnassigned'))
-    } catch {
-      toast.error(t('toast.groupAssignError'))
+    } catch (err) {
+      toast.error(t('toast.groupAssignError'), extractErrorDetails(err))
     }
   }
 
@@ -142,8 +148,8 @@ export function useProjects() {
         body: { groupId: null, displayName: null },
       })
       toast.success(t('toast.projectRemovedFromDb'))
-    } catch {
-      toast.error(t('toast.projectRemoveError'))
+    } catch (err) {
+      toast.error(t('toast.projectRemoveError'), extractErrorDetails(err))
     }
   }
 
