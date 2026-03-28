@@ -20,7 +20,7 @@ FROM node:22-alpine
 WORKDIR /app
 
 # Install runtime dependencies
-RUN apk add --no-cache libstdc++ docker-cli docker-cli-compose
+RUN apk add --no-cache libstdc++ docker-cli docker-cli-compose rsync
 
 COPY --from=build /app/.output ./.output
 

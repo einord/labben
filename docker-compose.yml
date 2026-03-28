@@ -7,10 +7,12 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - labben-data:/data
+      # - /path/to/backup/destination:/backups
     environment:
       - COMPOSE_DIR=/data/compose
       - DATA_DIR=/data
       - DOCKER_SOCKET=/var/run/docker.sock
+      # - BACKUP_DIR=/backups
       # Set these for production:
       # - AUTH_RP_ID=labben.example.com
       # - AUTH_ORIGIN=https://labben.example.com

@@ -1,13 +1,14 @@
 # Labben
 
-A self-hosted homelab management dashboard for Docker. Manage your Compose projects, containers, and reverse proxy configuration — all from one clean interface.
+A self-hosted homelab management dashboard for Docker. Manage your Compose projects, containers, reverse proxy, and backups — all from one clean interface.
 
 ## Features
 
-- **Project management** — Create, start, stop, and configure Docker Compose projects from a master-detail UI
+- **Project management** — Create, start, stop, update, and configure Docker Compose projects from a master-detail UI
 - **Container overview** — Monitor status, ports, volumes, environment variables, and live logs for all your containers
 - **Nginx Proxy Manager integration** — Connect to NPM's API to create and manage proxy hosts directly from your project view
 - **Smart proxy suggestions** — Configurable base domain with one-click "Publish" to expose services
+- **Scheduled backups** — Automatic rsync backup of all project files and data on a configurable schedule with retention management
 - **Passkey authentication** — Passwordless login with WebAuthn. First user creates an account on setup, invite others via shareable links
 - **Project grouping** — Organize projects into custom groups, with automatic detection of external and system projects
 - **Self-aware** — Labben detects its own container and prevents accidental self-shutdown
@@ -67,6 +68,25 @@ To manage Compose projects that already exist on the host, bind-mount the direct
       - DATA_DIR=/data/db
 ```
 
+### Backups
+
+Mount a backup destination (e.g. a NAS or external drive) and configure the schedule in Labben's Backup page:
+
+```yaml
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /path/to/your/compose/projects:/data/compose
+      - /mnt/nas/backups:/backups
+      - labben-data:/data/db
+    environment:
+      - COMPOSE_DIR=/data/compose
+      - DATA_DIR=/data/db
+```
+
+Then go to **Backup** in Labben, set the destination to `/backups`, choose your schedule (days and time), and enable it. Backups include all project files, data, and Labben's own database.
+
+Backups are incremental (rsync) and use hardlinks for history, so they're fast and space-efficient.
+
 ### Environment variables
 
 | Variable | Default | Description |
@@ -97,6 +117,7 @@ The dev server starts at `http://localhost:3005`. Create a `.env` file for local
 - **Auth:** WebAuthn passkeys via SimpleWebAuthn
 - **Database:** SQLite (better-sqlite3)
 - **Docker:** Dockerode for container management
+- **Backup:** rsync with node-cron scheduling
 - **Package manager:** pnpm
 
 ## License
