@@ -58,10 +58,14 @@ export interface ContainerVolume {
 /** A Docker Compose project (group of related containers) */
 export interface ComposeProject {
   name: string
-  /** Full path to the docker-compose.yml file (from Docker labels) */
+  /** Path to the docker-compose.yml file (container-local for reading) */
   configPath: string
-  /** Working directory for compose commands */
+  /** Working directory (container-local for reading) */
   workingDir: string
+  /** Host-side path to compose file (for running docker compose commands) */
+  hostConfigPath: string
+  /** Host-side working directory (for running docker compose commands) */
+  hostWorkingDir: string
   /** Containers belonging to this project */
   containers: ContainerSummary[]
   /** Number of running containers */
