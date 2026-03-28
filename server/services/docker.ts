@@ -221,10 +221,14 @@ class DockerService {
   /** Update a project: pull + down + up in one operation (avoids findProject after down removes containers). */
   async projectUpdate(name: string): Promise<string> {
     const project = await this.findProject(name)
+    const baseArgs = ['compose']
+    if (project.hostWorkingDir) {
+      baseArgs.push('--project-directory', project.hostWorkingDir)
+    }
+    baseArgs.push('-f', project.configPath)
     const run = (args: string[]) =>
-      execFileAsync('docker', ['compose', '--project-directory', project.hostWorkingDir, '-f', project.hostConfigPath, ...args], {
-        timeout: 120_000,
-      }).then(({ stdout, stderr }) => stdout + stderr)
+      execFileAsync('docker', [...baseArgs, ...args], { timeout: 120_000 })
+        .then(({ stdout, stderr }) => stdout + stderr)
 
     const pullOutput = await run(['pull'])
     const downOutput = await run(['down'])
@@ -338,14 +342,15 @@ class DockerService {
     return dirName.toLowerCase()
   }
 
-  /** Run a docker compose command using host-side paths (Docker daemon runs on the host). */
+  /** Run a docker compose command. Uses container path for -f (readable by CLI) and host path for --project-directory (used by Docker daemon for volume mounts). */
   private async runComposeCommand(name: string, ...args: string[]): Promise<string> {
     const project = await this.findProject(name)
-    const { stdout, stderr } = await execFileAsync(
-      'docker',
-      ['compose', '--project-directory', project.hostWorkingDir, '-f', project.hostConfigPath, ...args],
-      { timeout: 120_000 },
-    )
+    const composeArgs = ['compose']
+    if (project.hostWorkingDir) {
+      composeArgs.push('--project-directory', project.hostWorkingDir)
+    }
+    composeArgs.push('-f', project.configPath, ...args)
+    const { stdout, stderr } = await execFileAsync('docker', composeArgs, { timeout: 120_000 })
     return stdout + stderr
   }
 
