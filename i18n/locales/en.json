@@ -289,10 +289,18 @@
     "setupStep3": "3. Restart the container with docker compose up -d"
   },
   "system": {
-    "dockerSocketMissing": "Docker socket is not available. Container management will not work.",
-    "composePathMissing": "No compose directory mounted. Set COMPOSE_PATH in your .env file.",
-    "authNotConfigured": "Authentication is using localhost defaults",
-    "authNotConfiguredDetail": "Set AUTH_RP_ID and AUTH_ORIGIN in your .env file if you plan to expose Labben publicly."
+    "dockerSocketMissing": "Docker socket not available",
+    "dockerSocketDescription": "The Docker socket must be mounted for Labben to manage containers.",
+    "dockerSocketStep1": "Ensure the Docker socket volume is in your docker-compose.yml:",
+    "composePathMissing": "Compose directory not mounted",
+    "composePathDescription": "Mount your Docker Compose project directory so Labben can manage your projects.",
+    "composePathStep1": "Set COMPOSE_PATH in your .env file to point to your projects:",
+    "authNotConfigured": "Authentication using localhost defaults",
+    "authNotConfiguredDetail": "Passkeys are tied to a domain. Configure these if you plan to expose Labben publicly.",
+    "authStep1": "Set your domain in .env:",
+    "authStep2": "Set the full URL:",
+    "authStep3": "Set a session secret (survives restarts):",
+    "restartStep": "Restart the container: docker compose up -d"
   },
   "common": {
     "save": "Save",

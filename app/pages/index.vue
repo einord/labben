@@ -10,6 +10,51 @@ interface DashboardCard {
 const { t } = useI18n()
 const { status, fetchStatus } = useSystemStatus()
 
+const setupGuides = computed(() => {
+  if (!status.value) return []
+  const guides: Array<{ icon: string; title: string; description: string; steps: Array<{ text: string; code?: string }> }> = []
+
+  if (!status.value.dockerSocket.available) {
+    guides.push({
+      icon: 'lucide:plug-zap',
+      title: t('system.dockerSocketMissing'),
+      description: t('system.dockerSocketDescription'),
+      steps: [
+        { text: t('system.dockerSocketStep1'), code: '- /var/run/docker.sock:/var/run/docker.sock' },
+        { text: t('system.restartStep') },
+      ],
+    })
+  }
+
+  if (!status.value.composePath.mounted) {
+    guides.push({
+      icon: 'lucide:folder-x',
+      title: t('system.composePathMissing'),
+      description: t('system.composePathDescription'),
+      steps: [
+        { text: t('system.composePathStep1'), code: 'COMPOSE_PATH=/path/to/your/compose/projects' },
+        { text: t('system.restartStep') },
+      ],
+    })
+  }
+
+  if (!status.value.auth.configured) {
+    guides.push({
+      icon: 'lucide:shield-alert',
+      title: t('system.authNotConfigured'),
+      description: t('system.authNotConfiguredDetail'),
+      steps: [
+        { text: t('system.authStep1'), code: 'AUTH_RP_ID=labben.example.com' },
+        { text: t('system.authStep2'), code: 'AUTH_ORIGIN=https://labben.example.com' },
+        { text: t('system.authStep3'), code: 'AUTH_SESSION_SECRET=replace-with-a-random-string' },
+        { text: t('system.restartStep') },
+      ],
+    })
+  }
+
+  return guides
+})
+
 const cards = computed<DashboardCard[]>(() => [
   {
     title: t('dashboard.projects'),
@@ -64,12 +109,7 @@ onMounted(() => fetchStatus())
     />
 
     <ClientOnly>
-      <div v-if="warnings.length > 0" class="warnings">
-        <div v-for="(warning, i) in warnings" :key="i" class="warning-item">
-          <Icon :name="warning.icon" class="warning-icon" />
-          <span class="warning-text">{{ warning.message }}</span>
-        </div>
-      </div>
+      <UiSetupGuide v-if="setupGuides.length > 0" :guides="setupGuides" />
     </ClientOnly>
 
     <div class="card-grid">
@@ -93,34 +133,6 @@ onMounted(() => fetchStatus())
 </template>
 
 <style scoped>
-.warnings {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-sm);
-  margin-bottom: var(--spacing-lg);
-}
-
-.warning-item {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-  padding: var(--spacing-sm) var(--spacing-md);
-  background-color: var(--color-warning-bg);
-  border: 1px solid var(--color-warning);
-  border-radius: var(--radius-md);
-}
-
-.warning-icon {
-  color: var(--color-warning);
-  font-size: var(--font-size-lg);
-  flex-shrink: 0;
-}
-
-.warning-text {
-  color: var(--color-text);
-  font-size: var(--font-size-sm);
-}
-
 .card-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));

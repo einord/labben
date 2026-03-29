@@ -289,10 +289,18 @@
     "setupStep3": "3. Starta om containern med docker compose up -d"
   },
   "system": {
-    "dockerSocketMissing": "Docker-socket är inte tillgänglig. Containerhantering fungerar inte.",
-    "composePathMissing": "Ingen compose-mapp monterad. Ange COMPOSE_PATH i din .env-fil.",
+    "dockerSocketMissing": "Docker-socket inte tillgänglig",
+    "dockerSocketDescription": "Docker-socketen måste monteras för att Labben ska kunna hantera containrar.",
+    "dockerSocketStep1": "Se till att Docker-socket-volymen finns i din docker-compose.yml:",
+    "composePathMissing": "Compose-mapp inte monterad",
+    "composePathDescription": "Montera din Docker Compose-projektmapp så att Labben kan hantera dina projekt.",
+    "composePathStep1": "Ange COMPOSE_PATH i din .env-fil som pekar på dina projekt:",
     "authNotConfigured": "Autentisering använder localhost-standardvärden",
-    "authNotConfiguredDetail": "Ange AUTH_RP_ID och AUTH_ORIGIN i din .env-fil om du planerar att exponera Labben publikt."
+    "authNotConfiguredDetail": "Passkeys är kopplade till en domän. Konfigurera dessa om du planerar att exponera Labben publikt.",
+    "authStep1": "Ange din domän i .env:",
+    "authStep2": "Ange den fullständiga URL:en:",
+    "authStep3": "Ange en sessionshemlighet (överlever omstarter):",
+    "restartStep": "Starta om containern: docker compose up -d"
   },
   "common": {
     "save": "Spara",
