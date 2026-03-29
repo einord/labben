@@ -32,7 +32,7 @@ class DockerService {
   private hostComposeDir: string | null
 
   constructor() {
-    this.newProjectDir = resolve(process.env.COMPOSE_DIR || '/compose-files')
+    this.newProjectDir = resolve(process.env.COMPOSE_DIR || '/data/compose')
     // Host-side path for COMPOSE_DIR — needed so Docker daemon can resolve volume mounts
     this.hostComposeDir = process.env.COMPOSE_HOST_DIR || null
     // Create a symlink so the host path is accessible inside the container

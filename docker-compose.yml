@@ -1,22 +1,19 @@
 services:
   labben:
     image: ghcr.io/einord/labben:latest
-    build: .
     ports:
       - "3005:3005"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - labben-data:/data
-      # - /path/to/backup/destination:/backups
+      - ${COMPOSE_PATH:?Set COMPOSE_PATH in .env}:/data/compose
+      - labben-data:/data/db
+      # Uncomment to enable backups:
+      # - ${BACKUP_PATH}:/backups
     environment:
-      - COMPOSE_DIR=/data/compose
-      - DATA_DIR=/data
-      - DOCKER_SOCKET=/var/run/docker.sock
-      # - BACKUP_DIR=/backups
-      # Set these for production:
-      # - AUTH_RP_ID=labben.example.com
-      # - AUTH_ORIGIN=https://labben.example.com
-      # - AUTH_SESSION_SECRET=replace-with-a-random-64-char-string
+      - COMPOSE_HOST_DIR=${COMPOSE_PATH}
+      - AUTH_RP_ID=${AUTH_RP_ID:-localhost}
+      - AUTH_ORIGIN=${AUTH_ORIGIN:-http://localhost:3005}
+      - AUTH_SESSION_SECRET=${AUTH_SESSION_SECRET:-}
     restart: unless-stopped
 
 volumes:

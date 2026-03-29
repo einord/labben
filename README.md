@@ -16,93 +16,73 @@ A self-hosted homelab management dashboard for Docker. Manage your Compose proje
 - **Internationalization** — English and Swedish, with more languages easy to add
 - **SQLite metadata** — Persistent project metadata, groups, and settings with zero configuration
 
-## Installation
+## Quick Start
 
-### Docker Compose (recommended)
+### 1. Create a `.env` file
 
-Create a `docker-compose.yml`:
-
-```yaml
-services:
-  labben:
-    image: ghcr.io/einord/labben:latest
-    ports:
-      - "3005:3005"
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - labben-data:/data
-    environment:
-      - COMPOSE_DIR=/data/compose
-      - DATA_DIR=/data
-      - DOCKER_SOCKET=/var/run/docker.sock
-      # Required for production — set to your domain and URL:
-      - AUTH_RP_ID=labben.example.com
-      - AUTH_ORIGIN=https://labben.example.com
-      # Recommended — set a stable secret so sessions survive restarts:
-      - AUTH_SESSION_SECRET=replace-with-a-random-64-char-string
-    restart: unless-stopped
-
-volumes:
-  labben-data:
+```bash
+# Required: path to your Docker Compose projects
+COMPOSE_PATH=/path/to/your/compose/projects
 ```
 
-Then run:
+### 2. Download `docker-compose.yml`
+
+```bash
+curl -O https://raw.githubusercontent.com/einord/labben/main/docker-compose.yml
+```
+
+### 3. Start Labben
 
 ```bash
 docker compose up -d
 ```
 
-Labben is now available at `http://localhost:3005`. On first visit you'll be asked to create your account with a passkey.
+Labben is now available at `http://localhost:3005`. On first visit you'll create your account with a passkey.
 
-### Mounting existing Compose projects
+## Configuration
 
-To manage Compose projects that already exist on the host, bind-mount the directory and set `COMPOSE_HOST_DIR` to the host-side path:
+All configuration is done via a `.env` file. Copy `.env.example` as a starting point:
 
-```yaml
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - /path/to/your/compose/projects:/data/compose
-      - labben-data:/data/db
-    environment:
-      - COMPOSE_DIR=/data/compose
-      - COMPOSE_HOST_DIR=/path/to/your/compose/projects
-      - DATA_DIR=/data/db
+```bash
+# Required: path to your Docker Compose projects on the host
+COMPOSE_PATH=/path/to/your/compose/projects
+
+# Optional: backup destination (e.g. NAS mount)
+# BACKUP_PATH=/mnt/nas/backups
+
+# Optional: set when exposing Labben publicly
+# AUTH_RP_ID=labben.example.com
+# AUTH_ORIGIN=https://labben.example.com
+# AUTH_SESSION_SECRET=replace-with-a-random-string
 ```
 
-> **Important:** `COMPOSE_HOST_DIR` must match the host-side path of your bind-mount. This is needed because Docker Compose commands run inside the container but the Docker daemon resolves volume mounts from the host filesystem.
+### Enabling backups
 
-### Backups
+1. Add `BACKUP_PATH` to your `.env` pointing to your backup destination
+2. Uncomment the backup volume line in `docker-compose.yml`
+3. Restart: `docker compose up -d`
+4. Go to **Settings → Backup** in Labben, set destination to `/backups`, configure schedule, and enable
 
-Mount a backup destination (e.g. a NAS or external drive) and configure the schedule in Labben's Backup page:
+### Exposing publicly
 
-```yaml
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - /path/to/your/compose/projects:/data/compose
-      - /mnt/nas/backups:/backups
-      - labben-data:/data/db
-    environment:
-      - COMPOSE_DIR=/data/compose
-      - DATA_DIR=/data/db
-```
+When accessing Labben via a domain (through a reverse proxy):
 
-Then go to **Backup** in Labben, set the destination to `/backups`, choose your schedule (days and time), and enable it. Backups include all project files, data, and Labben's own database.
+1. Set `AUTH_RP_ID` to your domain (e.g. `labben.example.com`)
+2. Set `AUTH_ORIGIN` to the full URL (e.g. `https://labben.example.com`)
+3. Set `AUTH_SESSION_SECRET` to a random string (sessions survive restarts)
+4. Restart: `docker compose up -d`
 
-Backups are incremental (rsync) and use hardlinks for history, so they're fast and space-efficient.
+> **Note:** Passkeys require HTTPS in production. `localhost` is exempted for development.
 
 ### Environment variables
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `COMPOSE_DIR` | `/data/compose` | Directory for Compose project files |
-| `DATA_DIR` | `/data` | Directory for application data (SQLite database) |
-| `DOCKER_SOCKET` | `/var/run/docker.sock` | Path to Docker socket |
-| `PORT` | `3005` | Port the app listens on |
-| `AUTH_RP_ID` | `localhost` | WebAuthn Relying Party ID — set to your domain in production (e.g. `labben.example.com`) |
-| `AUTH_ORIGIN` | `http://localhost:3005` | Full origin URL — must match how users access Labben (e.g. `https://labben.example.com`) |
-| `AUTH_SESSION_SECRET` | Auto-generated | Secret for encrypting session cookies. Set a stable value in production so sessions survive container restarts |
-
-> **Note:** Passkeys require HTTPS in production. `localhost` is exempted for development.
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `COMPOSE_PATH` | Yes | — | Host path to your Docker Compose projects |
+| `BACKUP_PATH` | No | — | Host path for backup destination |
+| `AUTH_RP_ID` | No | `localhost` | Your domain (for passkey authentication) |
+| `AUTH_ORIGIN` | No | `http://localhost:3005` | Full URL users access Labben from |
+| `AUTH_SESSION_SECRET` | No | Auto-generated | Stable secret for session cookies |
 
 ## Development
 
@@ -120,7 +100,7 @@ The dev server starts at `http://localhost:3005`. Create a `.env` file for local
 - **Auth:** WebAuthn passkeys via SimpleWebAuthn
 - **Database:** SQLite (better-sqlite3)
 - **Docker:** Dockerode for container management
-- **Backup:** rsync with node-cron scheduling
+- **Backup:** rsync with scheduled automation
 - **Package manager:** pnpm
 
 ## License

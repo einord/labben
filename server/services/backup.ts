@@ -16,8 +16,8 @@ class BackupService {
   private isRunning = false
 
   constructor() {
-    this.composeDir = resolve(process.env.COMPOSE_DIR || '/data/compose')
-    this.dataDir = resolve(process.env.DATA_DIR || '/data')
+    this.composeDir = '/data/compose'
+    this.dataDir = '/data/db'
 
     // Defer scheduler init to avoid module loading order issues
     setTimeout(() => this.initScheduler(), 1000)

@@ -24,14 +24,12 @@ RUN apk add --no-cache libstdc++ docker-cli docker-cli-compose rsync
 
 COPY --from=build /app/.output ./.output
 
-# Create data directory
-RUN mkdir -p /data/compose
+# Create fixed data directories
+RUN mkdir -p /data/compose /data/db /backups
 
 ENV HOST=0.0.0.0
 ENV PORT=3005
 ENV NODE_ENV=production
-ENV COMPOSE_DIR=/data/compose
-ENV DATA_DIR=/data
 
 EXPOSE 3005
 

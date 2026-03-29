@@ -8,7 +8,8 @@ class DatabaseService {
   private db: Database.Database
 
   constructor() {
-    const dbPath = resolve(process.env.DATA_DIR || 'data', 'labben.db')
+    const dataDir = process.env.NODE_ENV === 'production' ? '/data/db' : (process.env.DATA_DIR || 'data')
+    const dbPath = resolve(dataDir, 'labben.db')
     this.db = new Database(dbPath)
     this.db.pragma('journal_mode = WAL')
     this.db.pragma('foreign_keys = ON')
