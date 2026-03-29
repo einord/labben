@@ -71,9 +71,9 @@ class BackupService {
       const dbBackupPath = join(latestDir, 'labben.db')
       databaseService.backupDatabase(dbBackupPath)
 
-      // 2. rsync compose directory
+      // 2. rsync compose directory (skip permissions for network filesystem compatibility)
       await execFileAsync('rsync', [
-        '-a', '--delete',
+        '-rlt', '--delete', '--no-perms', '--no-owner', '--no-group',
         `${this.composeDir}/`,
         `${join(latestDir, 'compose')}/`,
       ], { timeout: 600_000 })
