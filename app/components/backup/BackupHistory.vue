@@ -20,6 +20,21 @@ const statusVariant = (status: string) => {
   return 'warning' as const
 }
 
+const expandedErrors = ref<Set<string>>(new Set())
+
+function toggleError(id: string) {
+  if (expandedErrors.value.has(id)) {
+    expandedErrors.value.delete(id)
+  } else {
+    expandedErrors.value.add(id)
+  }
+}
+
+function truncateError(message: string): string {
+  const firstLine = message.split('\n')[0] ?? message
+  return firstLine.length > 100 ? firstLine.slice(0, 100) + '...' : firstLine
+}
+
 onMounted(() => fetchHistory())
 </script>
 
@@ -45,8 +60,12 @@ onMounted(() => fetchHistory())
           <span class="history-date">{{ formatDate(entry.startedAt) }}</span>
           <span v-if="entry.sizeBytes" class="history-size">{{ formatSize(entry.sizeBytes) }}</span>
         </div>
-        <div v-if="entry.errorMessage" class="history-error">
-          {{ entry.errorMessage }}
+        <div v-if="entry.errorMessage" class="history-error" @click="toggleError(entry.id)">
+          <div class="error-header">
+            <Icon :name="expandedErrors.has(entry.id) ? 'lucide:chevron-down' : 'lucide:chevron-right'" class="error-toggle" />
+            <span class="error-preview">{{ truncateError(entry.errorMessage) }}</span>
+          </div>
+          <pre v-if="expandedErrors.has(entry.id)" class="error-details">{{ entry.errorMessage }}</pre>
         </div>
       </div>
     </div>
@@ -102,8 +121,38 @@ onMounted(() => fetchHistory())
 }
 
 .history-error {
+  cursor: pointer;
+}
+
+.error-header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.error-toggle {
+  font-size: var(--font-size-sm);
+  color: var(--color-danger);
+  flex-shrink: 0;
+}
+
+.error-preview {
   font-size: var(--font-size-xs);
   color: var(--color-danger);
+}
+
+.error-details {
+  margin: var(--spacing-xs) 0 0 0;
+  padding: var(--spacing-sm);
+  background-color: var(--color-bg);
+  border-radius: var(--radius-sm);
   font-family: var(--font-family-mono);
+  font-size: var(--font-size-xs);
+  color: var(--color-danger);
+  white-space: pre-wrap;
+  word-break: break-all;
+  max-height: 200px;
+  overflow-y: auto;
+  line-height: 1.4;
 }
 </style>
