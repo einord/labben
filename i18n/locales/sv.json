@@ -288,6 +288,12 @@
     "setupStep2": "2. Avkommentera backup-volymen i docker-compose.yml:",
     "setupStep3": "3. Starta om containern med docker compose up -d"
   },
+  "system": {
+    "dockerSocketMissing": "Docker-socket är inte tillgänglig. Containerhantering fungerar inte.",
+    "composePathMissing": "Ingen compose-mapp monterad. Ange COMPOSE_PATH i din .env-fil.",
+    "authNotConfigured": "Autentisering använder localhost-standardvärden",
+    "authNotConfiguredDetail": "Ange AUTH_RP_ID och AUTH_ORIGIN i din .env-fil om du planerar att exponera Labben publikt."
+  },
   "common": {
     "save": "Spara",
     "cancel": "Avbryt",

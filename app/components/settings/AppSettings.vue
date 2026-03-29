@@ -19,6 +19,7 @@ const toast = useToast()
 
 const inviteLink = ref<string | null>(null)
 const registeringPasskey = ref(false)
+const { status: systemStatus, fetchStatus: fetchSystemStatus } = useSystemStatus()
 
 const sections = computed<SettingsSection[]>(() => [
   { id: 'account', label: t('auth.account'), icon: 'lucide:user' },
@@ -110,11 +111,12 @@ const availableLocales = computed(() => {
 
 const palettes = getPalettes()
 
-// Load credentials and invites when modal opens
+// Load data when modal opens
 watch(() => props.modelValue, (open) => {
   if (open) {
     fetchCredentials()
     fetchInvites()
+    fetchSystemStatus()
     inviteLink.value = null
   }
 })
@@ -130,6 +132,14 @@ watch(() => props.modelValue, (open) => {
     <template #default="{ activeSection }">
       <!-- Account section -->
       <div v-if="activeSection === 'account'" class="account-section">
+        <div v-if="systemStatus && !systemStatus.auth.configured" class="auth-warning">
+          <Icon name="lucide:shield-alert" class="auth-warning-icon" />
+          <div class="auth-warning-content">
+            <span class="auth-warning-title">{{ $t('system.authNotConfigured') }}</span>
+            <span class="auth-warning-detail">{{ $t('system.authNotConfiguredDetail') }}</span>
+          </div>
+        </div>
+
         <div v-if="user" class="setting-group">
           <h3 class="section-title">{{ user.displayName }}</h3>
           <span class="account-username">@{{ user.username }}</span>
@@ -420,6 +430,40 @@ watch(() => props.modelValue, (open) => {
 .account-username {
   color: var(--color-text-muted);
   font-size: var(--font-size-sm);
+}
+
+.auth-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md);
+  background-color: var(--color-warning-bg);
+  border: 1px solid var(--color-warning);
+  border-radius: var(--radius-md);
+}
+
+.auth-warning-icon {
+  color: var(--color-warning);
+  font-size: var(--font-size-xl);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.auth-warning-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.auth-warning-title {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.auth-warning-detail {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
 }
 
 .empty-message {

@@ -288,6 +288,12 @@
     "setupStep2": "2. Uncomment the backup volume in docker-compose.yml:",
     "setupStep3": "3. Restart the container with docker compose up -d"
   },
+  "system": {
+    "dockerSocketMissing": "Docker socket is not available. Container management will not work.",
+    "composePathMissing": "No compose directory mounted. Set COMPOSE_PATH in your .env file.",
+    "authNotConfigured": "Authentication is using localhost defaults",
+    "authNotConfiguredDetail": "Set AUTH_RP_ID and AUTH_ORIGIN in your .env file if you plan to expose Labben publicly."
+  },
   "common": {
     "save": "Save",
     "cancel": "Cancel",
