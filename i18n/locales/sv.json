@@ -281,7 +281,12 @@
     "thursday": "Torsdag",
     "friday": "Fredag",
     "saturday": "Lördag",
-    "sunday": "Söndag"
+    "sunday": "Söndag",
+    "notMounted": "Backup inte konfigurerad",
+    "notMountedDescription": "En backup-destination måste monteras i containern innan du kan konfigurera backups.",
+    "setupStep1": "1. Lägg till BACKUP_PATH i din .env-fil:",
+    "setupStep2": "2. Avkommentera backup-volymen i docker-compose.yml:",
+    "setupStep3": "3. Starta om containern med docker compose up -d"
   },
   "common": {
     "save": "Spara",

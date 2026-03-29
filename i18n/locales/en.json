@@ -281,7 +281,12 @@
     "thursday": "Thursday",
     "friday": "Friday",
     "saturday": "Saturday",
-    "sunday": "Sunday"
+    "sunday": "Sunday",
+    "notMounted": "Backup not configured",
+    "notMountedDescription": "A backup destination needs to be mounted to the container before you can configure backups.",
+    "setupStep1": "1. Add BACKUP_PATH to your .env file:",
+    "setupStep2": "2. Uncomment the backup volume in docker-compose.yml:",
+    "setupStep3": "3. Restart the container with docker compose up -d"
   },
   "common": {
     "save": "Save",
