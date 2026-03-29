@@ -78,13 +78,14 @@ class BackupService {
         `${join(latestDir, 'compose')}/`,
       ], { timeout: 600_000 })
 
-      // 3. Create timestamped hardlink copy
-      await execFileAsync('cp', ['-al', latestDir, historyDir])
+      // 3. Create compressed archive of the backup
+      const archivePath = join(dest, 'history', `${timestamp}.tar.gz`)
+      await execFileAsync('tar', ['-czf', archivePath, '-C', dest, 'latest'], { timeout: 600_000 })
 
-      // 4. Calculate size
-      const sizeBytes = await this.getDirSize(latestDir)
+      // 4. Calculate size of the archive
+      const sizeBytes = await this.getFileSize(archivePath)
 
-      // 5. Clean up old history entries
+      // 5. Clean up old archives beyond retention count
       await this.cleanOldBackups(dest, config.retentionCount)
       databaseService.deleteOldBackupHistory(config.retentionCount)
 
@@ -144,24 +145,24 @@ class BackupService {
     }
   }
 
-  /** Get approximate directory size in bytes */
-  private async getDirSize(dirPath: string): Promise<number> {
+  /** Get file size in bytes */
+  private async getFileSize(filePath: string): Promise<number> {
     try {
-      const { stdout } = await execFileAsync('du', ['-sb', dirPath])
-      return parseInt(stdout.split('\t')[0] ?? '0', 10)
+      const fileStat = await stat(filePath)
+      return fileStat.size
     } catch {
       return 0
     }
   }
 
-  /** Remove old backup history directories beyond retention count */
+  /** Remove old backup archives beyond retention count */
   private async cleanOldBackups(dest: string, retentionCount: number): Promise<void> {
     try {
       const historyDir = join(dest, 'history')
       const entries = await readdir(historyDir)
-      const sorted = entries.sort().reverse()
-      for (const entry of sorted.slice(retentionCount)) {
-        await rm(join(historyDir, entry), { recursive: true, force: true })
+      const archives = entries.filter(e => e.endsWith('.tar.gz')).sort().reverse()
+      for (const entry of archives.slice(retentionCount)) {
+        await rm(join(historyDir, entry), { force: true })
       }
     } catch {
       // History dir may not exist yet
