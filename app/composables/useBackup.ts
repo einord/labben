@@ -28,19 +28,43 @@ export function useBackup() {
     }
   }
 
+  let pollInterval: ReturnType<typeof setInterval> | null = null
+
   async function runBackup(): Promise<boolean> {
     running.value = true
     try {
       await $fetch('/api/backup/run', { method: 'POST' })
-      toast.success(t('backup.backupSuccess'))
-      await fetchHistory()
+      // Backup runs in background — poll history to track progress
+      startPolling()
       return true
     } catch (err) {
       toast.error(t('backup.backupFailed'), err instanceof Error ? err.message : String(err))
-      await fetchHistory()
-      return false
-    } finally {
       running.value = false
+      return false
+    }
+  }
+
+  function startPolling() {
+    stopPolling()
+    pollInterval = setInterval(async () => {
+      await fetchHistory()
+      const latest = history.value[0]
+      if (latest && latest.status !== 'running') {
+        stopPolling()
+        running.value = false
+        if (latest.status === 'success') {
+          toast.success(t('backup.backupSuccess'))
+        } else {
+          toast.error(t('backup.backupFailed'), latest.errorMessage ?? '')
+        }
+      }
+    }, 3000)
+  }
+
+  function stopPolling() {
+    if (pollInterval) {
+      clearInterval(pollInterval)
+      pollInterval = null
     }
   }
 
