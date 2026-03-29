@@ -108,11 +108,12 @@ onMounted(() => fetchStatus())
       :subtitle="$t('dashboard.subtitle')"
     />
 
-    <ClientOnly>
-      <UiSetupGuide v-if="setupGuides.length > 0" :guides="setupGuides" />
-    </ClientOnly>
+    <div class="dashboard-content">
+      <ClientOnly>
+        <UiSetupGuide v-if="setupGuides.length > 0" :guides="setupGuides" />
+      </ClientOnly>
 
-    <div class="card-grid">
+      <div class="card-grid">
       <UiCard
         v-for="card in cards"
         :key="card.title"
@@ -128,11 +129,18 @@ onMounted(() => fetchStatus())
         </template>
         {{ card.description }}
       </UiCard>
+      </div>
     </div>
   </div>
 </template>
 
 <style scoped>
+.dashboard-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
 .card-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
