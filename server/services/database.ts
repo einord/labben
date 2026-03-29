@@ -3,6 +3,7 @@ import { resolve } from 'node:path'
 import type { ProjectGroup, ProjectMetadata } from '~/types/project'
 import type { User } from '~/types/auth'
 import type { BackupConfig, BackupHistoryEntry } from '~/types/backup'
+import type { StaticSite, UpdateStaticSiteData } from '~/types/static-sites'
 
 class DatabaseService {
   private db: Database.Database
@@ -77,6 +78,14 @@ class DatabaseService {
         schedule_minute INTEGER NOT NULL DEFAULT 0,
         retention_count INTEGER NOT NULL DEFAULT 30,
         enabled INTEGER NOT NULL DEFAULT 1,
+        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+
+      CREATE TABLE IF NOT EXISTS static_sites (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        domain TEXT NOT NULL UNIQUE,
+        enabled INTEGER NOT NULL DEFAULT 1,
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
         updated_at TEXT NOT NULL DEFAULT (datetime('now'))
       );
 
@@ -451,6 +460,76 @@ class DatabaseService {
     this.db.prepare(
       'DELETE FROM backup_history WHERE id NOT IN (SELECT id FROM backup_history ORDER BY started_at DESC LIMIT ?)',
     ).run(retentionCount)
+  }
+
+  // -- Static Sites --
+
+  /** Get all static sites ordered by domain */
+  getStaticSites(): StaticSite[] {
+    const rows = this.db.prepare(
+      'SELECT id, domain, enabled, created_at as createdAt, updated_at as updatedAt FROM static_sites ORDER BY domain',
+    ).all() as Array<{ id: number; domain: string; enabled: number; createdAt: string; updatedAt: string }>
+    return rows.map(r => ({ ...r, enabled: r.enabled === 1 }))
+  }
+
+  /** Get a single static site by ID */
+  getStaticSite(id: number): StaticSite | null {
+    const row = this.db.prepare(
+      'SELECT id, domain, enabled, created_at as createdAt, updated_at as updatedAt FROM static_sites WHERE id = ?',
+    ).get(id) as { id: number; domain: string; enabled: number; createdAt: string; updatedAt: string } | undefined
+    if (!row) return null
+    return { ...row, enabled: row.enabled === 1 }
+  }
+
+  /** Find a static site by domain */
+  getStaticSiteByDomain(domain: string): StaticSite | null {
+    const row = this.db.prepare(
+      'SELECT id, domain, enabled, created_at as createdAt, updated_at as updatedAt FROM static_sites WHERE domain = ?',
+    ).get(domain) as { id: number; domain: string; enabled: number; createdAt: string; updatedAt: string } | undefined
+    if (!row) return null
+    return { ...row, enabled: row.enabled === 1 }
+  }
+
+  /** Create a new static site entry */
+  createStaticSite(domain: string): StaticSite {
+    const result = this.db.prepare(
+      'INSERT INTO static_sites (domain) VALUES (?)',
+    ).run(domain)
+    return this.getStaticSite(Number(result.lastInsertRowid))!
+  }
+
+  /** Update an existing static site */
+  updateStaticSite(id: number, data: UpdateStaticSiteData): StaticSite | null {
+    const current = this.getStaticSite(id)
+    if (!current) return null
+
+    const updates: string[] = []
+    const values: unknown[] = []
+
+    if (data.domain !== undefined) {
+      updates.push('domain = ?')
+      values.push(data.domain)
+    }
+    if (data.enabled !== undefined) {
+      updates.push('enabled = ?')
+      values.push(data.enabled ? 1 : 0)
+    }
+
+    if (updates.length > 0) {
+      updates.push("updated_at = datetime('now')")
+      values.push(id)
+      this.db.prepare(
+        `UPDATE static_sites SET ${updates.join(', ')} WHERE id = ?`,
+      ).run(...values)
+    }
+
+    return this.getStaticSite(id)
+  }
+
+  /** Delete a static site by ID */
+  deleteStaticSite(id: number): boolean {
+    const result = this.db.prepare('DELETE FROM static_sites WHERE id = ?').run(id)
+    return result.changes > 0
   }
 
   /** Create an atomic backup of the SQLite database */
