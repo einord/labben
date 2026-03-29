@@ -1,8 +1,11 @@
 <script setup lang="ts">
 import type { StaticSite } from '~/types/static-sites'
+import type { NpmProxyHost } from '~/types/npm'
 
 interface StaticSitesListItemProps {
   site: StaticSite
+  npmReady: boolean
+  proxyHosts: NpmProxyHost[]
 }
 
 const props = defineProps<StaticSitesListItemProps>()
@@ -11,6 +14,7 @@ const emit = defineEmits<{
   edit: [site: StaticSite]
   upload: [site: StaticSite]
   delete: [site: StaticSite]
+  publish: [site: StaticSite]
 }>()
 
 const { t } = useI18n()
@@ -20,6 +24,12 @@ const toast = useToast()
 const formattedDate = computed(() => {
   return new Date(props.site.createdAt).toLocaleDateString()
 })
+
+const matchingProxyHost = computed(() => {
+  return props.proxyHosts.find(h => h.domainNames.includes(props.site.domain))
+})
+
+const hasProxyHost = computed(() => !!matchingProxyHost.value)
 
 async function handleCopyPath() {
   const path = await getSitePath(props.site.id)
@@ -48,8 +58,25 @@ async function handleCopyPath() {
       >
         {{ site.enabled ? t('staticSites.enabled') : t('staticSites.disabled') }}
       </UiBadge>
+      <UiBadge
+        v-if="npmReady && hasProxyHost"
+        variant="success"
+        dot
+        size="sm"
+      >
+        {{ matchingProxyHost?.sslForced ? 'HTTPS' : 'HTTP' }}
+      </UiBadge>
     </div>
     <div class="site-actions">
+      <UiButton
+        v-if="npmReady && !hasProxyHost"
+        variant="secondary"
+        size="sm"
+        icon="lucide:globe"
+        @click="emit('publish', site)"
+      >
+        {{ t('staticSites.publish') }}
+      </UiButton>
       <UiButton variant="ghost" size="sm" icon="lucide:pencil" @click="emit('edit', site)" />
       <UiButton variant="ghost" size="sm" icon="lucide:upload" @click="emit('upload', site)" />
       <UiButton variant="ghost" size="sm" icon="lucide:copy" @click="handleCopyPath" />

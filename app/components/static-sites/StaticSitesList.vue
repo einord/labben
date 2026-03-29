@@ -1,5 +1,13 @@
 <script setup lang="ts">
 import type { StaticSite } from '~/types/static-sites'
+import type { NpmProxyHost } from '~/types/npm'
+
+interface StaticSitesListProps {
+  npmReady: boolean
+  proxyHosts: NpmProxyHost[]
+}
+
+const props = defineProps<StaticSitesListProps>()
 
 const { sites, loading, fetchSites, deleteSite } = useStaticSites()
 const { t } = useI18n()
@@ -9,6 +17,13 @@ const editingSite = ref<StaticSite | null>(null)
 const showUpload = ref(false)
 const uploadSite = ref<StaticSite | null>(null)
 const confirmDeleteSite = ref<StaticSite | null>(null)
+const showProxyForm = ref(false)
+const proxyFormSite = ref<StaticSite | null>(null)
+
+function handlePublish(site: StaticSite) {
+  proxyFormSite.value = site
+  showProxyForm.value = true
+}
 
 function handleAdd() {
   editingSite.value = null
@@ -66,9 +81,12 @@ function handleSaved() {
         v-for="site in sites"
         :key="site.id"
         :site="site"
+        :npm-ready="props.npmReady"
+        :proxy-hosts="props.proxyHosts"
         @edit="handleEdit"
         @upload="handleUpload"
         @delete="handleDeleteRequest"
+        @publish="handlePublish"
       />
     </div>
   </UiCard>
@@ -82,6 +100,11 @@ function handleSaved() {
   <StaticSitesUpload
     v-model="showUpload"
     :site="uploadSite"
+  />
+
+  <StaticSitesProxyForm
+    v-model="showProxyForm"
+    :site="proxyFormSite"
   />
 
   <!-- Delete confirmation modal -->

@@ -1,9 +1,10 @@
 import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
 import { resolve, join } from 'node:path'
-import { mkdir, writeFile, access, rename, rm } from 'node:fs/promises'
+import { mkdir, writeFile, readFile, access, rename, rm } from 'node:fs/promises'
 import Docker from 'dockerode'
 import { databaseService } from './database'
+import { parseCompose } from '../utils/compose'
 import type { StaticSite, StaticSitesStatus, UpdateStaticSiteData } from '~/types/static-sites'
 
 const execFileAsync = promisify(execFile)
@@ -30,7 +31,7 @@ class StaticSitesService {
   private hostComposeDir: string | null
 
   constructor() {
-    this.composeBaseDir = resolve(process.env.COMPOSE_DIR || '/data/compose')
+    this.composeBaseDir = resolve(process.env.COMPOSE_DIR || process.env.COMPOSE_PATH || '/data/compose')
     this.hostComposeDir = process.env.COMPOSE_HOST_DIR || null
   }
 
@@ -219,16 +220,42 @@ class StaticSitesService {
     }
   }
 
+  /** Detect the network name used by the configured NPM proxy project */
+  private async detectProxyNetwork(): Promise<string | null> {
+    const proxyProject = databaseService.getSetting('proxy_project')
+    if (!proxyProject) return null
+
+    try {
+      const configPath = join(this.composeBaseDir, proxyProject, 'docker-compose.yml')
+      const content = await readFile(configPath, 'utf-8')
+      const compose = parseCompose(content)
+
+      if (!compose.networks) return null
+
+      // Look for a network with an explicit name, or use the first network key
+      for (const [key, config] of Object.entries(compose.networks)) {
+        const netConfig = config as Record<string, unknown> | null
+        if (netConfig && typeof netConfig.name === 'string') {
+          return netConfig.name
+        }
+        return `${proxyProject}_${key}`
+      }
+    } catch {
+      // Compose file not found or unreadable
+    }
+
+    return null
+  }
+
   /** Ensure the compose project directory and files exist */
   async ensureComposeProject(): Promise<void> {
     await mkdir(this.projectDir, { recursive: true })
     await mkdir(this.sitesDir, { recursive: true })
 
-    // Write docker-compose.yml if it doesn't exist
-    try {
-      await access(this.composeFilePath)
-    } catch {
-      const composeContent = `services:
+    // Always regenerate compose file to keep network config in sync
+    const networkName = await this.detectProxyNetwork()
+
+    let composeContent = `services:
   static-sites:
     image: nginx:alpine
     container_name: static-sites
@@ -236,15 +263,20 @@ class StaticSitesService {
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
       - ./sites:/var/www/sites:ro
-    networks:
-      - proxy_default
+`
+
+    if (networkName) {
+      composeContent += `    networks:
+      - proxy_net
 
 networks:
-  proxy_default:
+  proxy_net:
+    name: ${networkName}
     external: true
 `
-      await writeFile(this.composeFilePath, composeContent, 'utf-8')
     }
+
+    await writeFile(this.composeFilePath, composeContent, 'utf-8')
 
     // Always ensure nginx.conf exists
     try {

@@ -1,7 +1,10 @@
 <script setup lang="ts">
 const { status, fetchStatus, fetchSites, startContainer, stopContainer } = useStaticSites()
+const { proxyProject, fetchProxySettings } = useProxy()
+const npm = useNpm()
 
 const containerLoading = ref(false)
+const npmReady = computed(() => !!proxyProject.value && npm.status.value.connected)
 
 async function handleToggleContainer() {
   containerLoading.value = true
@@ -14,7 +17,10 @@ async function handleToggleContainer() {
 }
 
 onMounted(async () => {
-  await Promise.all([fetchStatus(), fetchSites()])
+  await Promise.all([fetchStatus(), fetchSites(), fetchProxySettings(), npm.fetchStatus()])
+  if (npm.status.value.connected) {
+    await npm.fetchProxyHosts()
+  }
 })
 </script>
 
@@ -45,8 +51,24 @@ onMounted(async () => {
     </UiPageHeader>
 
     <div class="static-sites-content">
+      <UiAlert
+        v-if="!proxyProject"
+        icon="lucide:shield-alert"
+        :title="$t('staticSites.noProxy')"
+        :description="$t('staticSites.noProxyDescription')"
+        variant="warning"
+      >
+        <template #actions>
+          <NuxtLink to="/proxy">
+            <UiButton variant="secondary" size="sm" icon="lucide:settings">
+              {{ $t('staticSites.configureProxy') }}
+            </UiButton>
+          </NuxtLink>
+        </template>
+      </UiAlert>
+
       <StaticSitesSetup v-if="!status.managedContainerExists" />
-      <StaticSitesList v-else />
+      <StaticSitesList v-else :npm-ready="npmReady" :proxy-hosts="npm.proxyHosts.value" />
     </div>
   </div>
 </template>
