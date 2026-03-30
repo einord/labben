@@ -40,7 +40,7 @@ function toggleSidebar() {
     <!-- Sidebar -->
     <aside class="sidebar" :class="{ open: sidebarOpen }">
       <div class="sidebar-header">
-        <h1 class="logo"><Icon name="lucide:flask-round" /> Labben</h1>
+        <UiLogo size="md" />
       </div>
       <nav class="nav">
         <NuxtLink
@@ -130,12 +130,6 @@ function toggleSidebar() {
   border-bottom: 1px solid var(--color-border);
 }
 
-.logo {
-  font-size: var(--font-size-2xl);
-  font-weight: 700;
-  color: var(--color-accent);
-  letter-spacing: 0.02em;
-}
 
 .nav {
   display: flex;
