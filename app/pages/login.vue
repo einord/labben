@@ -57,10 +57,7 @@ onMounted(async () => {
 <template>
   <div class="login-page">
     <div class="login-card">
-      <div class="logo">
-        <Icon name="lucide:flask-round" class="logo-icon" />
-        <h1 class="logo-text">Labben</h1>
-      </div>
+      <UiLogo size="lg" />
 
       <!-- First-time setup -->
       <template v-if="!isSetup">
@@ -125,24 +122,6 @@ onMounted(async () => {
   flex-direction: column;
   align-items: center;
   gap: var(--spacing-lg);
-}
-
-.logo {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-}
-
-.logo-icon {
-  font-size: var(--font-size-3xl);
-  color: var(--color-accent);
-}
-
-.logo-text {
-  font-size: var(--font-size-2xl);
-  font-weight: 700;
-  color: var(--color-accent);
-  margin: 0;
 }
 
 .subtitle {

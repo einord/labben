@@ -121,10 +121,11 @@ Pages are composition layers, not implementation layers. A page should:
 
 ### Components & Reusability
 
-- **Build a UI component library in `components/ui/`.** Buttons, cards, badges, modals, drawers, inputs, spinners, toasts, setup guides — all should be reusable.
+- **Never write one-off UI patterns inline.** If a visual element (alert, banner, status indicator, etc.) could appear on more than one page, extract it to a reusable `Ui`-component in `components/ui/` before using it. Check existing `Ui`-components first — the pattern you need may already exist.
+- **Build a UI component library in `components/ui/`.** Buttons, cards, badges, modals, drawers, inputs, spinners, toasts, alerts, setup guides — all should be reusable.
 - **Prefer props and slots over duplication.**
 - **Use slots for flexible content.**
-- **Prefix base components with `Ui`.** E.g. `UiButton`, `UiCard`, `UiModal`, `UiDrawer`, `UiSetupGuide`.
+- **Prefix base components with `Ui`.** E.g. `UiButton`, `UiCard`, `UiModal`, `UiDrawer`, `UiAlert`, `UiSetupGuide`.
 
 ### CSS
 
