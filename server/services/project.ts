@@ -34,10 +34,12 @@ const DEFAULT_METADATA: ProjectMetadata = {
 
 class ProjectService {
   private composeDir: string
+  private hostComposeDir: string | null
   private selfHostname: string | null
 
   constructor() {
-    this.composeDir = resolve(process.env.COMPOSE_DIR || '/compose-files')
+    this.composeDir = resolve(process.env.COMPOSE_DIR || process.env.COMPOSE_PATH || '/data/compose')
+    this.hostComposeDir = process.env.COMPOSE_HOST_DIR || null
     // Docker sets HOSTNAME to the container ID
     this.selfHostname = process.env.HOSTNAME ?? null
   }
@@ -96,15 +98,16 @@ class ProjectService {
 
   /** Determine if a project is managed (in COMPOSE_DIR) or external. */
   private resolveSource(workingDir: string, configFile?: string): ProjectSource {
-    // Check if either workingDir or configFile is under COMPOSE_DIR
-    // This handles the case where Docker labels have host paths but
-    // the filesystem scanner has updated configFile to container paths
+    // Check if either workingDir or configFile is under COMPOSE_DIR.
+    // Paths may be container-local (from filesystem scan) or host-side
+    // (from Docker labels), so we check against both.
     const paths = [workingDir, configFile].filter(Boolean) as string[]
     for (const p of paths) {
       const resolved = resolve(p)
       if (resolved.startsWith(this.composeDir)) return 'managed'
+      if (this.hostComposeDir && resolved.startsWith(this.hostComposeDir)) return 'managed'
     }
-    return paths.length === 0 ? 'external' : 'external'
+    return 'external'
   }
 
   /** Create a new project (filesystem + database entry). */
