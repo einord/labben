@@ -7,6 +7,7 @@ export interface NavItem {
 export const NAV_ITEMS: readonly NavItem[] = [
   { labelKey: 'nav.dashboard', icon: 'lucide:layout-dashboard', to: '/' },
   { labelKey: 'nav.projects', icon: 'lucide:folder-open', to: '/projects' },
+  { labelKey: 'nav.staticSites', icon: 'lucide:globe', to: '/sites' },
 ] as const
 
 export const PROXY_NAV_ITEM: NavItem = {

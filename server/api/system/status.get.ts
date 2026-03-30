@@ -1,5 +1,6 @@
 import { access, stat } from 'node:fs/promises'
 import { constants } from 'node:fs'
+import { resolve } from 'node:path'
 
 interface SystemStatus {
   composePath: { mounted: boolean }
@@ -30,9 +31,12 @@ async function isWritable(path: string): Promise<boolean> {
 }
 
 export default defineEventHandler(async (): Promise<{ success: boolean; data: SystemStatus }> => {
-  const composeMounted = await isDirectoryMounted('/data/compose')
-  const backupMounted = await isDirectoryMounted('/backups')
-  const backupWritable = backupMounted ? await isWritable('/backups') : false
+  const composePath = resolve(process.env.COMPOSE_DIR || process.env.COMPOSE_PATH || '/data/compose')
+  const backupPath = resolve(process.env.BACKUP_PATH || '/backups')
+
+  const composeMounted = await isDirectoryMounted(composePath)
+  const backupMounted = await isDirectoryMounted(backupPath)
+  const backupWritable = backupMounted ? await isWritable(backupPath) : false
   const dockerAvailable = await isDirectoryMounted('/var/run/docker.sock')
     .catch(() => false)
     // Socket is a file, not a directory
