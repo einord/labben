@@ -18,13 +18,10 @@ class BackupService {
   constructor() {
     this.composeDir = '/data/compose'
     this.dataDir = '/data/db'
-
-    // Defer scheduler init to avoid module loading order issues
-    setTimeout(() => this.initScheduler(), 1000)
   }
 
   /** Initialize scheduler from saved config */
-  private initScheduler(): void {
+  initScheduler(): void {
     const config = databaseService.getBackupConfig()
     if (config?.enabled) {
       this.startScheduler()
