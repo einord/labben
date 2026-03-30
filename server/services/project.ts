@@ -107,6 +107,8 @@ class ProjectService {
       if (resolved.startsWith(this.composeDir)) return 'managed'
       if (this.hostComposeDir && resolved.startsWith(this.hostComposeDir)) return 'managed'
     }
+    // TODO: Remove debug logging once source detection is verified in production
+    console.log('[resolveSource] external:', { workingDir, configFile, composeDir: this.composeDir, hostComposeDir: this.hostComposeDir })
     return 'external'
   }
 
