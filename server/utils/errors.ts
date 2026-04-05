@@ -17,10 +17,11 @@ export function isAlreadyExistsError(error: unknown): boolean {
 export function isDockerUnavailableError(error: unknown): boolean {
   if (!(error instanceof Error)) return false
   const message = error.message.toLowerCase()
-  // Dockerode throws ECONNREFUSED when daemon is down, ENOENT when socket file is missing
   if ('code' in error) {
     const code = (error as NodeJS.ErrnoException).code
-    if (code === 'ECONNREFUSED' || code === 'ENOENT') return true
+    if (code === 'ECONNREFUSED') return true
+    // Only treat ENOENT as Docker unavailable when it refers to the socket connection
+    if (code === 'ENOENT' && message.includes('connect')) return true
   }
   return message.includes('econnrefused')
     || message.includes('connect enoent')
