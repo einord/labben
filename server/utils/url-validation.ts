@@ -25,7 +25,8 @@ function isBlockedIPv4(hostname: string): boolean {
   const octets = parts.map(Number)
   if (octets.some(o => isNaN(o) || o < 0 || o > 255)) return false
 
-  const [a, b] = octets
+  const a = octets[0]!
+  const b = octets[1]!
 
   // 127.0.0.0/8 — loopback
   if (a === 127) return true
