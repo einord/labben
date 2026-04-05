@@ -13,6 +13,12 @@ export default defineEventHandler(async (event) => {
     const existingUser = databaseService.getUserById(body.userId)
 
     if (existingUser) {
+      // Verify the authenticated session owns this account
+      const sessionUserId = await authService.getSessionUserId(event)
+      if (!sessionUserId || sessionUserId !== body.userId) {
+        throw createError({ statusCode: 403, message: 'Cannot add passkey to another user\'s account' })
+      }
+
       // Adding a new passkey to existing account
       const verified = await authService.verifyAndStoreRegistration(body.userId, body.response as any)
       if (!verified) {
