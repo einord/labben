@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto'
 import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
 import { resolve, join } from 'node:path'
-import { mkdir, readdir, rm } from 'node:fs/promises'
+import { mkdir, readdir, rm, stat } from 'node:fs/promises'
 import { databaseService } from './database'
 import type { BackupConfig } from '~/types/backup'
 
