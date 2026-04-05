@@ -15,10 +15,24 @@ function extractErrorDetails(err: unknown): string {
   return String(err)
 }
 
+/** Check if a fetch error is a 503 Docker unavailable response */
+function isDockerUnavailable(err: unknown): boolean {
+  if (err && typeof err === 'object') {
+    const e = err as Record<string, unknown>
+    if (e.statusCode === 503 || e.status === 503) return true
+    if (e.response && typeof e.response === 'object') {
+      const resp = e.response as Record<string, unknown>
+      if (resp.status === 503) return true
+    }
+  }
+  return false
+}
+
 export function useProjects() {
   const projects = ref<ProjectWithMetadata[]>([])
   const loading = ref(false)
   const error = ref<string | null>(null)
+  const dockerUnavailable = ref(false)
   const toast = useToast()
   const { t } = useI18n()
 
@@ -29,9 +43,16 @@ export function useProjects() {
     try {
       const response = await $fetch<{ success: boolean; data: ProjectWithMetadata[] }>('/api/projects')
       projects.value = response.data
+      dockerUnavailable.value = false
     } catch (err) {
-      error.value = err instanceof Error ? err.message : 'Failed to fetch projects'
-      toast.error(t('toast.projectsFetchError'))
+      if (isDockerUnavailable(err)) {
+        dockerUnavailable.value = true
+        // Don't show toast — the page will display a banner instead
+      } else {
+        dockerUnavailable.value = false
+        error.value = err instanceof Error ? err.message : 'Failed to fetch projects'
+        toast.error(t('toast.projectsFetchError'))
+      }
     } finally {
       loading.value = false
     }
@@ -153,5 +174,5 @@ export function useProjects() {
     }
   }
 
-  return { projects, loading, error, fetchProjects, createProject, projectUp, projectDown, projectRestart, projectUpdate, projectPull, getConfig, saveConfig, assignGroup, removeFromDatabase }
+  return { projects, loading, error, dockerUnavailable, fetchProjects, createProject, projectUp, projectDown, projectRestart, projectUpdate, projectPull, getConfig, saveConfig, assignGroup, removeFromDatabase }
 }

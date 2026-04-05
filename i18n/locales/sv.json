@@ -40,7 +40,9 @@
     "notFoundDescription": "Det gick inte att hitta det begärda projektet.",
     "containersRunning": "{running}/{total} containrar igång",
     "publish": "Publicera",
-    "update": "Uppdatera"
+    "update": "Uppdatera",
+    "dockerUnavailable": "Docker-daemon är inte tillgänglig",
+    "dockerUnavailableDescription": "Kan inte ansluta till Docker-daemon. Kontrollera att Docker körs och att socketen är korrekt monterad."
   },
   "createProject": {
     "title": "Nytt projekt",

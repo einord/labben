@@ -8,6 +8,7 @@ export function useProjectsView() {
   const {
     projects,
     loading: projectsLoading,
+    dockerUnavailable: projectsDockerUnavailable,
     fetchProjects,
     projectUp,
     projectDown,
@@ -22,11 +23,14 @@ export function useProjectsView() {
   const {
     containers: allContainers,
     loading: containersLoading,
+    dockerUnavailable: containersDockerUnavailable,
     fetchContainers,
     startContainer,
     stopContainer,
     restartContainer,
   } = useContainers()
+
+  const dockerUnavailable = computed(() => projectsDockerUnavailable.value || containersDockerUnavailable.value)
 
   const {
     groups,
@@ -204,6 +208,7 @@ export function useProjectsView() {
     activeAction,
     projectsLoading,
     containersLoading,
+    dockerUnavailable,
     createProject,
     assignGroup,
     removeFromDatabase,

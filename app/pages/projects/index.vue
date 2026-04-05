@@ -10,6 +10,7 @@ const {
   activeAction,
   projectsLoading,
   containersLoading,
+  dockerUnavailable,
   createProject,
   init,
   refreshAll,
@@ -101,6 +102,14 @@ onMounted(async () => {
         </UiButton>
       </template>
     </UiPageHeader>
+
+    <UiAlert
+      v-if="dockerUnavailable"
+      icon="lucide:plug-zap"
+      :title="$t('projects.dockerUnavailable')"
+      :description="$t('projects.dockerUnavailableDescription')"
+      variant="danger"
+    />
 
     <div class="master-detail">
       <aside class="list-panel">
