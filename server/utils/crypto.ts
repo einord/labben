@@ -8,7 +8,7 @@ const AUTH_TAG_LENGTH = 16
 /** Get or create a stable encryption key that survives HMR reloads */
 function getEncryptionKey(): Buffer {
   const globalKey = '__labben_encryption_key'
-  const g = globalThis as Record<string, Buffer | undefined>
+  const g = globalThis as unknown as Record<string, Buffer | undefined>
   if (g[globalKey]) return g[globalKey]
 
   const secret = process.env.ENCRYPTION_SECRET
@@ -40,7 +40,9 @@ export function decrypt(value: string): string | null {
   const parts = value.slice(PREFIX.length).split(':')
   if (parts.length !== 3) return null
 
-  const [ivHex, authTagHex, ciphertext] = parts
+  const ivHex = parts[0]!
+  const authTagHex = parts[1]!
+  const ciphertext = parts[2]!
   const key = getEncryptionKey()
   const iv = Buffer.from(ivHex, 'hex')
   const authTag = Buffer.from(authTagHex, 'hex')
