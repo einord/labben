@@ -19,19 +19,7 @@ const VALID_STATUSES: ReadonlySet<string> = new Set<ContainerStatus>([
   'running', 'exited', 'paused', 'restarting', 'created', 'removing', 'dead',
 ])
 
-const SENSITIVE_ENV_PATTERNS = /^[^=]*(PASSWORD|PASSWD|SECRET|TOKEN|API_KEY|ACCESS_KEY|PRIVATE_KEY|CREDENTIALS|AUTH)=/i
-
-/** Mask sensitive environment variable values while preserving the variable name */
-function maskSensitiveEnvVars(envVars: string[]): string[] {
-  return envVars.map((entry) => {
-    if (SENSITIVE_ENV_PATTERNS.test(entry)) {
-      const eqIndex = entry.indexOf('=')
-      if (eqIndex === -1) return entry
-      return `${entry.slice(0, eqIndex)}=****`
-    }
-    return entry
-  })
-}
+import { maskSensitiveEnvVars } from '../utils/env-mask'
 
 function toContainerStatus(state: string): ContainerStatus {
   if (VALID_STATUSES.has(state)) {
