@@ -54,10 +54,10 @@ class NpmApiService {
     return creds.password === NPM_DEFAULT_PASSWORD
   }
 
-  /** Test connection by attempting login with given credentials */
+  /** Test connection by attempting login with given credentials. Rethrows SSRF validation errors. */
   async testConnection(url: string, email: string, password: string): Promise<boolean> {
+    validateExternalUrl(url)
     try {
-      validateExternalUrl(url)
       await this.login(url, email, password)
       return true
     } catch {

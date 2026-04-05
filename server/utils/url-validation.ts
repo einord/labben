@@ -43,8 +43,8 @@ function isBlockedIPv4(hostname: string): boolean {
   // 169.254.0.0/16 — link-local / cloud metadata
   if (a === 169 && b === 254) return true
 
-  // 0.0.0.0
-  if (a === 0 && b === 0 && octets[2] === 0 && octets[3] === 0) return true
+  // 0.0.0.0/8 — reserved
+  if (a === 0) return true
 
   return false
 }
@@ -52,6 +52,8 @@ function isBlockedIPv4(hostname: string): boolean {
 /**
  * Validate that a URL is safe for server-side requests.
  * Blocks private/internal network addresses and non-HTTP protocols to prevent SSRF attacks.
+ * Note: this validates the hostname string only — it does not resolve DNS, so a domain that
+ * resolves to 127.0.0.1 would pass. Acceptable for a homelab app with trusted admin users.
  *
  * @throws Error if the URL is invalid, uses a blocked protocol, or targets a private/internal address
  */

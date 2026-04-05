@@ -1,4 +1,5 @@
 // Set HTTP security headers on all responses
+// 'unsafe-inline' is required for script-src (Nuxt SSR hydration) and style-src (scoped styles)
 export default defineEventHandler((event) => {
   const csp = [
     "default-src 'self'",

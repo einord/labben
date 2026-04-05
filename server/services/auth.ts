@@ -215,7 +215,7 @@ class AuthService {
     if (this.challenges.size >= AuthService.MAX_ACTIVE_CHALLENGES) {
       this.cleanupChallenges()
       if (this.challenges.size >= AuthService.MAX_ACTIVE_CHALLENGES) {
-        throw new Error('Too many active challenges, please try again later')
+        throw createError({ statusCode: 429, message: 'Too many active challenges, please try again later' })
       }
     }
 
