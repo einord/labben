@@ -40,7 +40,9 @@
     "notFoundDescription": "The requested project could not be found.",
     "containersRunning": "{running}/{total} containers running",
     "publish": "Publish",
-    "update": "Update"
+    "update": "Update",
+    "dockerUnavailable": "Docker daemon is not available",
+    "dockerUnavailableDescription": "Cannot connect to the Docker daemon. Make sure Docker is running and the socket is mounted correctly."
   },
   "createProject": {
     "title": "New project",

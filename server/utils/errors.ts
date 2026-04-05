@@ -13,6 +13,22 @@ export function isAlreadyExistsError(error: unknown): boolean {
   return error instanceof Error && error.message.includes('already exists')
 }
 
+/** Check if a Docker error indicates the daemon is unavailable (connection refused or socket missing) */
+export function isDockerUnavailableError(error: unknown): boolean {
+  if (!(error instanceof Error)) return false
+  const message = error.message.toLowerCase()
+  if ('code' in error) {
+    const code = (error as NodeJS.ErrnoException).code
+    if (code === 'ECONNREFUSED') return true
+    // Only treat ENOENT as Docker unavailable when it refers to the socket connection
+    if (code === 'ENOENT' && message.includes('connect')) return true
+  }
+  return message.includes('econnrefused')
+    || message.includes('connect enoent')
+    || message.includes('socket hang up')
+    || message.includes('is docker running')
+}
+
 /** Extract a meaningful error message from an unknown error (e.g. from external APIs) */
 export function extractErrorMessage(error: unknown, fallback: string): string {
   if (error && typeof error === 'object') {

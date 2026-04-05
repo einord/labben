@@ -4,6 +4,7 @@ export function useContainers() {
   const containers = ref<ContainerSummary[]>([])
   const loading = ref(false)
   const error = ref<string | null>(null)
+  const dockerUnavailable = ref(false)
   const toast = useToast()
   const { t } = useI18n()
 
@@ -14,9 +15,15 @@ export function useContainers() {
     try {
       const response = await $fetch<{ success: boolean; data: ContainerSummary[] }>('/api/containers')
       containers.value = response.data
+      dockerUnavailable.value = false
     } catch (err) {
-      error.value = err instanceof Error ? err.message : 'Failed to fetch containers'
-      toast.error(t('toast.containersFetchError'))
+      if (isDockerUnavailableResponse(err)) {
+        dockerUnavailable.value = true
+      } else {
+        dockerUnavailable.value = false
+        error.value = err instanceof Error ? err.message : 'Failed to fetch containers'
+        toast.error(t('toast.containersFetchError'))
+      }
     } finally {
       loading.value = false
     }
@@ -55,5 +62,5 @@ export function useContainers() {
     }
   }
 
-  return { containers, loading, error, fetchContainers, startContainer, stopContainer, restartContainer }
+  return { containers, loading, error, dockerUnavailable, fetchContainers, startContainer, stopContainer, restartContainer }
 }
