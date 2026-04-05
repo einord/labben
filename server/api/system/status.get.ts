@@ -2,6 +2,7 @@ import { access, stat } from 'node:fs/promises'
 import { constants } from 'node:fs'
 import { resolve } from 'node:path'
 import { dockerService } from '../../services/docker'
+import { composePath as configuredComposePath } from '../../utils/config'
 
 interface SystemStatus {
   composePath: { mounted: boolean }
@@ -33,7 +34,7 @@ async function isWritable(path: string): Promise<boolean> {
 }
 
 export default defineEventHandler(async (): Promise<{ success: boolean; data: SystemStatus }> => {
-  const composePath = resolve(process.env.COMPOSE_DIR || process.env.COMPOSE_PATH || '/data/compose')
+  const composePath = configuredComposePath
   const backupPath = resolve(process.env.BACKUP_PATH || '/backups')
 
   const composeMounted = await isDirectoryMounted(composePath)

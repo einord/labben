@@ -3,6 +3,7 @@ import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
 import { readFile, writeFile, mkdir, access, readdir, stat, symlink, lstat } from 'node:fs/promises'
 import { join, resolve } from 'node:path'
+import { composePath, composeHostDir } from '../utils/config'
 import type { Readable } from 'node:stream'
 import type {
   ContainerSummary,
@@ -35,9 +36,8 @@ class DockerService {
   private symlinkError: string | null = null
 
   constructor() {
-    this.newProjectDir = resolve(process.env.COMPOSE_DIR || '/data/compose')
-    // Host-side path for COMPOSE_DIR — needed so Docker daemon can resolve volume mounts
-    this.hostComposeDir = process.env.COMPOSE_HOST_DIR || null
+    this.newProjectDir = composePath
+    this.hostComposeDir = composeHostDir
     // Create a symlink so the host path is accessible inside the container
     this.ensureHostPathSymlink().catch((err) => {
       this.symlinkError = err instanceof Error ? err.message : String(err)
