@@ -1,9 +1,10 @@
 import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
-import { resolve, join } from 'node:path'
+import { join } from 'node:path'
 import { mkdir, writeFile, readFile, access, rename, rm } from 'node:fs/promises'
 import Docker from 'dockerode'
 import { databaseService } from './database'
+import { composePath, composeHostDir } from '../utils/config'
 import { parseCompose } from '../utils/compose'
 import type { StaticSite, StaticSitesStatus, UpdateStaticSiteData } from '~/types/static-sites'
 
@@ -31,8 +32,8 @@ class StaticSitesService {
   private hostComposeDir: string | null
 
   constructor() {
-    this.composeBaseDir = resolve(process.env.COMPOSE_DIR || process.env.COMPOSE_PATH || '/data/compose')
-    this.hostComposeDir = process.env.COMPOSE_HOST_DIR || null
+    this.composeBaseDir = composePath
+    this.hostComposeDir = composeHostDir
   }
 
   /** Get the container-local path for the static-sites compose project */

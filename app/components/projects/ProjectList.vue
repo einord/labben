@@ -58,7 +58,7 @@ const sections = computed<ListSection[]>(() => {
     }
   }
 
-  // External projects (from Docker, not in COMPOSE_DIR)
+  // External projects (from Docker, not in COMPOSE_PATH)
   if (externalProjects.value.length > 0) {
     result.push({ key: 'external', label: t('projects.external'), icon: 'lucide:external-link', projects: externalProjects.value })
   }

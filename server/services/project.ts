@@ -2,6 +2,7 @@ import type { ProjectWithMetadata, ProjectMetadata, ProjectSource } from '~/type
 import { resolve } from 'node:path'
 import { dockerService } from './docker'
 import { databaseService } from './database'
+import { composePath, composeHostDir } from '../utils/config'
 
 const NPM_IMAGE_PREFIX = 'jc21/nginx-proxy-manager'
 const STATIC_SITES_CONTAINER = 'static-sites'
@@ -38,8 +39,8 @@ class ProjectService {
   private selfHostname: string | null
 
   constructor() {
-    this.composeDir = resolve(process.env.COMPOSE_DIR || process.env.COMPOSE_PATH || '/data/compose')
-    this.hostComposeDir = process.env.COMPOSE_HOST_DIR || null
+    this.composeDir = composePath
+    this.hostComposeDir = composeHostDir
     // Docker sets HOSTNAME to the container ID
     this.selfHostname = process.env.HOSTNAME ?? null
   }
@@ -96,9 +97,9 @@ class ProjectService {
     return containers.some(c => c.name === STATIC_SITES_CONTAINER)
   }
 
-  /** Determine if a project is managed (in COMPOSE_DIR) or external. */
+  /** Determine if a project is managed (in COMPOSE_PATH) or external. */
   private resolveSource(workingDir: string, configFile?: string): ProjectSource {
-    // Check if either workingDir or configFile is under COMPOSE_DIR.
+    // Check if either workingDir or configFile is under COMPOSE_PATH.
     // Paths may be container-local (from filesystem scan) or host-side
     // (from Docker labels), so we check against both.
     const paths = [workingDir, configFile].filter(Boolean) as string[]
