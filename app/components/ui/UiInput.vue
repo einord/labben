@@ -21,6 +21,8 @@ withDefaults(defineProps<UiInputProps>(), {
   disabled: false,
 })
 
+const inputId = useId()
+
 defineEmits<{
   'update:modelValue': [value: string]
 }>()
@@ -28,10 +30,11 @@ defineEmits<{
 
 <template>
   <div class="field" :class="{ 'has-error': error, disabled }">
-    <label v-if="label" class="label">{{ label }}</label>
+    <label v-if="label" :for="inputId" class="label">{{ label }}</label>
     <div class="input-wrapper" :class="{ 'has-icon': icon }">
       <Icon v-if="icon" :name="icon" class="input-icon" />
       <input
+        :id="inputId"
         class="input"
         :type="type"
         :value="modelValue"
