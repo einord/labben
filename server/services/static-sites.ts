@@ -286,9 +286,15 @@ networks:
     }
   }
 
+  /** Check if a domain string is safe for use in nginx config (defense-in-depth) */
+  private isSafeDomain(domain: string): boolean {
+    const domainRegex = /^(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$/
+    return domainRegex.test(domain)
+  }
+
   /** Generate the nginx.conf content from all enabled sites */
   generateNginxConfig(): string {
-    const sites = databaseService.getStaticSites().filter(s => s.enabled)
+    const sites = databaseService.getStaticSites().filter(s => s.enabled && this.isSafeDomain(s.domain))
 
     const serverBlocks = sites.map(site => `
     server {
@@ -379,9 +385,7 @@ ${serverBlocks.join('\n')}
     if (!domain || !domain.trim()) {
       throw new Error('Domain is required')
     }
-    // Allow standard domain names (e.g. example.com, sub.example.com)
-    const domainRegex = /^(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$/
-    if (!domainRegex.test(domain)) {
+    if (!this.isSafeDomain(domain)) {
       throw new Error(`Invalid domain format: ${domain}`)
     }
   }
