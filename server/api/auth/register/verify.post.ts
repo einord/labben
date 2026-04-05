@@ -43,6 +43,10 @@ export default defineEventHandler(async (event) => {
     await authService.createSession(event, user.id)
     return { success: true, data: user }
   } catch (error) {
+    // Re-throw H3 errors (4xx, etc.) with their original status code
+    if (error && typeof error === 'object' && 'statusCode' in error) {
+      throw error
+    }
     throw createError({ statusCode: 500, message: extractErrorMessage(error, 'Registration failed') })
   }
 })
