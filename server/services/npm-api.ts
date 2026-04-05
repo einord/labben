@@ -1,25 +1,38 @@
 import type { NpmConnectionStatus, NpmCredentials, NpmProxyHost, NpmTokenResponse, NpmUser, CreateProxyHostData } from '~/types/npm'
 import { databaseService } from './database'
+import { encrypt, decrypt, isEncrypted } from '../utils/crypto'
 
 const NPM_DEFAULT_PASSWORD = 'changeme'
 
 class NpmApiService {
   private cachedToken: string | null = null
 
-  /** Get stored credentials from the database */
+  /** Get stored credentials from the database, decrypting the password */
   getCredentials(): NpmCredentials | null {
     const url = databaseService.getSetting('npm_api_url')
     const email = databaseService.getSetting('npm_email')
-    const password = databaseService.getSetting('npm_password')
-    if (!url || !email || !password) return null
+    const storedPassword = databaseService.getSetting('npm_password')
+    if (!url || !email || !storedPassword) return null
+
+    let password: string
+    if (isEncrypted(storedPassword)) {
+      const decrypted = decrypt(storedPassword)
+      if (!decrypted) return null
+      password = decrypted
+    } else {
+      // Legacy plaintext — encrypt it in place for next time
+      databaseService.setSetting('npm_password', encrypt(storedPassword))
+      password = storedPassword
+    }
+
     return { url, email, password }
   }
 
-  /** Save credentials to the database */
+  /** Save credentials to the database, encrypting the password */
   saveCredentials(url: string, email: string, password: string): void {
     databaseService.setSetting('npm_api_url', url)
     databaseService.setSetting('npm_email', email)
-    databaseService.setSetting('npm_password', password)
+    databaseService.setSetting('npm_password', encrypt(password))
     this.cachedToken = null
   }
 

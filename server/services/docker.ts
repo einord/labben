@@ -19,6 +19,8 @@ const VALID_STATUSES: ReadonlySet<string> = new Set<ContainerStatus>([
   'running', 'exited', 'paused', 'restarting', 'created', 'removing', 'dead',
 ])
 
+import { maskSensitiveEnvVars } from '../utils/env-mask'
+
 function toContainerStatus(state: string): ContainerStatus {
   if (VALID_STATUSES.has(state)) {
     return state as ContainerStatus
@@ -104,7 +106,7 @@ class DockerService {
       ports,
       project: info.Config.Labels['com.docker.compose.project'] || undefined,
       createdAt: info.Created,
-      env: info.Config.Env ?? [],
+      env: maskSensitiveEnvVars(info.Config.Env ?? []),
       volumes,
       networks,
       restartPolicy: info.HostConfig.RestartPolicy?.Name ?? 'no',
