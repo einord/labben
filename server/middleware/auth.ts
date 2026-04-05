@@ -24,8 +24,11 @@ export default defineEventHandler(async (event) => {
   // Allow health check
   if (path === '/api/health') return
 
-  // If no users exist, allow everything (initial setup)
-  if (authService.isSetupRequired()) return
+  // If no users exist, only allow auth routes (initial setup)
+  if (authService.isSetupRequired()) {
+    if (path.startsWith('/api/auth/')) return
+    throw createError({ statusCode: 403, message: 'Setup required' })
+  }
 
   // Check session
   const userId = await authService.getSessionUserId(event)
