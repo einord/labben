@@ -2,6 +2,7 @@ interface SystemStatus {
   composePath: { mounted: boolean }
   backupPath: { mounted: boolean; writable: boolean }
   dockerSocket: { available: boolean }
+  hostPathSymlink: { needed: boolean; ok: boolean; error: string | null }
   auth: { configured: boolean; rpId: string; origin: string }
 }
 

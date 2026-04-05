@@ -301,7 +301,11 @@
     "authStep1": "Ange din domän i .env:",
     "authStep2": "Ange den fullständiga URL:en:",
     "authStep3": "Ange en sessionshemlighet (överlever omstarter):",
-    "restartStep": "Starta om containern: docker compose up -d"
+    "restartStep": "Starta om containern: docker compose up -d",
+    "symlinkBroken": "Sökvägs-symlink fungerar inte",
+    "symlinkBrokenDescription": "Symlinken mellan container- och värdsökvägar för compose-filer misslyckades. Compose-kommandon kan misslyckas med vilseledande felmeddelanden om att filer inte hittas.",
+    "symlinkStep1": "Kontrollera att COMPOSE_HOST_DIR i din .env pekar på rätt värdsökväg:",
+    "symlinkStep2": "Se till att containern har skrivbehörighet för att skapa symlinken"
   },
   "staticSites": {
     "title": "Statiska sidor",

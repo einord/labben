@@ -301,7 +301,11 @@
     "authStep1": "Set your domain in .env:",
     "authStep2": "Set the full URL:",
     "authStep3": "Set a session secret (survives restarts):",
-    "restartStep": "Restart the container: docker compose up -d"
+    "restartStep": "Restart the container: docker compose up -d",
+    "symlinkBroken": "Host path symlink not working",
+    "symlinkBrokenDescription": "The symlink mapping between container and host compose paths failed. Compose commands may fail with misleading file-not-found errors.",
+    "symlinkStep1": "Verify COMPOSE_HOST_DIR in your .env points to the correct host path:",
+    "symlinkStep2": "Ensure the container has write permissions to create the symlink"
   },
   "staticSites": {
     "title": "Static Sites",
