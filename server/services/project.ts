@@ -97,9 +97,9 @@ class ProjectService {
     return containers.some(c => c.name === STATIC_SITES_CONTAINER)
   }
 
-  /** Determine if a project is managed (in COMPOSE_DIR) or external. */
+  /** Determine if a project is managed (in COMPOSE_PATH) or external. */
   private resolveSource(workingDir: string, configFile?: string): ProjectSource {
-    // Check if either workingDir or configFile is under COMPOSE_DIR.
+    // Check if either workingDir or configFile is under COMPOSE_PATH.
     // Paths may be container-local (from filesystem scan) or host-side
     // (from Docker labels), so we check against both.
     const paths = [workingDir, configFile].filter(Boolean) as string[]
