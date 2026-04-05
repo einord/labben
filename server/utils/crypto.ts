@@ -47,12 +47,17 @@ export function decrypt(value: string): string | null {
 
   if (iv.length !== IV_LENGTH || authTag.length !== AUTH_TAG_LENGTH) return null
 
-  const decipher = createDecipheriv(ALGORITHM, key, iv)
-  decipher.setAuthTag(authTag)
+  try {
+    const decipher = createDecipheriv(ALGORITHM, key, iv)
+    decipher.setAuthTag(authTag)
 
-  let decrypted = decipher.update(ciphertext, 'hex', 'utf8')
-  decrypted += decipher.final('utf8')
-  return decrypted
+    let decrypted = decipher.update(ciphertext, 'hex', 'utf8')
+    decrypted += decipher.final('utf8')
+    return decrypted
+  } catch {
+    // Decryption failed (wrong key, corrupted data)
+    return null
+  }
 }
 
 /** Check if a value is already encrypted */

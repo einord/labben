@@ -19,7 +19,7 @@ const VALID_STATUSES: ReadonlySet<string> = new Set<ContainerStatus>([
   'running', 'exited', 'paused', 'restarting', 'created', 'removing', 'dead',
 ])
 
-const SENSITIVE_ENV_PATTERNS = /^.*(PASSWORD|SECRET|TOKEN|KEY|API_KEY|CREDENTIALS|PRIVATE)=.*$/i
+const SENSITIVE_ENV_PATTERNS = /^[^=]*(PASSWORD|PASSWD|SECRET|TOKEN|API_KEY|ACCESS_KEY|PRIVATE_KEY|CREDENTIALS|AUTH)=/i
 
 /** Mask sensitive environment variable values while preserving the variable name */
 function maskSensitiveEnvVars(envVars: string[]): string[] {
