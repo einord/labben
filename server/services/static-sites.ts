@@ -294,7 +294,14 @@ networks:
 
   /** Generate the nginx.conf content from all enabled sites */
   generateNginxConfig(): string {
-    const sites = databaseService.getStaticSites().filter(s => s.enabled && this.isSafeDomain(s.domain))
+    const allEnabled = databaseService.getStaticSites().filter(s => s.enabled)
+    const sites = allEnabled.filter((s) => {
+      if (!this.isSafeDomain(s.domain)) {
+        console.warn(`[static-sites] Skipping site with unsafe domain: ${s.domain}`)
+        return false
+      }
+      return true
+    })
 
     const serverBlocks = sites.map(site => `
     server {
