@@ -1,11 +1,13 @@
 import { access, stat } from 'node:fs/promises'
 import { constants } from 'node:fs'
 import { resolve } from 'node:path'
+import { dockerService } from '../../services/docker'
 
 interface SystemStatus {
   composePath: { mounted: boolean }
   backupPath: { mounted: boolean; writable: boolean }
   dockerSocket: { available: boolean }
+  hostPathSymlink: { needed: boolean; ok: boolean; error: string | null }
   auth: { configured: boolean; rpId: string; origin: string }
 }
 
@@ -46,12 +48,15 @@ export default defineEventHandler(async (): Promise<{ success: boolean; data: Sy
   const origin = process.env.AUTH_ORIGIN || 'http://localhost:3005'
   const authConfigured = rpId !== 'localhost'
 
+  const symlinkHealth = await dockerService.checkSymlinkHealth()
+
   return {
     success: true,
     data: {
       composePath: { mounted: composeMounted },
       backupPath: { mounted: backupMounted, writable: backupWritable },
       dockerSocket: { available: dockerAvailable },
+      hostPathSymlink: symlinkHealth,
       auth: { configured: authConfigured, rpId, origin },
     },
   }

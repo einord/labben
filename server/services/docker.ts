@@ -1,7 +1,7 @@
 import Docker from 'dockerode'
 import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
-import { readFile, writeFile, mkdir, access, readdir, stat, symlink } from 'node:fs/promises'
+import { readFile, writeFile, mkdir, access, readdir, stat, symlink, lstat } from 'node:fs/promises'
 import { join, resolve } from 'node:path'
 import type { Readable } from 'node:stream'
 import type {
@@ -32,13 +32,17 @@ class DockerService {
   private _docker: Docker | null = null
   private newProjectDir: string
   private hostComposeDir: string | null
+  private symlinkError: string | null = null
 
   constructor() {
     this.newProjectDir = resolve(process.env.COMPOSE_DIR || '/data/compose')
     // Host-side path for COMPOSE_DIR — needed so Docker daemon can resolve volume mounts
     this.hostComposeDir = process.env.COMPOSE_HOST_DIR || null
     // Create a symlink so the host path is accessible inside the container
-    this.ensureHostPathSymlink()
+    this.ensureHostPathSymlink().catch((err) => {
+      this.symlinkError = err instanceof Error ? err.message : String(err)
+      console.error(`[docker] Failed to create host path symlink: ${this.symlinkError}`)
+    })
   }
 
   /** Create a symlink from host path to container path so compose CLI can read files via host paths. */
@@ -52,6 +56,26 @@ class DockerService {
       const parentDir = resolve(this.hostComposeDir, '..')
       await mkdir(parentDir, { recursive: true })
       await symlink(this.newProjectDir, this.hostComposeDir)
+    }
+  }
+
+  /** Check whether the host path symlink is healthy via live filesystem checks. */
+  async checkSymlinkHealth(): Promise<{ needed: boolean; ok: boolean; error: string | null }> {
+    if (!this.hostComposeDir || this.hostComposeDir === this.newProjectDir) {
+      return { needed: false, ok: true, error: null }
+    }
+    try {
+      const stats = await lstat(this.hostComposeDir)
+      if (!stats.isSymbolicLink()) {
+        return { needed: true, ok: false, error: `Path exists but is not a symlink: ${this.hostComposeDir}` }
+      }
+      // Verify the symlink target is accessible
+      await access(this.hostComposeDir)
+      return { needed: true, ok: true, error: null }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err)
+      // Fall back to startup error if the path doesn't exist yet
+      return { needed: true, ok: false, error: this.symlinkError || message }
     }
   }
 

@@ -38,6 +38,19 @@ const setupGuides = computed(() => {
     })
   }
 
+  if (status.value.hostPathSymlink.needed && !status.value.hostPathSymlink.ok) {
+    guides.push({
+      icon: 'lucide:link-2-off',
+      title: t('system.symlinkBroken'),
+      description: t('system.symlinkBrokenDescription'),
+      steps: [
+        { text: t('system.symlinkStep1'), code: 'COMPOSE_HOST_DIR=/host/path/to/compose' },
+        { text: t('system.symlinkStep2') },
+        { text: t('system.restartStep') },
+      ],
+    })
+  }
+
   if (!status.value.auth.configured) {
     guides.push({
       icon: 'lucide:shield-alert',
@@ -91,6 +104,9 @@ const warnings = computed(() => {
   }
   if (!status.value.composePath.mounted) {
     list.push({ icon: 'lucide:folder-x', message: t('system.composePathMissing') })
+  }
+  if (status.value.hostPathSymlink.needed && !status.value.hostPathSymlink.ok) {
+    list.push({ icon: 'lucide:link-2-off', message: t('system.symlinkBroken') })
   }
   if (!status.value.auth.configured) {
     list.push({ icon: 'lucide:shield-alert', message: t('system.authNotConfigured') })
