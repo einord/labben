@@ -59,25 +59,23 @@ class DockerService {
     }
   }
 
-  /** Check whether the host path symlink is healthy. */
+  /** Check whether the host path symlink is healthy via live filesystem checks. */
   async checkSymlinkHealth(): Promise<{ needed: boolean; ok: boolean; error: string | null }> {
     if (!this.hostComposeDir || this.hostComposeDir === this.newProjectDir) {
       return { needed: false, ok: true, error: null }
     }
-    if (this.symlinkError) {
-      return { needed: true, ok: false, error: this.symlinkError }
-    }
     try {
       const stats = await lstat(this.hostComposeDir)
       if (!stats.isSymbolicLink()) {
-        return { needed: true, ok: false, error: 'Path exists but is not a symlink' }
+        return { needed: true, ok: false, error: `Path exists but is not a symlink: ${this.hostComposeDir}` }
       }
       // Verify the symlink target is accessible
       await access(this.hostComposeDir)
       return { needed: true, ok: true, error: null }
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err)
-      return { needed: true, ok: false, error: message }
+      // Fall back to startup error if the path doesn't exist yet
+      return { needed: true, ok: false, error: this.symlinkError || message }
     }
   }
 
