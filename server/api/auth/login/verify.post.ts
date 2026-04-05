@@ -2,6 +2,8 @@ import { authService } from '../../../services/auth'
 import { databaseService } from '../../../services/database'
 
 export default defineEventHandler(async (event) => {
+  checkRateLimit(event, { key: 'auth:login:verify', windowMs: 60_000, maxRequests: 10 })
+
   const body = await readBody<{ challengeKey?: string; response?: unknown }>(event)
 
   if (!body?.challengeKey || !body?.response) {

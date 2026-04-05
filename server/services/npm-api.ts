@@ -1,6 +1,7 @@
 import type { NpmConnectionStatus, NpmCredentials, NpmProxyHost, NpmTokenResponse, NpmUser, CreateProxyHostData } from '~/types/npm'
 import { databaseService } from './database'
 import { encrypt, decrypt, isEncrypted } from '../utils/crypto'
+import { validateExternalUrl } from '../utils/url-validation'
 
 const NPM_DEFAULT_PASSWORD = 'changeme'
 
@@ -30,6 +31,7 @@ class NpmApiService {
 
   /** Save credentials to the database, encrypting the password */
   saveCredentials(url: string, email: string, password: string): void {
+    validateExternalUrl(url)
     databaseService.setSetting('npm_api_url', url)
     databaseService.setSetting('npm_email', email)
     databaseService.setSetting('npm_password', encrypt(password))
@@ -52,8 +54,9 @@ class NpmApiService {
     return creds.password === NPM_DEFAULT_PASSWORD
   }
 
-  /** Test connection by attempting login with given credentials */
+  /** Test connection by attempting login with given credentials. Rethrows SSRF validation errors. */
   async testConnection(url: string, email: string, password: string): Promise<boolean> {
+    validateExternalUrl(url)
     try {
       await this.login(url, email, password)
       return true

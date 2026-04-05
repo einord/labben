@@ -208,7 +208,17 @@ class AuthService {
 
   // -- Private helpers --
 
+  private static readonly MAX_ACTIVE_CHALLENGES = 100
+
   private storeChallenge(key: string, challenge: string): void {
+    // Prevent memory exhaustion from excessive active challenges
+    if (this.challenges.size >= AuthService.MAX_ACTIVE_CHALLENGES) {
+      this.cleanupChallenges()
+      if (this.challenges.size >= AuthService.MAX_ACTIVE_CHALLENGES) {
+        throw createError({ statusCode: 429, message: 'Too many active challenges, please try again later' })
+      }
+    }
+
     this.challenges.set(key, {
       challenge,
       expiresAt: Date.now() + 5 * 60 * 1000, // 5 minutes

@@ -3,6 +3,8 @@ import { authService } from '../../../services/auth'
 import { databaseService } from '../../../services/database'
 
 export default defineEventHandler(async (event) => {
+  checkRateLimit(event, { key: 'auth:register:options', windowMs: 60_000, maxRequests: 5 })
+
   const body = await readBody<{ username?: string; displayName?: string; inviteToken?: string }>(event)
 
   const username = body?.username?.trim()
