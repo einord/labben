@@ -2,6 +2,7 @@ import { access, stat } from 'node:fs/promises'
 import { constants } from 'node:fs'
 import { resolve } from 'node:path'
 import { dockerService } from '../../services/docker'
+import { databaseService } from '../../services/database'
 import { composePath as configuredComposePath } from '../../utils/config'
 
 interface SystemStatus {
@@ -9,6 +10,8 @@ interface SystemStatus {
   backupPath: { mounted: boolean; writable: boolean }
   dockerSocket: { available: boolean }
   hostPathSymlink: { needed: boolean; ok: boolean; error: string | null }
+  database: { writable: boolean; mounted: boolean }
+  composeHostDir: { configured: boolean; accessible: boolean }
   auth: { configured: boolean; rpId: string; origin: string }
 }
 
@@ -51,6 +54,15 @@ export default defineEventHandler(async (): Promise<{ success: boolean; data: Sy
 
   const symlinkHealth = await dockerService.checkSymlinkHealth()
 
+  const dbHealth = databaseService.checkHealth()
+
+  // Check COMPOSE_HOST_DIR accessibility
+  let composeHostDirAccessible = false
+  const composeHostDirConfigured = !!process.env.COMPOSE_HOST_DIR
+  if (composeHostDirConfigured) {
+    composeHostDirAccessible = await access(process.env.COMPOSE_HOST_DIR!, constants.R_OK).then(() => true).catch(() => false)
+  }
+
   return {
     success: true,
     data: {
@@ -58,6 +70,8 @@ export default defineEventHandler(async (): Promise<{ success: boolean; data: Sy
       backupPath: { mounted: backupMounted, writable: backupWritable },
       dockerSocket: { available: dockerAvailable },
       hostPathSymlink: symlinkHealth,
+      database: dbHealth,
+      composeHostDir: { configured: composeHostDirConfigured, accessible: composeHostDirAccessible },
       auth: { configured: authConfigured, rpId, origin },
     },
   }

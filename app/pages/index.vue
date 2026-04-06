@@ -51,6 +51,40 @@ const setupGuides = computed(() => {
     })
   }
 
+  if (status.value.composeHostDir.configured && !status.value.composeHostDir.accessible) {
+    guides.push({
+      icon: 'lucide:folder-search',
+      title: t('system.composeHostDirInaccessible'),
+      description: t('system.composeHostDirInaccessibleDescription'),
+      steps: [
+        { text: t('system.composeHostDirStep1'), code: 'COMPOSE_HOST_DIR=/correct/host/path' },
+        { text: t('system.restartStep') },
+      ],
+    })
+  }
+
+  if (!status.value.database.writable) {
+    guides.push({
+      icon: 'lucide:database',
+      title: t('system.dbNotWritable'),
+      description: t('system.dbNotWritableDescription'),
+      steps: [
+        { text: t('system.dbStep1'), code: '- /path/on/host:/data/db' },
+        { text: t('system.restartStep') },
+      ],
+    })
+  } else if (!status.value.database.mounted) {
+    guides.push({
+      icon: 'lucide:database',
+      title: t('system.dbNotMounted'),
+      description: t('system.dbNotMountedDescription'),
+      steps: [
+        { text: t('system.dbStep1'), code: '- /path/on/host:/data/db' },
+        { text: t('system.restartStep') },
+      ],
+    })
+  }
+
   if (!status.value.auth.configured) {
     guides.push({
       icon: 'lucide:shield-alert',
@@ -107,6 +141,14 @@ const warnings = computed(() => {
   }
   if (status.value.hostPathSymlink.needed && !status.value.hostPathSymlink.ok) {
     list.push({ icon: 'lucide:link-2-off', message: t('system.symlinkBroken') })
+  }
+  if (status.value.composeHostDir.configured && !status.value.composeHostDir.accessible) {
+    list.push({ icon: 'lucide:folder-search', message: t('system.composeHostDirInaccessible') })
+  }
+  if (!status.value.database.writable) {
+    list.push({ icon: 'lucide:database', message: t('system.dbNotWritable') })
+  } else if (!status.value.database.mounted) {
+    list.push({ icon: 'lucide:database', message: t('system.dbNotMounted') })
   }
   if (!status.value.auth.configured) {
     list.push({ icon: 'lucide:shield-alert', message: t('system.authNotConfigured') })

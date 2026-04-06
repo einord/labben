@@ -1,4 +1,5 @@
 import Database from 'better-sqlite3'
+import { accessSync, constants, statSync } from 'node:fs'
 import { resolve } from 'node:path'
 import type { ProjectGroup, ProjectMetadata } from '~/types/project'
 import type { User } from '~/types/auth'
@@ -7,14 +8,66 @@ import type { StaticSite, UpdateStaticSiteData } from '~/types/static-sites'
 
 class DatabaseService {
   private db: Database.Database
+  private dataDir: string
 
   constructor() {
-    const dataDir = process.env.NODE_ENV === 'production' ? '/data/db' : (process.env.DATA_DIR || 'data')
-    const dbPath = resolve(dataDir, 'labben.db')
+    this.dataDir = process.env.NODE_ENV === 'production' ? '/data/db' : (process.env.DATA_DIR || 'data')
+    const dbPath = resolve(this.dataDir, 'labben.db')
     this.db = new Database(dbPath)
     this.db.pragma('journal_mode = WAL')
     this.db.pragma('foreign_keys = ON')
+
+    // Verify data directory is writable and likely a mounted volume in production
+    this.validateDataDir()
+
     this.createTables()
+  }
+
+  /** Log warnings if the data directory has issues (not writable, not mounted in production). */
+  private validateDataDir(): void {
+    try {
+      accessSync(this.dataDir, constants.W_OK)
+    } catch {
+      console.warn(`[database] WARNING: Data directory "${this.dataDir}" is not writable. Database changes may fail.`)
+    }
+
+    if (process.env.NODE_ENV === 'production') {
+      try {
+        const dirStat = statSync(this.dataDir)
+        const parentStat = statSync(resolve(this.dataDir, '..'))
+        if (dirStat.dev === parentStat.dev) {
+          console.warn('[database] WARNING: Data directory does not appear to be a mounted volume. Data will be lost on container restart. Mount a volume to /data/db.')
+        }
+      } catch {
+        // Can't check — don't warn
+      }
+    }
+  }
+
+  /** Check database directory health for system status reporting. */
+  checkHealth(): { writable: boolean; mounted: boolean } {
+    let writable = false
+    // Mount check only applies in production; in dev, assume mounted
+    let mounted = true
+
+    try {
+      accessSync(this.dataDir, constants.W_OK)
+      writable = true
+    } catch {
+      writable = false
+    }
+
+    if (process.env.NODE_ENV === 'production') {
+      try {
+        const dirStat = statSync(this.dataDir)
+        const parentStat = statSync(resolve(this.dataDir, '..'))
+        mounted = dirStat.dev !== parentStat.dev
+      } catch {
+        mounted = false
+      }
+    }
+
+    return { writable, mounted }
   }
 
   /** Create tables if they don't exist */

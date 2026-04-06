@@ -3,6 +3,8 @@ interface SystemStatus {
   backupPath: { mounted: boolean; writable: boolean }
   dockerSocket: { available: boolean }
   hostPathSymlink: { needed: boolean; ok: boolean; error: string | null }
+  database: { writable: boolean; mounted: boolean }
+  composeHostDir: { configured: boolean; accessible: boolean }
   auth: { configured: boolean; rpId: string; origin: string }
 }
 

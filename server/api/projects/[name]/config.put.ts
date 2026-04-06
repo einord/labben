@@ -1,4 +1,5 @@
 import { dockerService } from '../../../services/docker'
+import { ComposeValidationError } from '../../../utils/compose'
 
 interface ConfigBody {
   content: string
@@ -19,9 +20,10 @@ export default defineEventHandler(async (event) => {
     await dockerService.saveProjectConfig(name, body.content)
     return { success: true }
   } catch (error) {
+    const message = extractErrorMessage(error, 'Failed to save project config')
     throw createError({
-      statusCode: 500,
-      message: extractErrorMessage(error, 'Failed to save project config'),
+      statusCode: error instanceof ComposeValidationError ? 400 : 500,
+      message,
     })
   }
 })
