@@ -215,8 +215,10 @@ class AuthService {
     if (!sealed) return null
 
     try {
+      // unsealSession's first param (_event) is unused internally by h3
       const unsealed = await unsealSession(null as never, config, sealed)
-      return (unsealed as { userId?: string })?.userId ?? null
+      const data = (unsealed as { data?: { userId?: string } })?.data
+      return data?.userId ?? null
     } catch {
       return null
     }
