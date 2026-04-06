@@ -1,4 +1,5 @@
 import { projectService } from '../../services/project'
+import { ComposeValidationError } from '../../utils/compose'
 
 export default defineEventHandler(async (event) => {
   const body = await readBody<{ name?: string; content?: string }>(event)
@@ -26,12 +27,10 @@ export default defineEventHandler(async (event) => {
       throw createError({ statusCode: 409, statusMessage: 'A project with that name already exists' })
     }
 
-    const message = extractErrorMessage(error, 'Failed to create project')
-    const isValidationError = error instanceof Error &&
-      (error.message.startsWith('Invalid YAML') || error.message.startsWith('Compose file must be'))
+    const isYamlError = error instanceof ComposeValidationError
     throw createError({
-      statusCode: isValidationError ? 400 : 500,
-      statusMessage: isValidationError ? message : 'Failed to create project',
+      statusCode: isYamlError ? 400 : 500,
+      statusMessage: isYamlError ? extractErrorMessage(error, 'Invalid YAML') : 'Failed to create project',
     })
   }
 })

@@ -1,5 +1,13 @@
 import { parse, stringify } from 'yaml'
 
+/** Error thrown when compose YAML content fails validation. */
+export class ComposeValidationError extends Error {
+  constructor(message: string) {
+    super(message)
+    this.name = 'ComposeValidationError'
+  }
+}
+
 interface ComposeFile {
   /** Optional explicit project name */
   name?: string
@@ -19,19 +27,19 @@ export function stringifyCompose(data: ComposeFile): string {
   return stringify(data, { lineWidth: 0 })
 }
 
-/** Validate that content is valid YAML for a docker-compose file. Throws with a clear message if invalid. */
+/** Validate that content is valid YAML for a docker-compose file. Throws ComposeValidationError if invalid. */
 export function validateComposeYaml(content: string): void {
   try {
     const result = parse(content)
     if (result === null || typeof result !== 'object') {
-      throw new Error('Compose file must be a YAML mapping (object), not a scalar or list')
+      throw new ComposeValidationError('Compose file must be a YAML mapping (object), not a scalar or list')
     }
   } catch (err) {
-    if (err instanceof Error && err.message.startsWith('Compose file must be')) {
+    if (err instanceof ComposeValidationError) {
       throw err
     }
     const message = err instanceof Error ? err.message : String(err)
-    throw new Error(`Invalid YAML syntax: ${message}`)
+    throw new ComposeValidationError(`Invalid YAML syntax: ${message}`)
   }
 }
 

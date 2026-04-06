@@ -40,18 +40,20 @@ class DockerService {
     this.newProjectDir = composePath
     this.hostComposeDir = composeHostDir
 
-    // Validate COMPOSE_HOST_DIR accessibility at startup
-    if (this.hostComposeDir) {
-      access(this.hostComposeDir).catch(() => {
-        console.warn(`[docker] WARNING: COMPOSE_HOST_DIR="${this.hostComposeDir}" is not accessible. Compose commands will likely fail. Verify the path exists on the host and is correctly mapped.`)
+    // Create a symlink so the host path is accessible inside the container,
+    // then validate COMPOSE_HOST_DIR accessibility (after symlink is in place)
+    this.ensureHostPathSymlink()
+      .catch((err) => {
+        this.symlinkError = err instanceof Error ? err.message : String(err)
+        console.error(`[docker] Failed to create host path symlink: ${this.symlinkError}`)
       })
-    }
-
-    // Create a symlink so the host path is accessible inside the container
-    this.ensureHostPathSymlink().catch((err) => {
-      this.symlinkError = err instanceof Error ? err.message : String(err)
-      console.error(`[docker] Failed to create host path symlink: ${this.symlinkError}`)
-    })
+      .finally(() => {
+        if (this.hostComposeDir) {
+          access(this.hostComposeDir).catch(() => {
+            console.warn(`[docker] WARNING: COMPOSE_HOST_DIR="${this.hostComposeDir}" is not accessible. Compose commands will likely fail. Verify the path exists on the host and is correctly mapped.`)
+          })
+        }
+      })
   }
 
   /** Create a symlink from host path to container path so compose CLI can read files via host paths. */

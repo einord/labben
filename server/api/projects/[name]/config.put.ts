@@ -1,4 +1,5 @@
 import { dockerService } from '../../../services/docker'
+import { ComposeValidationError } from '../../../utils/compose'
 
 interface ConfigBody {
   content: string
@@ -20,10 +21,8 @@ export default defineEventHandler(async (event) => {
     return { success: true }
   } catch (error) {
     const message = extractErrorMessage(error, 'Failed to save project config')
-    const isValidationError = error instanceof Error &&
-      (error.message.startsWith('Invalid YAML') || error.message.startsWith('Compose file must be'))
     throw createError({
-      statusCode: isValidationError ? 400 : 500,
+      statusCode: error instanceof ComposeValidationError ? 400 : 500,
       message,
     })
   }
