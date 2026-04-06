@@ -19,6 +19,22 @@ export function stringifyCompose(data: ComposeFile): string {
   return stringify(data, { lineWidth: 0 })
 }
 
+/** Validate that content is valid YAML for a docker-compose file. Throws with a clear message if invalid. */
+export function validateComposeYaml(content: string): void {
+  try {
+    const result = parse(content)
+    if (result === null || typeof result !== 'object') {
+      throw new Error('Compose file must be a YAML mapping (object), not a scalar or list')
+    }
+  } catch (err) {
+    if (err instanceof Error && err.message.startsWith('Compose file must be')) {
+      throw err
+    }
+    const message = err instanceof Error ? err.message : String(err)
+    throw new Error(`Invalid YAML syntax: ${message}`)
+  }
+}
+
 /** Extract all service image names from a compose file string */
 export function getServiceImages(content: string): string[] {
   const compose = parseCompose(content)

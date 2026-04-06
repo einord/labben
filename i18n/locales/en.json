@@ -307,7 +307,17 @@
     "symlinkBroken": "Host path symlink not working",
     "symlinkBrokenDescription": "The symlink mapping between container and host compose paths failed. Compose commands may fail with misleading file-not-found errors.",
     "symlinkStep1": "Verify COMPOSE_HOST_DIR in your .env points to the correct host path:",
-    "symlinkStep2": "Ensure the container has write permissions to create the symlink"
+    "symlinkStep2": "Ensure the container has write permissions to create the symlink",
+    "composeHostDirInaccessible": "COMPOSE_HOST_DIR path not accessible",
+    "composeHostDirInaccessibleDescription": "The configured COMPOSE_HOST_DIR path cannot be accessed. Docker Compose commands will fail with cryptic errors.",
+    "composeHostDirStep1": "Verify COMPOSE_HOST_DIR in your .env points to a valid, accessible host path:",
+    "dbNotWritable": "Database directory not writable",
+    "dbNotWritableDescription": "The database directory is not writable. Database operations will fail.",
+    "dbNotMounted": "Database directory not mounted",
+    "dbNotMountedDescription": "The database directory does not appear to be a mounted volume. All data will be lost when the container restarts.",
+    "dbStep1": "Mount a volume to /data/db in your docker-compose.yml:",
+    "invalidYaml": "Invalid YAML syntax",
+    "invalidYamlDescription": "The compose file contains invalid YAML syntax. Please fix the errors before saving."
   },
   "staticSites": {
     "title": "Static Sites",

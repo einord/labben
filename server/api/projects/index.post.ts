@@ -26,6 +26,12 @@ export default defineEventHandler(async (event) => {
       throw createError({ statusCode: 409, statusMessage: 'A project with that name already exists' })
     }
 
-    throw createError({ statusCode: 500, statusMessage: 'Failed to create project' })
+    const message = extractErrorMessage(error, 'Failed to create project')
+    const isValidationError = error instanceof Error &&
+      (error.message.startsWith('Invalid YAML') || error.message.startsWith('Compose file must be'))
+    throw createError({
+      statusCode: isValidationError ? 400 : 500,
+      statusMessage: isValidationError ? message : 'Failed to create project',
+    })
   }
 })

@@ -1,4 +1,5 @@
 import Database from 'better-sqlite3'
+import { accessSync, constants, statSync } from 'node:fs'
 import { resolve } from 'node:path'
 import type { ProjectGroup, ProjectMetadata } from '~/types/project'
 import type { User } from '~/types/auth'
@@ -14,7 +15,59 @@ class DatabaseService {
     this.db = new Database(dbPath)
     this.db.pragma('journal_mode = WAL')
     this.db.pragma('foreign_keys = ON')
+
+    // Verify data directory is writable and likely a mounted volume in production
+    this.validateDataDir(dataDir)
+
     this.createTables()
+  }
+
+  /** Log warnings if the data directory has issues (not writable, not mounted in production). */
+  private validateDataDir(dataDir: string): void {
+    try {
+      accessSync(dataDir, constants.W_OK)
+    } catch {
+      console.warn(`[database] WARNING: Data directory "${dataDir}" is not writable. Database changes may fail.`)
+    }
+
+    if (process.env.NODE_ENV === 'production') {
+      try {
+        const dirStat = statSync(dataDir)
+        const parentStat = statSync(resolve(dataDir, '..'))
+        // If dir and parent have the same device, it's likely NOT a separate mount
+        if (dirStat.dev === parentStat.dev) {
+          console.warn('[database] WARNING: Data directory does not appear to be a mounted volume. Data will be lost on container restart. Mount a volume to /data/db.')
+        }
+      } catch {
+        // Can't check — don't warn
+      }
+    }
+  }
+
+  /** Check database directory health for system status reporting. */
+  checkHealth(): { writable: boolean; mounted: boolean } {
+    const dataDir = process.env.NODE_ENV === 'production' ? '/data/db' : (process.env.DATA_DIR || 'data')
+    let writable = false
+    const mounted = true
+
+    try {
+      accessSync(dataDir, constants.W_OK)
+      writable = true
+    } catch {
+      writable = false
+    }
+
+    if (process.env.NODE_ENV === 'production') {
+      try {
+        const dirStat = statSync(dataDir)
+        const parentStat = statSync(resolve(dataDir, '..'))
+        return { writable, mounted: dirStat.dev !== parentStat.dev }
+      } catch {
+        return { writable, mounted: false }
+      }
+    }
+
+    return { writable, mounted }
   }
 
   /** Create tables if they don't exist */

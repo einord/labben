@@ -19,9 +19,12 @@ export default defineEventHandler(async (event) => {
     await dockerService.saveProjectConfig(name, body.content)
     return { success: true }
   } catch (error) {
+    const message = extractErrorMessage(error, 'Failed to save project config')
+    const isValidationError = error instanceof Error &&
+      (error.message.startsWith('Invalid YAML') || error.message.startsWith('Compose file must be'))
     throw createError({
-      statusCode: 500,
-      message: extractErrorMessage(error, 'Failed to save project config'),
+      statusCode: isValidationError ? 400 : 500,
+      message,
     })
   }
 })

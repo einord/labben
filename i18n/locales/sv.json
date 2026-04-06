@@ -307,7 +307,17 @@
     "symlinkBroken": "Sökvägs-symlink fungerar inte",
     "symlinkBrokenDescription": "Symlinken mellan container- och värdsökvägar för compose-filer misslyckades. Compose-kommandon kan misslyckas med vilseledande felmeddelanden om att filer inte hittas.",
     "symlinkStep1": "Kontrollera att COMPOSE_HOST_DIR i din .env pekar på rätt värdsökväg:",
-    "symlinkStep2": "Se till att containern har skrivbehörighet för att skapa symlinken"
+    "symlinkStep2": "Se till att containern har skrivbehörighet för att skapa symlinken",
+    "composeHostDirInaccessible": "COMPOSE_HOST_DIR-sökvägen inte tillgänglig",
+    "composeHostDirInaccessibleDescription": "Den konfigurerade COMPOSE_HOST_DIR-sökvägen kan inte nås. Docker Compose-kommandon kommer att misslyckas med kryptiska felmeddelanden.",
+    "composeHostDirStep1": "Kontrollera att COMPOSE_HOST_DIR i din .env pekar på en giltig, tillgänglig värdsökväg:",
+    "dbNotWritable": "Databaskatalogen inte skrivbar",
+    "dbNotWritableDescription": "Databaskatalogen är inte skrivbar. Databasoperationer kommer att misslyckas.",
+    "dbNotMounted": "Databaskatalogen inte monterad",
+    "dbNotMountedDescription": "Databaskatalogen verkar inte vara en monterad volym. All data förloras när containern startas om.",
+    "dbStep1": "Montera en volym till /data/db i din docker-compose.yml:",
+    "invalidYaml": "Ogiltig YAML-syntax",
+    "invalidYamlDescription": "Compose-filen innehåller ogiltig YAML-syntax. Åtgärda felen innan du sparar."
   },
   "staticSites": {
     "title": "Statiska sidor",

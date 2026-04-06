@@ -4,6 +4,7 @@ import { promisify } from 'node:util'
 import { readFile, writeFile, mkdir, access, readdir, stat, symlink, lstat } from 'node:fs/promises'
 import { join, resolve } from 'node:path'
 import { composePath, composeHostDir } from '../utils/config'
+import { validateComposeYaml, parseCompose } from '../utils/compose'
 import type { Readable } from 'node:stream'
 import type {
   ContainerSummary,
@@ -38,6 +39,14 @@ class DockerService {
   constructor() {
     this.newProjectDir = composePath
     this.hostComposeDir = composeHostDir
+
+    // Validate COMPOSE_HOST_DIR accessibility at startup
+    if (this.hostComposeDir) {
+      access(this.hostComposeDir).catch(() => {
+        console.warn(`[docker] WARNING: COMPOSE_HOST_DIR="${this.hostComposeDir}" is not accessible. Compose commands will likely fail. Verify the path exists on the host and is correctly mapped.`)
+      })
+    }
+
     // Create a symlink so the host path is accessible inside the container
     this.ensureHostPathSymlink().catch((err) => {
       this.symlinkError = err instanceof Error ? err.message : String(err)
@@ -244,6 +253,7 @@ class DockerService {
 
   /** Save docker-compose.yml content for a project. */
   async saveProjectConfig(name: string, content: string): Promise<void> {
+    validateComposeYaml(content)
     const project = await this.findProject(name)
     await writeFile(project.configPath, content, 'utf-8')
   }
@@ -294,6 +304,7 @@ class DockerService {
       }
     }
 
+    validateComposeYaml(content)
     await mkdir(projectDir, { recursive: true })
     await writeFile(configPath, content, 'utf-8')
 
@@ -371,7 +382,6 @@ class DockerService {
   private async resolveProjectName(configPath: string, dirName: string): Promise<string> {
     try {
       const content = await readFile(configPath, 'utf-8')
-      const { parseCompose } = await import('../utils/compose')
       const compose = parseCompose(content)
       if (typeof compose.name === 'string' && compose.name.trim()) {
         return compose.name.trim()
