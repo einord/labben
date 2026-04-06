@@ -12,7 +12,7 @@ import type {
   AuthenticationResponseJSON,
 } from '@simplewebauthn/server'
 import type { H3Event } from 'h3'
-import { useSession } from 'h3'
+import { useSession, unsealSession } from 'h3'
 import { databaseService } from './database'
 
 /** Get or create a stable session password that survives HMR reloads */
@@ -196,6 +196,32 @@ class AuthService {
   async destroySession(event: H3Event): Promise<void> {
     const session = await useSession(event, this.getSessionConfig())
     await session.clear()
+  }
+
+  /**
+   * Validate a session from a raw cookie header string (for WebSocket auth).
+   * Returns the userId if valid, null otherwise.
+   */
+  async getSessionUserIdFromCookie(cookieHeader: string): Promise<string | null> {
+    const config = this.getSessionConfig()
+    const cookieName = config.name
+    const cookies = Object.fromEntries(
+      cookieHeader.split(';').map((c) => {
+        const [key, ...rest] = c.trim().split('=')
+        return [key, rest.join('=')]
+      }),
+    )
+    const sealed = cookies[cookieName]
+    if (!sealed) return null
+
+    try {
+      // unsealSession's first param (_event) is unused internally by h3
+      const unsealed = await unsealSession(null as never, config, sealed)
+      const data = (unsealed as { data?: { userId?: string } })?.data
+      return data?.userId ?? null
+    } catch {
+      return null
+    }
   }
 
   /** Generate a unique invite token */
