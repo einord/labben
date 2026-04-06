@@ -1,9 +1,21 @@
 import { dockerService } from '../../../services/docker'
+import { authService } from '../../../services/auth'
+import { databaseService } from '../../../services/database'
 import type { Readable } from 'node:stream'
 const CONTAINER_ID_PATTERN = /\/api\/containers\/([^/]+)\/logs-stream/
 
 export default defineWebSocketHandler({
   async open(peer) {
+    // WebSocket handlers bypass Nitro middleware — validate session manually
+    const cookieHeader = peer.request?.headers?.get('cookie') ?? ''
+    const userId = await authService.getSessionUserIdFromCookie(cookieHeader)
+
+    if (!userId || !databaseService.getUserById(userId)) {
+      peer.send(JSON.stringify({ error: 'Authentication required' }))
+      peer.close(1008, 'Authentication required')
+      return
+    }
+
     const url = peer.request?.url ?? ''
     const match = url.match(CONTAINER_ID_PATTERN)
     const containerId = match?.[1]
