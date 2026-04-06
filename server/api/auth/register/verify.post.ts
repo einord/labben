@@ -26,6 +26,10 @@ export default defineEventHandler(async (event) => {
       if (!verified) {
         throw createError({ statusCode: 400, message: 'Registration verification failed' })
       }
+
+      // Rotate session after sensitive operation
+      await authService.rotateSession(event, existingUser.id)
+
       return { success: true, data: existingUser }
     }
 

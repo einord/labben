@@ -150,6 +150,17 @@ class DatabaseService {
         size_bytes INTEGER,
         error_message TEXT
       );
+
+      CREATE TABLE IF NOT EXISTS sessions (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        user_agent TEXT,
+        ip_address TEXT,
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        last_used_at TEXT NOT NULL DEFAULT (datetime('now')),
+        expires_at TEXT NOT NULL,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+      );
     `)
     this.migrate()
   }
@@ -175,6 +186,11 @@ class DatabaseService {
 
     if (version < 3) {
       this.db.pragma('user_version = 3')
+    }
+
+    if (version < 4) {
+      // Sessions table is created with IF NOT EXISTS above, safe for new/existing installs
+      this.db.pragma('user_version = 4')
     }
   }
 
@@ -444,6 +460,57 @@ class DatabaseService {
   /** Delete an invite token */
   deleteInviteToken(token: string): void {
     this.db.prepare('DELETE FROM invite_tokens WHERE token = ?').run(token)
+  }
+
+  // -- Sessions --
+
+  /** Create a new session record */
+  createSession(id: string, userId: string, expiresAt: string, userAgent: string | null, ipAddress: string | null): void {
+    this.db.prepare(
+      'INSERT INTO sessions (id, user_id, expires_at, user_agent, ip_address) VALUES (?, ?, ?, ?, ?)',
+    ).run(id, userId, expiresAt, userAgent, ipAddress)
+  }
+
+  /** Get a session by ID (only if not expired) */
+  getSession(id: string): { id: string; userId: string; userAgent: string | null; ipAddress: string | null; createdAt: string; lastUsedAt: string; expiresAt: string } | null {
+    const row = this.db.prepare(
+      "SELECT id, user_id as userId, user_agent as userAgent, ip_address as ipAddress, created_at as createdAt, last_used_at as lastUsedAt, expires_at as expiresAt FROM sessions WHERE id = ? AND expires_at > datetime('now')",
+    ).get(id) as { id: string; userId: string; userAgent: string | null; ipAddress: string | null; createdAt: string; lastUsedAt: string; expiresAt: string } | undefined
+    return row ?? null
+  }
+
+  /** Update the last_used_at timestamp for a session */
+  touchSession(id: string): void {
+    this.db.prepare("UPDATE sessions SET last_used_at = datetime('now') WHERE id = ?").run(id)
+  }
+
+  /** Get all active sessions for a user */
+  getSessionsByUserId(userId: string): Array<{ id: string; userAgent: string | null; ipAddress: string | null; createdAt: string; lastUsedAt: string; expiresAt: string }> {
+    return this.db.prepare(
+      "SELECT id, user_agent as userAgent, ip_address as ipAddress, created_at as createdAt, last_used_at as lastUsedAt, expires_at as expiresAt FROM sessions WHERE user_id = ? AND expires_at > datetime('now') ORDER BY last_used_at DESC",
+    ).all(userId) as Array<{ id: string; userAgent: string | null; ipAddress: string | null; createdAt: string; lastUsedAt: string; expiresAt: string }>
+  }
+
+  /** Delete a specific session */
+  deleteSession(id: string): void {
+    this.db.prepare('DELETE FROM sessions WHERE id = ?').run(id)
+  }
+
+  /** Delete all sessions for a user except one */
+  deleteOtherSessions(userId: string, keepSessionId: string): number {
+    const result = this.db.prepare('DELETE FROM sessions WHERE user_id = ? AND id != ?').run(userId, keepSessionId)
+    return result.changes
+  }
+
+  /** Delete all sessions for a user */
+  deleteAllUserSessions(userId: string): void {
+    this.db.prepare('DELETE FROM sessions WHERE user_id = ?').run(userId)
+  }
+
+  /** Delete expired sessions (cleanup) */
+  deleteExpiredSessions(): number {
+    const result = this.db.prepare("DELETE FROM sessions WHERE expires_at <= datetime('now')").run()
+    return result.changes
   }
 
   // -- Backup --
