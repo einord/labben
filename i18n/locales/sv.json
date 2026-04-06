@@ -315,9 +315,7 @@
     "dbNotWritableDescription": "Databaskatalogen är inte skrivbar. Databasoperationer kommer att misslyckas.",
     "dbNotMounted": "Databaskatalogen inte monterad",
     "dbNotMountedDescription": "Databaskatalogen verkar inte vara en monterad volym. All data förloras när containern startas om.",
-    "dbStep1": "Montera en volym till /data/db i din docker-compose.yml:",
-    "invalidYaml": "Ogiltig YAML-syntax",
-    "invalidYamlDescription": "Compose-filen innehåller ogiltig YAML-syntax. Åtgärda felen innan du sparar."
+    "dbStep1": "Montera en volym till /data/db i din docker-compose.yml:"
   },
   "staticSites": {
     "title": "Statiska sidor",

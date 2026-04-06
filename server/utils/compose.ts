@@ -31,7 +31,7 @@ export function stringifyCompose(data: ComposeFile): string {
 export function validateComposeYaml(content: string): void {
   try {
     const result = parse(content)
-    if (result === null || typeof result !== 'object') {
+    if (result === null || typeof result !== 'object' || Array.isArray(result)) {
       throw new ComposeValidationError('Compose file must be a YAML mapping (object), not a scalar or list')
     }
   } catch (err) {

@@ -8,33 +8,33 @@ import type { StaticSite, UpdateStaticSiteData } from '~/types/static-sites'
 
 class DatabaseService {
   private db: Database.Database
+  private dataDir: string
 
   constructor() {
-    const dataDir = process.env.NODE_ENV === 'production' ? '/data/db' : (process.env.DATA_DIR || 'data')
-    const dbPath = resolve(dataDir, 'labben.db')
+    this.dataDir = process.env.NODE_ENV === 'production' ? '/data/db' : (process.env.DATA_DIR || 'data')
+    const dbPath = resolve(this.dataDir, 'labben.db')
     this.db = new Database(dbPath)
     this.db.pragma('journal_mode = WAL')
     this.db.pragma('foreign_keys = ON')
 
     // Verify data directory is writable and likely a mounted volume in production
-    this.validateDataDir(dataDir)
+    this.validateDataDir()
 
     this.createTables()
   }
 
   /** Log warnings if the data directory has issues (not writable, not mounted in production). */
-  private validateDataDir(dataDir: string): void {
+  private validateDataDir(): void {
     try {
-      accessSync(dataDir, constants.W_OK)
+      accessSync(this.dataDir, constants.W_OK)
     } catch {
-      console.warn(`[database] WARNING: Data directory "${dataDir}" is not writable. Database changes may fail.`)
+      console.warn(`[database] WARNING: Data directory "${this.dataDir}" is not writable. Database changes may fail.`)
     }
 
     if (process.env.NODE_ENV === 'production') {
       try {
-        const dirStat = statSync(dataDir)
-        const parentStat = statSync(resolve(dataDir, '..'))
-        // If dir and parent have the same device, it's likely NOT a separate mount
+        const dirStat = statSync(this.dataDir)
+        const parentStat = statSync(resolve(this.dataDir, '..'))
         if (dirStat.dev === parentStat.dev) {
           console.warn('[database] WARNING: Data directory does not appear to be a mounted volume. Data will be lost on container restart. Mount a volume to /data/db.')
         }
@@ -46,12 +46,12 @@ class DatabaseService {
 
   /** Check database directory health for system status reporting. */
   checkHealth(): { writable: boolean; mounted: boolean } {
-    const dataDir = process.env.NODE_ENV === 'production' ? '/data/db' : (process.env.DATA_DIR || 'data')
     let writable = false
-    const mounted = true
+    // Mount check only applies in production; in dev, assume mounted
+    let mounted = true
 
     try {
-      accessSync(dataDir, constants.W_OK)
+      accessSync(this.dataDir, constants.W_OK)
       writable = true
     } catch {
       writable = false
@@ -59,11 +59,11 @@ class DatabaseService {
 
     if (process.env.NODE_ENV === 'production') {
       try {
-        const dirStat = statSync(dataDir)
-        const parentStat = statSync(resolve(dataDir, '..'))
-        return { writable, mounted: dirStat.dev !== parentStat.dev }
+        const dirStat = statSync(this.dataDir)
+        const parentStat = statSync(resolve(this.dataDir, '..'))
+        mounted = dirStat.dev !== parentStat.dev
       } catch {
-        return { writable, mounted: false }
+        mounted = false
       }
     }
 

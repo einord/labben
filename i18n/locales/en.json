@@ -315,9 +315,7 @@
     "dbNotWritableDescription": "The database directory is not writable. Database operations will fail.",
     "dbNotMounted": "Database directory not mounted",
     "dbNotMountedDescription": "The database directory does not appear to be a mounted volume. All data will be lost when the container restarts.",
-    "dbStep1": "Mount a volume to /data/db in your docker-compose.yml:",
-    "invalidYaml": "Invalid YAML syntax",
-    "invalidYamlDescription": "The compose file contains invalid YAML syntax. Please fix the errors before saving."
+    "dbStep1": "Mount a volume to /data/db in your docker-compose.yml:"
   },
   "staticSites": {
     "title": "Static Sites",
