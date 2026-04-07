@@ -14,12 +14,14 @@ const emit = defineEmits<{
 
 const { config, getPalettes, setPalette, setMode } = useTheme()
 const { locale, locales, setLocale, t } = useI18n()
-const { user, credentials, fetchCredentials, deleteCredential, registerAdditionalPasskey, invites, fetchInvites, deleteInvite, createInvite } = useAuth()
+const { user, credentials, fetchCredentials, deleteCredential, registerAdditionalPasskey, invites, fetchInvites, deleteInvite, createInvite, sessions, fetchSessions, revokeSession, revokeOtherSessions } = useAuth()
 const toast = useToast()
 
 const inviteLink = ref<string | null>(null)
 const registeringPasskey = ref(false)
 const { status: systemStatus, fetchStatus: fetchSystemStatus } = useSystemStatus()
+
+const otherSessions = computed(() => sessions.value.filter(s => !s.isCurrent))
 
 const sections = computed<SettingsSection[]>(() => [
   { id: 'account', label: t('auth.account'), icon: 'lucide:user' },
@@ -82,6 +84,24 @@ async function handleDeleteInvite(token: string) {
   }
 }
 
+async function handleRevokeSession(sessionId: string) {
+  try {
+    await revokeSession(sessionId)
+    toast.success(t('auth.sessionRevoked'))
+  } catch (err) {
+    toast.error(t('auth.sessionRevokeError'), err instanceof Error ? err.message : String(err))
+  }
+}
+
+async function handleRevokeOtherSessions() {
+  try {
+    await revokeOtherSessions()
+    toast.success(t('auth.sessionsRevoked'))
+  } catch (err) {
+    toast.error(t('auth.sessionRevokeError'), err instanceof Error ? err.message : String(err))
+  }
+}
+
 async function copyInviteLink() {
   if (!inviteLink.value) return
   try {
@@ -95,6 +115,7 @@ async function copyInviteLink() {
 function onSectionChange(sectionId: string) {
   if (sectionId === 'account') {
     fetchCredentials()
+    fetchSessions()
     inviteLink.value = null
   }
 }
@@ -116,6 +137,7 @@ watch(() => props.modelValue, (open) => {
   if (open) {
     fetchCredentials()
     fetchInvites()
+    fetchSessions()
     fetchSystemStatus()
     inviteLink.value = null
   }
@@ -203,6 +225,44 @@ watch(() => props.modelValue, (open) => {
           <UiButton variant="secondary" size="sm" icon="lucide:user-plus" @click="handleCreateInvite">
             {{ $t('auth.inviteUser') }}
           </UiButton>
+        </div>
+
+        <div class="setting-group">
+          <h3 class="section-title">{{ $t('auth.sessions') }}</h3>
+          <div class="session-list">
+            <div v-for="sess in sessions" :key="sess.id" class="session-item" :class="{ current: sess.isCurrent }">
+              <div class="session-info">
+                <Icon :name="sess.isCurrent ? 'lucide:monitor-check' : 'lucide:monitor'" class="session-icon" />
+                <div class="session-details">
+                  <span class="session-agent">{{ sess.userAgent ? sess.userAgent.substring(0, 60) + (sess.userAgent.length > 60 ? '...' : '') : 'Unknown' }}</span>
+                  <span class="session-meta">
+                    {{ sess.isCurrent ? $t('auth.currentSession') : '' }}
+                    {{ sess.ipAddress ? `· ${sess.ipAddress}` : '' }}
+                    · {{ $t('auth.lastUsed') }}: {{ new Date(sess.lastUsedAt).toLocaleString() }}
+                  </span>
+                </div>
+              </div>
+              <UiButton
+                v-if="!sess.isCurrent"
+                variant="ghost"
+                size="sm"
+                icon="lucide:x"
+                @click="handleRevokeSession(sess.id)"
+              />
+            </div>
+          </div>
+          <UiButton
+            v-if="otherSessions.length > 0"
+            variant="secondary"
+            size="sm"
+            icon="lucide:shield-off"
+            @click="handleRevokeOtherSessions"
+          >
+            {{ $t('auth.revokeAllOtherSessions') }}
+          </UiButton>
+          <div v-else-if="sessions.length <= 1" class="empty-message">
+            {{ $t('auth.noOtherSessions') }}
+          </div>
         </div>
       </div>
 
@@ -568,6 +628,62 @@ watch(() => props.modelValue, (open) => {
 }
 
 .invite-expiry {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+.session-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.session-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-sm);
+  background-color: var(--color-bg);
+  border-radius: var(--radius-md);
+
+  &.current {
+    border: 1px solid var(--color-accent);
+  }
+}
+
+.session-info {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  min-width: 0;
+}
+
+.session-icon {
+  font-size: var(--font-size-xl);
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+
+  .current & {
+    color: var(--color-accent);
+  }
+}
+
+.session-details {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.session-agent {
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--color-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.session-meta {
   font-size: var(--font-size-xs);
   color: var(--color-text-muted);
 }

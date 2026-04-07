@@ -21,6 +21,16 @@ export interface InviteInfo {
   expiresAt: string
 }
 
+/** Info about an active session (for display in UI) */
+export interface SessionInfo {
+  id: string
+  userAgent: string | null
+  ipAddress: string | null
+  createdAt: string
+  lastUsedAt: string
+  isCurrent: boolean
+}
+
 /** Auth state returned to the client */
 export interface AuthState {
   user: User | null

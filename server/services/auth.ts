@@ -1,4 +1,6 @@
 import { randomBytes } from 'node:crypto'
+import { writeFileSync, readFileSync, existsSync } from 'node:fs'
+import { resolve } from 'node:path'
 import {
   generateRegistrationOptions,
   verifyRegistrationResponse,
@@ -15,19 +17,52 @@ import type { H3Event } from 'h3'
 import { useSession, unsealSession } from 'h3'
 import { databaseService } from './database'
 
-/** Get or create a stable session password that survives HMR reloads */
+const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 30 // 30 days
+
+/** Format a Date as SQLite-compatible datetime string (YYYY-MM-DD HH:MM:SS) */
+function toSqliteDatetime(date: Date): string {
+  return date.toISOString().replace('T', ' ').replace(/\.\d{3}Z$/, '')
+}
+
+/**
+ * Get or create a stable session password.
+ * Priority: env var > persisted file > generated (with warning).
+ */
 function getSessionPassword(): string {
   if (process.env.AUTH_SESSION_SECRET) return process.env.AUTH_SESSION_SECRET
 
-  const globalKey = '__labben_session_password'
-  const g = globalThis as Record<string, string | undefined>
-  if (!g[globalKey]) {
-    g[globalKey] = randomBytes(32).toString('hex')
+  const dataDir = process.env.NODE_ENV === 'production' ? '/data/db' : (process.env.DATA_DIR || 'data')
+  const secretPath = resolve(dataDir, '.session-secret')
+
+  // Try to read a previously persisted secret
+  try {
+    if (existsSync(secretPath)) {
+      const stored = readFileSync(secretPath, 'utf-8').trim()
+      if (stored.length >= 32) return stored
+    }
+  } catch {
+    // Fall through to generation
   }
-  return g[globalKey]
+
+  // Generate and persist a new secret
+  const generated = randomBytes(32).toString('hex')
+  try {
+    writeFileSync(secretPath, generated, { mode: 0o600 })
+  } catch {
+    console.warn('[auth] WARNING: Could not persist session secret to disk. Sessions will be invalidated on restart. Set AUTH_SESSION_SECRET env var for stable sessions.')
+  }
+
+  if (process.env.NODE_ENV === 'production') {
+    console.warn('[auth] WARNING: AUTH_SESSION_SECRET is not set. A generated secret has been persisted to disk. For best security, set AUTH_SESSION_SECRET explicitly.')
+  }
+
+  return generated
 }
 
-const SESSION_PASSWORD = getSessionPassword()
+// Survive HMR reloads
+const globalKey = '__labben_session_password'
+const g = globalThis as unknown as Record<string, string | undefined>
+const SESSION_PASSWORD = g[globalKey] ??= getSessionPassword()
 
 interface ChallengeEntry {
   challenge: string
@@ -45,8 +80,11 @@ class AuthService {
     this.rpID = process.env.AUTH_RP_ID || 'localhost'
     this.origin = process.env.AUTH_ORIGIN || 'http://localhost:3005'
 
-    // Clean up expired challenges periodically
-    setInterval(() => this.cleanupChallenges(), 60_000)
+    // Clean up expired challenges and sessions periodically
+    setInterval(() => {
+      this.cleanupChallenges()
+      databaseService.deleteExpiredSessions()
+    }, 60_000)
   }
 
   /** Check if initial setup is required (no users exist) */
@@ -170,7 +208,7 @@ class AuthService {
     return {
       password: SESSION_PASSWORD,
       name: 'labben-auth',
-      maxAge: 60 * 60 * 24 * 30, // 30 days
+      maxAge: SESSION_MAX_AGE_SECONDS,
       cookie: {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
@@ -180,22 +218,60 @@ class AuthService {
     }
   }
 
-  /** Create a session for a user */
+  /** Create a session for a user, storing it in the database */
   async createSession(event: H3Event, userId: string): Promise<void> {
+    const sessionId = randomBytes(32).toString('hex')
+    const expiresAt = toSqliteDatetime(new Date(Date.now() + SESSION_MAX_AGE_SECONDS * 1000))
+    const userAgent = getHeader(event, 'user-agent') ?? null
+    const ipAddress = getRequestIP(event, { xForwardedFor: true }) ?? null
+
+    databaseService.createSession(sessionId, userId, expiresAt, userAgent, ipAddress)
+
     const session = await useSession(event, this.getSessionConfig())
-    await session.update({ userId })
+    await session.update({ userId, sessionId })
   }
 
-  /** Get the current session user ID */
+  /** Get the current session user ID, validating against the database */
   async getSessionUserId(event: H3Event): Promise<string | null> {
     const session = await useSession(event, this.getSessionConfig())
-    return (session.data as { userId?: string })?.userId ?? null
+    const data = session.data as { userId?: string; sessionId?: string }
+    if (!data?.userId || !data?.sessionId) return null
+
+    // Validate session exists in DB and is not expired/revoked
+    const dbSession = databaseService.getSession(data.sessionId)
+    if (!dbSession || dbSession.userId !== data.userId) return null
+
+    // Update last used timestamp
+    databaseService.touchSession(data.sessionId)
+
+    return data.userId
   }
 
-  /** Destroy the current session */
+  /** Get the current session ID from the cookie */
+  async getSessionId(event: H3Event): Promise<string | null> {
+    const session = await useSession(event, this.getSessionConfig())
+    return (session.data as { sessionId?: string })?.sessionId ?? null
+  }
+
+  /** Destroy the current session (both cookie and DB record) */
   async destroySession(event: H3Event): Promise<void> {
     const session = await useSession(event, this.getSessionConfig())
+    const data = session.data as { sessionId?: string }
+
+    if (data?.sessionId) {
+      databaseService.deleteSession(data.sessionId)
+    }
+
     await session.clear()
+  }
+
+  /**
+   * Rotate the session: destroy the old one and create a new one for the same user.
+   * Used after sensitive operations like adding a passkey.
+   */
+  async rotateSession(event: H3Event, userId: string): Promise<void> {
+    await this.destroySession(event)
+    await this.createSession(event, userId)
   }
 
   /**
@@ -217,11 +293,51 @@ class AuthService {
     try {
       // unsealSession's first param (_event) is unused internally by h3
       const unsealed = await unsealSession(null as never, config, sealed)
-      const data = (unsealed as { data?: { userId?: string } })?.data
-      return data?.userId ?? null
+      const data = (unsealed as { data?: { userId?: string; sessionId?: string } })?.data
+      if (!data?.userId || !data?.sessionId) return null
+
+      // Validate against DB
+      const dbSession = databaseService.getSession(data.sessionId)
+      if (!dbSession || dbSession.userId !== data.userId) return null
+
+      return data.userId
     } catch {
       return null
     }
+  }
+
+  /** Get all active sessions for a user, marking which one is current. Returns truncated IDs for the frontend. */
+  getSessionsForUser(userId: string, currentSessionId: string | null): Array<{
+    id: string
+    userAgent: string | null
+    ipAddress: string | null
+    createdAt: string
+    lastUsedAt: string
+    isCurrent: boolean
+  }> {
+    const sessions = databaseService.getSessionsByUserId(userId)
+    return sessions.map(s => ({
+      id: s.id.substring(0, 16),
+      userAgent: s.userAgent,
+      ipAddress: s.ipAddress,
+      createdAt: s.createdAt,
+      lastUsedAt: s.lastUsedAt,
+      isCurrent: s.id === currentSessionId,
+    }))
+  }
+
+  /** Revoke a specific session by truncated ID prefix (must belong to the user) */
+  revokeSession(sessionIdPrefix: string, userId: string): boolean {
+    const sessions = databaseService.getSessionsByUserId(userId)
+    const match = sessions.find(s => s.id.substring(0, 16) === sessionIdPrefix)
+    if (!match) return false
+    databaseService.deleteSession(match.id)
+    return true
+  }
+
+  /** Revoke all sessions except the current one */
+  revokeOtherSessions(userId: string, currentSessionId: string): number {
+    return databaseService.deleteOtherSessions(userId, currentSessionId)
   }
 
   /** Generate a unique invite token */

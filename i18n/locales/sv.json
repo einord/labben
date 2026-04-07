@@ -251,7 +251,17 @@
     "noPasskeys": "Inga passkeys registrerade.",
     "lastPasskeyWarning": "Kan inte ta bort den sista passkeyn.",
     "logout": "Logga ut",
-    "loggedInAs": "Inloggad som"
+    "loggedInAs": "Inloggad som",
+    "sessions": "Sessioner",
+    "currentSession": "Nuvarande session",
+    "revokeSession": "Återkalla",
+    "revokeAllOtherSessions": "Återkalla alla andra sessioner",
+    "noOtherSessions": "Inga andra aktiva sessioner.",
+    "sessionRevoked": "Session återkallad",
+    "sessionsRevoked": "Alla andra sessioner återkallade",
+    "sessionRevokeError": "Kunde inte återkalla session",
+    "sessionSecretWarning": "Ingen sessionshemlighet konfigurerad. Sessioner ogiltigförklaras vid omstart.",
+    "lastUsed": "Senast använd"
   },
   "backup": {
     "subtitle": "Schemalägg och övervaka säkerhetskopior av dina projekt och data.",

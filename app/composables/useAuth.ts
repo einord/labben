@@ -1,5 +1,5 @@
 import { startRegistration, startAuthentication } from '@simplewebauthn/browser'
-import type { User, AuthState, WebAuthnCredentialInfo, InviteInfo } from '~/types/auth'
+import type { User, AuthState, WebAuthnCredentialInfo, InviteInfo, SessionInfo } from '~/types/auth'
 
 interface ActiveInvite {
   token: string
@@ -12,6 +12,7 @@ export function useAuth() {
   const isSetup = useState<boolean>('auth-setup', () => true)
   const credentials = ref<WebAuthnCredentialInfo[]>([])
   const invites = ref<ActiveInvite[]>([])
+  const sessions = useState<SessionInfo[]>('auth-sessions', () => [])
 
   const isAuthenticated = computed(() => user.value !== null)
 
@@ -172,11 +173,38 @@ export function useAuth() {
     }
   }
 
+  /** Fetch active sessions for the current user */
+  async function fetchSessions() {
+    try {
+      const res = await $fetch<{ success: boolean; data: SessionInfo[] }>('/api/auth/sessions')
+      sessions.value = res.data
+    } catch {
+      sessions.value = []
+    }
+  }
+
+  /** Revoke a specific session. Throws on failure. */
+  async function revokeSession(sessionId: string): Promise<void> {
+    await $fetch(`/api/auth/sessions/${sessionId}`, { method: 'DELETE' })
+    await fetchSessions()
+  }
+
+  /** Revoke all sessions except the current one. */
+  async function revokeOtherSessions(): Promise<number> {
+    const res = await $fetch<{ success: boolean; data: { revoked: number } }>(
+      '/api/auth/sessions',
+      { method: 'DELETE' },
+    )
+    await fetchSessions()
+    return res.data.revoked
+  }
+
   return {
     user,
     isSetup,
     isAuthenticated,
     credentials,
+    sessions,
     fetchAuthState,
     register,
     login,
@@ -188,5 +216,8 @@ export function useAuth() {
     fetchInvites,
     deleteInvite,
     createInvite,
+    fetchSessions,
+    revokeSession,
+    revokeOtherSessions,
   }
 }

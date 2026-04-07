@@ -251,7 +251,17 @@
     "noPasskeys": "No passkeys registered.",
     "lastPasskeyWarning": "Cannot remove the last passkey.",
     "logout": "Log out",
-    "loggedInAs": "Logged in as"
+    "loggedInAs": "Logged in as",
+    "sessions": "Sessions",
+    "currentSession": "Current session",
+    "revokeSession": "Revoke",
+    "revokeAllOtherSessions": "Revoke all other sessions",
+    "noOtherSessions": "No other active sessions.",
+    "sessionRevoked": "Session revoked",
+    "sessionsRevoked": "All other sessions revoked",
+    "sessionRevokeError": "Could not revoke session",
+    "sessionSecretWarning": "No session secret configured. Sessions will be invalidated on restart.",
+    "lastUsed": "Last used"
   },
   "backup": {
     "subtitle": "Schedule and monitor backups of your projects and data.",
