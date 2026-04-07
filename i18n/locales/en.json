@@ -227,6 +227,7 @@
     "authStateFetchError": "Could not fetch authentication status",
     "credentialsFetchError": "Could not fetch passkeys",
     "invitesFetchError": "Could not fetch invites",
+    "sessionsFetchError": "Could not fetch sessions",
     "staticSitesFetchError": "Could not fetch static sites",
     "staticSitesStatusFetchError": "Could not fetch static sites status",
     "systemStatusFetchError": "Could not fetch system status"

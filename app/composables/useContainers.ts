@@ -22,7 +22,7 @@ export function useContainers() {
       } else {
         dockerUnavailable.value = false
         error.value = err instanceof Error ? err.message : 'Failed to fetch containers'
-        toast.error(t('toast.containersFetchError'))
+        toast.error(t('toast.containersFetchError'), extractErrorDetails(err))
       }
     } finally {
       loading.value = false

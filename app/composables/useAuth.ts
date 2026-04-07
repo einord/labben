@@ -183,8 +183,9 @@ export function useAuth() {
     try {
       const res = await $fetch<{ success: boolean; data: SessionInfo[] }>('/api/auth/sessions')
       sessions.value = res.data
-    } catch {
+    } catch (err) {
       sessions.value = []
+      toast.warning(t('toast.sessionsFetchError'), extractErrorDetails(err))
     }
   }
 

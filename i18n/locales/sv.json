@@ -227,6 +227,7 @@
     "authStateFetchError": "Kunde inte hämta autentiseringsstatus",
     "credentialsFetchError": "Kunde inte hämta passkeys",
     "invitesFetchError": "Kunde inte hämta inbjudningar",
+    "sessionsFetchError": "Kunde inte hämta sessioner",
     "staticSitesFetchError": "Kunde inte hämta statiska sajter",
     "staticSitesStatusFetchError": "Kunde inte hämta status för statiska sajter",
     "systemStatusFetchError": "Kunde inte hämta systemstatus"
