@@ -218,7 +218,18 @@
     "proxyHostDeleted": "Proxy host removed",
     "proxyHostDeleteError": "Could not remove proxy host",
     "baseDomainSaved": "Base domain saved",
-    "baseDomainSaveError": "Could not save base domain"
+    "baseDomainSaveError": "Could not save base domain",
+    "backupConfigFetchError": "Could not fetch backup configuration",
+    "backupHistoryFetchError": "Could not fetch backup history",
+    "backupTestError": "Could not test backup destination",
+    "npmCandidatesFetchError": "Could not fetch proxy candidates",
+    "npmStatusFetchError": "Could not fetch NPM status",
+    "authStateFetchError": "Could not fetch authentication status",
+    "credentialsFetchError": "Could not fetch passkeys",
+    "invitesFetchError": "Could not fetch invites",
+    "staticSitesFetchError": "Could not fetch static sites",
+    "staticSitesStatusFetchError": "Could not fetch static sites status",
+    "systemStatusFetchError": "Could not fetch system status"
   },
   "auth": {
     "welcomeSetup": "Welcome! Create your first account to get started.",

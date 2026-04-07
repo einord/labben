@@ -218,7 +218,18 @@
     "proxyHostDeleted": "Proxy host borttagen",
     "proxyHostDeleteError": "Kunde inte ta bort proxy host",
     "baseDomainSaved": "Basdomän sparad",
-    "baseDomainSaveError": "Kunde inte spara basdomän"
+    "baseDomainSaveError": "Kunde inte spara basdomän",
+    "backupConfigFetchError": "Kunde inte hämta backup-konfiguration",
+    "backupHistoryFetchError": "Kunde inte hämta backup-historik",
+    "backupTestError": "Kunde inte testa backup-destination",
+    "npmCandidatesFetchError": "Kunde inte hämta proxy-kandidater",
+    "npmStatusFetchError": "Kunde inte hämta NPM-status",
+    "authStateFetchError": "Kunde inte hämta autentiseringsstatus",
+    "credentialsFetchError": "Kunde inte hämta passkeys",
+    "invitesFetchError": "Kunde inte hämta inbjudningar",
+    "staticSitesFetchError": "Kunde inte hämta statiska sajter",
+    "staticSitesStatusFetchError": "Kunde inte hämta status för statiska sajter",
+    "systemStatusFetchError": "Kunde inte hämta systemstatus"
   },
   "auth": {
     "welcomeSetup": "Välkommen! Skapa ditt första konto för att komma igång.",

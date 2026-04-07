@@ -1,20 +1,5 @@
 import type { NpmConnectionStatus, NpmProxyHost, CreateProxyHostData } from '~/types/npm'
 
-/** Extract a human-readable error message from a fetch error */
-function extractErrorDetails(err: unknown): string {
-  if (err && typeof err === 'object') {
-    const e = err as Record<string, unknown>
-    if (e.data && typeof e.data === 'object') {
-      const data = e.data as Record<string, unknown>
-      if (typeof data.message === 'string') return data.message
-      if (typeof data.statusMessage === 'string') return data.statusMessage
-    }
-    if (typeof e.message === 'string') return e.message
-    if (typeof e.statusMessage === 'string') return e.statusMessage
-  }
-  return String(err)
-}
-
 export function useNpm() {
   const status = useState<NpmConnectionStatus>('npm-status', () => ({ connected: false, url: null, email: null, isDefault: false }))
   const proxyHosts = useState<NpmProxyHost[]>('npm-proxy-hosts', () => [])
@@ -28,8 +13,9 @@ export function useNpm() {
     try {
       const response = await $fetch<{ success: boolean; data: NpmConnectionStatus }>('/api/npm/status')
       status.value = response.data
-    } catch {
+    } catch (err) {
       status.value = { connected: false, url: null, email: null, isDefault: false }
+      toast.warning(t('toast.npmStatusFetchError'), extractErrorDetails(err))
     }
   }
 
@@ -96,6 +82,7 @@ export function useNpm() {
       proxyHosts.value = response.data
     } catch (err) {
       proxyHosts.value = []
+      toast.warning(t('toast.proxyHostsFetchError'), extractErrorDetails(err))
     } finally {
       loading.value = false
     }

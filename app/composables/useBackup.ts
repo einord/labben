@@ -11,8 +11,9 @@ export function useBackup() {
     try {
       const res = await $fetch<{ success: boolean; data: BackupConfig | null }>('/api/backup/config')
       config.value = res.data
-    } catch {
+    } catch (err) {
       config.value = null
+      toast.warning(t('toast.backupConfigFetchError'), extractErrorDetails(err))
     }
   }
 
@@ -72,8 +73,9 @@ export function useBackup() {
     try {
       const res = await $fetch<{ success: boolean; data: BackupHistoryEntry[] }>('/api/backup/history')
       history.value = res.data
-    } catch {
+    } catch (err) {
       history.value = []
+      toast.warning(t('toast.backupHistoryFetchError'), extractErrorDetails(err))
     }
   }
 
@@ -84,7 +86,8 @@ export function useBackup() {
         body: { path },
       })
       return res.data.writable
-    } catch {
+    } catch (err) {
+      toast.warning(t('toast.backupTestError'), extractErrorDetails(err))
       return false
     }
   }

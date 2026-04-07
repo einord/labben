@@ -12,8 +12,9 @@ export function useProxy() {
     try {
       const response = await $fetch<{ success: boolean; data: SystemSettings }>('/api/settings/proxy')
       proxyProject.value = response.data.proxyProject
-    } catch {
+    } catch (err) {
       proxyProject.value = null
+      toast.warning(t('toast.proxySettingsFetchError'), extractErrorDetails(err))
     }
   }
 
@@ -23,8 +24,9 @@ export function useProxy() {
     try {
       const response = await $fetch<{ success: boolean; data: ProjectWithMetadata[] }>('/api/projects/npm-candidates')
       npmCandidates.value = response.data
-    } catch {
+    } catch (err) {
       npmCandidates.value = []
+      toast.warning(t('toast.npmCandidatesFetchError'), extractErrorDetails(err))
     } finally {
       loading.value = false
     }

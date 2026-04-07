@@ -10,13 +10,16 @@ interface SystemStatus {
 
 export function useSystemStatus() {
   const status = useState<SystemStatus | null>('system-status', () => null)
+  const toast = useToast()
+  const { t } = useI18n()
 
   async function fetchStatus() {
     try {
       const res = await $fetch<{ success: boolean; data: SystemStatus }>('/api/system/status')
       status.value = res.data
-    } catch {
+    } catch (err) {
       status.value = null
+      toast.warning(t('toast.systemStatusFetchError'), extractErrorDetails(err))
     }
   }
 

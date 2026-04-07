@@ -60,9 +60,9 @@ export function useToast() {
     return addToast(message, 'error', { details })
   }
 
-  /** Convenience: show a warning toast */
-  function warning(message: string) {
-    return addToast(message, 'warning')
+  /** Convenience: show a warning toast (with optional details) */
+  function warning(message: string, details?: string) {
+    return addToast(message, 'warning', { details })
   }
 
   /** Convenience: show an info toast */
