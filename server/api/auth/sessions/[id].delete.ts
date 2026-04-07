@@ -13,7 +13,7 @@ export default defineEventHandler(async (event) => {
 
   // Prevent revoking the current session (use logout for that)
   const currentSessionId = await authService.getSessionId(event)
-  if (sessionId === currentSessionId) {
+  if (currentSessionId && sessionId === currentSessionId.substring(0, 16)) {
     throw createError({ statusCode: 400, message: 'Cannot revoke current session. Use logout instead.' })
   }
 

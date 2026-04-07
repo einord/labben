@@ -21,6 +21,8 @@ const inviteLink = ref<string | null>(null)
 const registeringPasskey = ref(false)
 const { status: systemStatus, fetchStatus: fetchSystemStatus } = useSystemStatus()
 
+const otherSessions = computed(() => sessions.value.filter(s => !s.isCurrent))
+
 const sections = computed<SettingsSection[]>(() => [
   { id: 'account', label: t('auth.account'), icon: 'lucide:user' },
   { id: 'proxy', label: t('nav.proxy'), icon: 'lucide:route' },
@@ -250,7 +252,7 @@ watch(() => props.modelValue, (open) => {
             </div>
           </div>
           <UiButton
-            v-if="sessions.filter(s => !s.isCurrent).length > 0"
+            v-if="otherSessions.length > 0"
             variant="secondary"
             size="sm"
             icon="lucide:shield-off"

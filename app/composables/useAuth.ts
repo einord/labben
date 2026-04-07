@@ -12,7 +12,7 @@ export function useAuth() {
   const isSetup = useState<boolean>('auth-setup', () => true)
   const credentials = ref<WebAuthnCredentialInfo[]>([])
   const invites = ref<ActiveInvite[]>([])
-  const sessions = ref<SessionInfo[]>([])
+  const sessions = useState<SessionInfo[]>('auth-sessions', () => [])
 
   const isAuthenticated = computed(() => user.value !== null)
 

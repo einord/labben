@@ -216,11 +216,12 @@ describe('authService session management', () => {
     }
   })
 
-  it('revokes a session belonging to the user', () => {
+  it('revokes a session belonging to the user using truncated ID', () => {
     const sessionId = randomBytes(32).toString('hex')
     databaseService.createSession(sessionId, userId, toSqliteDatetime(new Date(Date.now() + 3600_000)), null, null)
 
-    const result = authService.revokeSession(sessionId, userId)
+    const truncatedId = sessionId.substring(0, 16)
+    const result = authService.revokeSession(truncatedId, userId)
     expect(result).toBe(true)
     expect(databaseService.getSession(sessionId)).toBeNull()
   })
@@ -229,7 +230,8 @@ describe('authService session management', () => {
     const sessionId = randomBytes(32).toString('hex')
     databaseService.createSession(sessionId, userId, toSqliteDatetime(new Date(Date.now() + 3600_000)), null, null)
 
-    const result = authService.revokeSession(sessionId, 'other-user')
+    const truncatedId = sessionId.substring(0, 16)
+    const result = authService.revokeSession(truncatedId, 'other-user')
     expect(result).toBe(false)
     expect(databaseService.getSession(sessionId)).not.toBeNull()
 
@@ -238,11 +240,11 @@ describe('authService session management', () => {
   })
 
   it('returns false for non-existent session', () => {
-    const result = authService.revokeSession('nonexistent', userId)
+    const result = authService.revokeSession('nonexistent12345', userId)
     expect(result).toBe(false)
   })
 
-  it('getSessionsForUser marks current session correctly', () => {
+  it('getSessionsForUser returns truncated IDs and marks current correctly', () => {
     databaseService.deleteAllUserSessions(userId)
 
     const current = randomBytes(32).toString('hex')
@@ -253,7 +255,14 @@ describe('authService session management', () => {
 
     const sessions = authService.getSessionsForUser(userId, current)
     expect(sessions.length).toBe(2)
-    expect(sessions.find(s => s.id === current)!.isCurrent).toBe(true)
-    expect(sessions.find(s => s.id === other)!.isCurrent).toBe(false)
+
+    // IDs should be truncated to 16 chars
+    const currentSession = sessions.find(s => s.isCurrent)!
+    expect(currentSession.id).toBe(current.substring(0, 16))
+    expect(currentSession.id.length).toBe(16)
+
+    const otherSession = sessions.find(s => !s.isCurrent)!
+    expect(otherSession.id).toBe(other.substring(0, 16))
+    expect(otherSession.isCurrent).toBe(false)
   })
 })

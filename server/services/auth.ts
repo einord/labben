@@ -241,7 +241,7 @@ class AuthService {
     const dbSession = databaseService.getSession(data.sessionId)
     if (!dbSession || dbSession.userId !== data.userId) return null
 
-    // Update last used timestamp (at most once per minute to reduce writes)
+    // Update last used timestamp
     databaseService.touchSession(data.sessionId)
 
     return data.userId
@@ -306,7 +306,7 @@ class AuthService {
     }
   }
 
-  /** Get all active sessions for a user, marking which one is current */
+  /** Get all active sessions for a user, marking which one is current. Returns truncated IDs for the frontend. */
   getSessionsForUser(userId: string, currentSessionId: string | null): Array<{
     id: string
     userAgent: string | null
@@ -317,16 +317,21 @@ class AuthService {
   }> {
     const sessions = databaseService.getSessionsByUserId(userId)
     return sessions.map(s => ({
-      ...s,
+      id: s.id.substring(0, 16),
+      userAgent: s.userAgent,
+      ipAddress: s.ipAddress,
+      createdAt: s.createdAt,
+      lastUsedAt: s.lastUsedAt,
       isCurrent: s.id === currentSessionId,
     }))
   }
 
-  /** Revoke a specific session (must belong to the user) */
-  revokeSession(sessionId: string, userId: string): boolean {
-    const session = databaseService.getSession(sessionId)
-    if (!session || session.userId !== userId) return false
-    databaseService.deleteSession(sessionId)
+  /** Revoke a specific session by truncated ID prefix (must belong to the user) */
+  revokeSession(sessionIdPrefix: string, userId: string): boolean {
+    const sessions = databaseService.getSessionsByUserId(userId)
+    const match = sessions.find(s => s.id.substring(0, 16) === sessionIdPrefix)
+    if (!match) return false
+    databaseService.deleteSession(match.id)
     return true
   }
 
