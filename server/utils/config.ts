@@ -5,3 +5,6 @@ export const composePath = resolve(process.env.COMPOSE_PATH || '/data/compose')
 
 /** Host-side compose directory — needed so Docker daemon can resolve volume mounts inside the container. */
 export const composeHostDir: string | null = process.env.COMPOSE_HOST_DIR || null
+
+/** Allowed base directory for backup destinations — prevents path traversal attacks. */
+export const ALLOWED_BACKUP_BASE = '/backups'

@@ -2,8 +2,7 @@ import { resolve } from 'node:path'
 import type { BackupConfig } from '~/types/backup'
 import { databaseService } from '../../services/database'
 import { backupService } from '../../services/backup'
-
-const ALLOWED_BACKUP_BASE = '/backups'
+import { ALLOWED_BACKUP_BASE } from '../../utils/config'
 
 export default defineEventHandler(async (event) => {
   const body = await readBody<Partial<BackupConfig>>(event)
@@ -18,7 +17,7 @@ export default defineEventHandler(async (event) => {
   }
 
   const config: BackupConfig = {
-    destination: body.destination.trim(),
+    destination: resolved,
     scheduleDays: body.scheduleDays ?? [0, 1, 2, 3, 4, 5, 6],
     scheduleHour: body.scheduleHour ?? 3,
     scheduleMinute: body.scheduleMinute ?? 0,

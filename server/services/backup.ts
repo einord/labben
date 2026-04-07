@@ -5,10 +5,9 @@ import { resolve, join } from 'node:path'
 import { mkdir, readdir, realpath, rm, stat } from 'node:fs/promises'
 import { databaseService } from './database'
 import type { BackupConfig } from '~/types/backup'
+import { ALLOWED_BACKUP_BASE } from '../utils/config'
 
 const execFileAsync = promisify(execFile)
-
-const ALLOWED_BACKUP_BASE = '/backups'
 
 class BackupService {
   private composeDir: string

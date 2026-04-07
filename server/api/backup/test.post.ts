@@ -1,7 +1,6 @@
 import { resolve } from 'node:path'
 import { backupService } from '../../services/backup'
-
-const ALLOWED_BACKUP_BASE = '/backups'
+import { ALLOWED_BACKUP_BASE } from '../../utils/config'
 
 export default defineEventHandler(async (event) => {
   const body = await readBody<{ path?: string }>(event)

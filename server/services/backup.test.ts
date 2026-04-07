@@ -33,5 +33,20 @@ describe('backupService', () => {
       const result = await backupService.testDestination('/backups-evil')
       expect(result).toBe(false)
     })
+
+    it('rejects relative paths that escape /backups', async () => {
+      const result = await backupService.testDestination('relative/path')
+      expect(result).toBe(false)
+    })
+
+    it('rejects deeply nested traversal attempts', async () => {
+      const result = await backupService.testDestination('/backups/a/../../etc/passwd')
+      expect(result).toBe(false)
+    })
+
+    it('rejects paths with null bytes', async () => {
+      const result = await backupService.testDestination('/backups/test\0/evil')
+      expect(result).toBe(false)
+    })
   })
 })
