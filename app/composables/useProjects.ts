@@ -1,20 +1,5 @@
 import type { ProjectWithMetadata } from '~/types/project'
 
-/** Extract a human-readable error message from a fetch error */
-function extractErrorDetails(err: unknown): string {
-  if (err && typeof err === 'object') {
-    const e = err as Record<string, unknown>
-    if (e.data && typeof e.data === 'object') {
-      const data = e.data as Record<string, unknown>
-      if (typeof data.message === 'string') return data.message
-      if (typeof data.statusMessage === 'string') return data.statusMessage
-    }
-    if (typeof e.message === 'string') return e.message
-    if (typeof e.statusMessage === 'string') return e.statusMessage
-  }
-  return String(err)
-}
-
 export function useProjects() {
   const projects = ref<ProjectWithMetadata[]>([])
   const loading = ref(false)

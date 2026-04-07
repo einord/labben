@@ -22,7 +22,7 @@ export function useContainers() {
       } else {
         dockerUnavailable.value = false
         error.value = err instanceof Error ? err.message : 'Failed to fetch containers'
-        toast.error(t('toast.containersFetchError'))
+        toast.error(t('toast.containersFetchError'), extractErrorDetails(err))
       }
     } finally {
       loading.value = false
@@ -36,7 +36,7 @@ export function useContainers() {
       toast.success(t('toast.containerStarted'))
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to start container'
-      toast.error(t('toast.containerStartError'))
+      toast.error(t('toast.containerStartError'), extractErrorDetails(err))
     }
   }
 
@@ -47,7 +47,7 @@ export function useContainers() {
       toast.success(t('toast.containerStopped'))
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to stop container'
-      toast.error(t('toast.containerStopError'))
+      toast.error(t('toast.containerStopError'), extractErrorDetails(err))
     }
   }
 
@@ -58,7 +58,7 @@ export function useContainers() {
       toast.success(t('toast.containerRestarted'))
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to restart container'
-      toast.error(t('toast.containerRestartError'))
+      toast.error(t('toast.containerRestartError'), extractErrorDetails(err))
     }
   }
 

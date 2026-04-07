@@ -13,6 +13,8 @@ export function useAuth() {
   const credentials = ref<WebAuthnCredentialInfo[]>([])
   const invites = ref<ActiveInvite[]>([])
   const sessions = useState<SessionInfo[]>('auth-sessions', () => [])
+  const toast = useToast()
+  const { t } = useI18n()
 
   const isAuthenticated = computed(() => user.value !== null)
 
@@ -30,9 +32,10 @@ export function useAuth() {
           user.value = null
         }
       }
-    } catch {
+    } catch (err) {
       isSetup.value = false
       user.value = null
+      toast.warning(t('toast.authStateFetchError'), extractErrorDetails(err))
     }
 
     return { user: user.value, isSetup: isSetup.value }
@@ -108,8 +111,9 @@ export function useAuth() {
     try {
       const res = await $fetch<{ success: boolean; data: WebAuthnCredentialInfo[] }>('/api/auth/credentials')
       credentials.value = res.data
-    } catch {
+    } catch (err) {
       credentials.value = []
+      toast.warning(t('toast.credentialsFetchError'), extractErrorDetails(err))
     }
   }
 
@@ -148,8 +152,9 @@ export function useAuth() {
     try {
       const res = await $fetch<{ success: boolean; data: ActiveInvite[] }>('/api/auth/invites')
       invites.value = res.data
-    } catch {
+    } catch (err) {
       invites.value = []
+      toast.warning(t('toast.invitesFetchError'), extractErrorDetails(err))
     }
   }
 
@@ -178,8 +183,9 @@ export function useAuth() {
     try {
       const res = await $fetch<{ success: boolean; data: SessionInfo[] }>('/api/auth/sessions')
       sessions.value = res.data
-    } catch {
+    } catch (err) {
       sessions.value = []
+      toast.warning(t('toast.sessionsFetchError'), extractErrorDetails(err))
     }
   }
 
