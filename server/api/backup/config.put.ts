@@ -1,12 +1,20 @@
+import { resolve } from 'node:path'
 import type { BackupConfig } from '~/types/backup'
 import { databaseService } from '../../services/database'
 import { backupService } from '../../services/backup'
+
+const ALLOWED_BACKUP_BASE = '/backups'
 
 export default defineEventHandler(async (event) => {
   const body = await readBody<Partial<BackupConfig>>(event)
 
   if (!body?.destination?.trim()) {
     throw createError({ statusCode: 400, message: 'Destination is required' })
+  }
+
+  const resolved = resolve(body.destination.trim())
+  if (!resolved.startsWith(ALLOWED_BACKUP_BASE + '/') && resolved !== ALLOWED_BACKUP_BASE) {
+    throw createError({ statusCode: 400, message: `Backup destination must be under ${ALLOWED_BACKUP_BASE}` })
   }
 
   const config: BackupConfig = {

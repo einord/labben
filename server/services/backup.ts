@@ -2,11 +2,13 @@ import { randomUUID } from 'node:crypto'
 import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
 import { resolve, join } from 'node:path'
-import { mkdir, readdir, rm, stat } from 'node:fs/promises'
+import { mkdir, readdir, realpath, rm, stat } from 'node:fs/promises'
 import { databaseService } from './database'
 import type { BackupConfig } from '~/types/backup'
 
 const execFileAsync = promisify(execFile)
+
+const ALLOWED_BACKUP_BASE = '/backups'
 
 class BackupService {
   private composeDir: string
@@ -20,6 +22,31 @@ class BackupService {
     this.dataDir = '/data/db'
   }
 
+  /** Validate that a destination path resolves to within the allowed backup base directory */
+  private async validateDestinationPath(destPath: string): Promise<string> {
+    const resolved = resolve(destPath)
+
+    // Check the resolved path is under the allowed base before creating directories
+    if (!resolved.startsWith(ALLOWED_BACKUP_BASE + '/') && resolved !== ALLOWED_BACKUP_BASE) {
+      throw new Error(`Backup destination must be under ${ALLOWED_BACKUP_BASE}`)
+    }
+
+    // If the path already exists, resolve symlinks and re-check
+    try {
+      const real = await realpath(resolved)
+      if (!real.startsWith(ALLOWED_BACKUP_BASE + '/') && real !== ALLOWED_BACKUP_BASE) {
+        throw new Error(`Backup destination must be under ${ALLOWED_BACKUP_BASE}`)
+      }
+      return real
+    } catch (err) {
+      // ENOENT is fine — the directory doesn't exist yet but the resolved path is valid
+      if (err instanceof Error && 'code' in err && (err as NodeJS.ErrnoException).code === 'ENOENT') {
+        return resolved
+      }
+      throw err
+    }
+  }
+
   /** Initialize scheduler from saved config */
   initScheduler(): void {
     const config = databaseService.getBackupConfig()
@@ -31,9 +58,9 @@ class BackupService {
   /** Test if a destination path is writable */
   async testDestination(destPath: string): Promise<boolean> {
     try {
-      const resolved = resolve(destPath)
-      await mkdir(resolved, { recursive: true })
-      const testFile = join(resolved, '.labben-backup-test')
+      const validated = await this.validateDestinationPath(destPath)
+      await mkdir(validated, { recursive: true })
+      const testFile = join(validated, '.labben-backup-test')
       await execFileAsync('touch', [testFile])
       await rm(testFile)
       return true
@@ -56,7 +83,7 @@ class BackupService {
     databaseService.addBackupHistory(backupId, 'running', startedAt)
 
     try {
-      const dest = resolve(config.destination)
+      const dest = await this.validateDestinationPath(config.destination)
       const latestDir = join(dest, 'latest')
       const timestamp = new Date().toISOString().replace(/[:.]/g, '').replace('T', '_').slice(0, 15)
       const historyDir = join(dest, 'history', timestamp)
