@@ -19,6 +19,11 @@ import { databaseService } from './database'
 
 const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 30 // 30 days
 
+/** Format a Date as SQLite-compatible datetime string (YYYY-MM-DD HH:MM:SS) */
+function toSqliteDatetime(date: Date): string {
+  return date.toISOString().replace('T', ' ').replace(/\.\d{3}Z$/, '')
+}
+
 /**
  * Get or create a stable session password.
  * Priority: env var > persisted file > generated (with warning).
@@ -216,7 +221,7 @@ class AuthService {
   /** Create a session for a user, storing it in the database */
   async createSession(event: H3Event, userId: string): Promise<void> {
     const sessionId = randomBytes(32).toString('hex')
-    const expiresAt = new Date(Date.now() + SESSION_MAX_AGE_SECONDS * 1000).toISOString()
+    const expiresAt = toSqliteDatetime(new Date(Date.now() + SESSION_MAX_AGE_SECONDS * 1000))
     const userAgent = getHeader(event, 'user-agent') ?? null
     const ipAddress = getRequestIP(event, { xForwardedFor: true }) ?? null
 
