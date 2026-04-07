@@ -278,9 +278,9 @@ class DockerService {
   /** Update a project: pull + down + up in one operation (avoids findProject after down removes containers). */
   async projectUpdate(name: string): Promise<string> {
     const project = await this.findProject(name)
-    const configPath = this.resolveComposePath(project.configPath)
+    const hostPath = project.hostConfigPath
     const run = (args: string[]) =>
-      execFileAsync('docker', ['compose', '-f', configPath, ...args], { timeout: 120_000 })
+      execFileAsync('docker', ['compose', '-f', hostPath, ...args], { timeout: 120_000 })
         .then(({ stdout, stderr }) => stdout + stderr)
 
     const pullOutput = await run(['pull'])
@@ -366,13 +366,19 @@ class DockerService {
           continue
         }
 
-        // New filesystem-only project — container and host paths are the same
+        // New filesystem-only project — map to host paths if COMPOSE_HOST_DIR is set
+        const hostDir = this.hostComposeDir
+          ? projectDir.replace(this.newProjectDir, this.hostComposeDir)
+          : projectDir
+        const hostConfig = this.hostComposeDir
+          ? configPath.replace(this.newProjectDir, this.hostComposeDir)
+          : configPath
         projectMap.set(effectiveName, {
           containers: [],
           workingDir: projectDir,
           configFile: configPath,
-          hostWorkingDir: projectDir,
-          hostConfigFile: configPath,
+          hostWorkingDir: hostDir,
+          hostConfigFile: hostConfig,
         })
       }
     } catch {
@@ -395,23 +401,15 @@ class DockerService {
     return dirName.toLowerCase()
   }
 
-  /** Run a docker compose command using host-side paths (symlinked inside container). */
+  /** Run a docker compose command using host-side paths. */
   private async runComposeCommand(name: string, ...args: string[]): Promise<string> {
     const project = await this.findProject(name)
-    const configPath = this.resolveComposePath(project.configPath)
     const { stdout, stderr } = await execFileAsync(
       'docker',
-      ['compose', '-f', configPath, ...args],
+      ['compose', '-f', project.hostConfigPath, ...args],
       { timeout: 120_000 },
     )
     return stdout + stderr
-  }
-
-  /** Resolve a compose file path — use host path if available (symlinked in container). */
-  private resolveComposePath(containerPath: string): string {
-    if (!this.hostComposeDir) return containerPath
-    if (!containerPath.startsWith(this.newProjectDir)) return containerPath
-    return containerPath.replace(this.newProjectDir, this.hostComposeDir)
   }
 
   private mapPorts(ports: Docker.Port[] | null): ContainerPort[] {
