@@ -63,8 +63,11 @@ After implementation, write tests for new functionality where appropriate:
 - Look at existing e2e tests in `e2e/` for patterns and conventions to follow
 - **Note:** Auth is required — e2e tests must handle the WebAuthn login flow or bypass it via test configuration
 
-Run all relevant tests and iterate until they pass:
-- `pnpm test:e2e` (Playwright) — always run when UI changes were made
+**Smoke tests (`e2e/smoke.spec.ts`) must always pass.** These verify that every main page renders without server errors (500), without "Internal Server Error" text, and without critical console errors. Any change — server or client — can break SSR rendering, so these are non-negotiable.
+
+Run **all** tests and iterate until they pass:
+- `pnpm test` — unit tests (always run)
+- `pnpm test:e2e` — e2e + smoke tests (always run, not just for UI changes — smoke tests catch SSR breakage from any change)
 
 ### Phase 4: Create Pull Request
 
@@ -131,3 +134,4 @@ When asking the user, provide:
 - Reference the issue number in commits where relevant
 - If you get stuck or the issue is unclear, ask the user rather than guessing
 - When all work is done (merged or handed off to user), use `ExitWorktree` to clean up the worktree
+- **If adding a new page** in `app/pages/`, add it to the `AUTHENTICATED_PAGES` array in `e2e/smoke.spec.ts` so it is covered by smoke tests

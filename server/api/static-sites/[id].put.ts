@@ -9,6 +9,9 @@ export default defineEventHandler(async (event) => {
   }
 
   const body = await readBody<UpdateStaticSiteData>(event)
+  if (!body) {
+    throw createError({ statusCode: 400, statusMessage: 'Request body is required' })
+  }
 
   const data: UpdateStaticSiteData = {}
   if (body.domain !== undefined) {

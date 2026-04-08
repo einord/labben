@@ -314,7 +314,7 @@ watch(() => props.modelValue, (open) => {
             :key="loc.code"
             class="language-option"
             :class="{ active: locale === loc.code }"
-            @click="setLocale(loc.code)"
+            @click="setLocale(loc.code as 'en' | 'sv')"
           >
             <span class="language-label">{{ loc.name }}</span>
           </button>

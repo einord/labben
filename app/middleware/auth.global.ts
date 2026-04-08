@@ -5,7 +5,7 @@ export default defineNuxtRouteMiddleware(async (to) => {
   // Only check auth on client side (SSR doesn't have browser cookies in $fetch)
   if (import.meta.server) return
 
-  const { fetchAuthState, isAuthenticated } = useAuth()
+  const { fetchAuthState, isAuthenticated } = useAuthState()
 
   // Only fetch if we don't already have a user in state
   if (!isAuthenticated.value) {

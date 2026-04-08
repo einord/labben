@@ -38,10 +38,10 @@ function prev() {
 <template>
   <div v-if="guides.length > 0" class="setup-guide">
     <div class="guide-header">
-      <Icon :name="currentGuide.icon" class="guide-icon" />
+      <Icon :name="currentGuide!.icon" class="guide-icon" />
       <div class="guide-text">
-        <span class="guide-title">{{ currentGuide.title }}</span>
-        <span class="guide-description">{{ currentGuide.description }}</span>
+        <span class="guide-title">{{ currentGuide!.title }}</span>
+        <span class="guide-description">{{ currentGuide!.description }}</span>
       </div>
       <div v-if="hasMultiple" class="guide-nav">
         <button class="nav-button" :disabled="currentIndex === 0" @click="prev">
@@ -54,7 +54,7 @@ function prev() {
       </div>
     </div>
     <div class="guide-steps">
-      <div v-for="(step, i) in currentGuide.steps" :key="i" class="step">
+      <div v-for="(step, i) in currentGuide!.steps" :key="i" class="step">
         <span class="step-text">{{ step.text }}</span>
         <code v-if="step.code" class="step-code">{{ step.code }}</code>
       </div>

@@ -24,7 +24,7 @@ export default defineEventHandler(async (event) => {
   }
 
   try {
-    await staticSitesService.uploadSiteArchive(id, file.data, file.filename)
+    await staticSitesService.uploadSiteArchive(id, Buffer.from(file.data), file.filename)
     return { success: true }
   } catch (error) {
     if (error instanceof Error && error.message === 'Site not found') {

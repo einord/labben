@@ -1,7 +1,7 @@
 import { authService } from '../../../services/auth'
 
 export default defineEventHandler(async (event) => {
-  const userId = event.context.user?.id
+  const userId = getAuthUser(event)?.id
   if (!userId) {
     throw createError({ statusCode: 401, message: 'Not authenticated' })
   }

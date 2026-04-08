@@ -8,6 +8,9 @@ export default defineEventHandler(async (event) => {
   }
 
   const body = await readBody<Partial<CreateProxyHostData>>(event)
+  if (!body) {
+    throw createError({ statusCode: 400, message: 'Request body is required' })
+  }
 
   if (!body.domainNames?.length) {
     throw createError({ statusCode: 400, message: 'At least one domain name is required' })

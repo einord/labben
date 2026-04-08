@@ -7,6 +7,9 @@ export default defineEventHandler(async (event) => {
   }
 
   const body = await readBody<{ groupId?: number | null; displayName?: string | null }>(event)
+  if (!body) {
+    throw createError({ statusCode: 400, message: 'Request body is required' })
+  }
 
   try {
     if (body.groupId !== undefined) {

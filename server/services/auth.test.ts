@@ -25,7 +25,7 @@ function toSqliteDatetime(date: Date): string {
  */
 async function createSealedCookie(data: Record<string, unknown>, password: string, maxAge: number): Promise<string> {
   const session = { data, createdAt: Date.now() }
-  return await seal(crypto, session, password, {
+  return await seal(crypto as Parameters<typeof seal>[0], session, password, {
     ...defaults,
     ttl: maxAge * 1000,
   })

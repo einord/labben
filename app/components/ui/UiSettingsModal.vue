@@ -21,7 +21,7 @@ const activeSection = ref(props.sections[0]?.id ?? '')
 // Reset to first section when opened
 watch(() => props.modelValue, (open) => {
   if (open && props.sections.length > 0) {
-    activeSection.value = props.sections[0].id
+    activeSection.value = props.sections[0]?.id ?? ''
   }
 })
 

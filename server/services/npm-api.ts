@@ -122,11 +122,11 @@ class NpmApiService {
 
     try {
       const token = await this.getToken()
-      return await $fetch<T>(url, {
+      return await $fetch(url, {
         method: method as 'GET' | 'POST' | 'PUT' | 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
         body: body ?? undefined,
-      })
+      }) as T
     } catch (error: unknown) {
       // On 401, try refreshing the token once
       if (this.isUnauthorized(error)) {
@@ -136,11 +136,11 @@ class NpmApiService {
         this.cachedToken = token
         databaseService.setSetting('npm_token', token)
 
-        return await $fetch<T>(url, {
+        return await $fetch(url, {
           method: method as 'GET' | 'POST' | 'PUT' | 'DELETE',
           headers: { Authorization: `Bearer ${token}` },
           body: body ?? undefined,
-        })
+        }) as T
       }
       throw error
     }

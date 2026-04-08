@@ -7,18 +7,15 @@ interface ActiveInvite {
   createdAt: string
 }
 
-export function useAuth() {
+/**
+ * Minimal auth state — safe to call outside component setup (e.g. route middleware).
+ * Does NOT use useI18n() or useToast(), so it works in any Nuxt context.
+ */
+export function useAuthState() {
   const user = useState<User | null>('auth-user', () => null)
   const isSetup = useState<boolean>('auth-setup', () => true)
-  const credentials = ref<WebAuthnCredentialInfo[]>([])
-  const invites = ref<ActiveInvite[]>([])
-  const sessions = useState<SessionInfo[]>('auth-sessions', () => [])
-  const toast = useToast()
-  const { t } = useI18n()
-
   const isAuthenticated = computed(() => user.value !== null)
 
-  /** Fetch auth state (setup status + current user) — safe to call outside setup */
   async function fetchAuthState(): Promise<AuthState> {
     try {
       const setupRes = await $fetch<{ success: boolean; data: { isSetup: boolean } }>('/api/auth/setup')
@@ -32,13 +29,33 @@ export function useAuth() {
           user.value = null
         }
       }
-    } catch (err) {
+    } catch {
       isSetup.value = false
       user.value = null
-      toast.warning(t('toast.authStateFetchError'), extractErrorDetails(err))
     }
 
     return { user: user.value, isSetup: isSetup.value }
+  }
+
+  return { user, isSetup, isAuthenticated, fetchAuthState }
+}
+
+export function useAuth() {
+  const { user, isSetup, isAuthenticated, fetchAuthState: fetchAuthStateBase } = useAuthState()
+  const credentials = ref<WebAuthnCredentialInfo[]>([])
+  const invites = ref<ActiveInvite[]>([])
+  const sessions = useState<SessionInfo[]>('auth-sessions', () => [])
+  const toast = useToast()
+  const { t } = useI18n()
+
+  /** Fetch auth state (setup status + current user) with error toast on failure */
+  async function fetchAuthState(): Promise<AuthState> {
+    try {
+      return await fetchAuthStateBase()
+    } catch (err) {
+      toast.warning(t('toast.authStateFetchError'), extractErrorDetails(err))
+      return { user: user.value, isSetup: isSetup.value }
+    }
   }
 
   /** Register a new passkey. Returns the user on success, throws on failure. */

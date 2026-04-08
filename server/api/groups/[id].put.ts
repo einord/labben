@@ -7,6 +7,9 @@ export default defineEventHandler(async (event) => {
   }
 
   const body = await readBody<{ name?: string; sortOrder?: number }>(event)
+  if (!body) {
+    throw createError({ statusCode: 400, message: 'Request body is required' })
+  }
 
   if (body.name !== undefined && !body.name.trim()) {
     throw createError({ statusCode: 400, message: 'Group name cannot be empty' })
