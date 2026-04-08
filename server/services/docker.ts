@@ -226,9 +226,9 @@ class DockerService {
 
   /** List compose projects from both Docker containers and the filesystem. */
   async listProjects(): Promise<ComposeProject[]> {
-    // Return cached result if fresh enough
+    // Return cached result if fresh enough (shallow copy to protect cache from mutation)
     if (this.projectCache && (Date.now() - this.projectCache.timestamp) < PROJECT_CACHE_TTL_MS) {
-      return this.projectCache.data
+      return [...this.projectCache.data]
     }
 
     const containers = await this.listContainers()

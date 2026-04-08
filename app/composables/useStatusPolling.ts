@@ -30,6 +30,7 @@ export function useStatusPolling(options: StatusPollingOptions) {
   function start() {
     if (polling.value) return
     polling.value = true
+    poll()
     intervalId = setInterval(poll, POLL_INTERVAL_MS)
   }
 

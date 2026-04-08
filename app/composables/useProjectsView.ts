@@ -179,8 +179,10 @@ export function useProjectsView() {
   /** Pull latest images for the selected project and refresh */
   async function handlePull() {
     if (!selectedProjectName.value) return
-    await projectPull(selectedProjectName.value)
-    await refreshAll()
+    await withAction('pull', async () => {
+      await projectPull(selectedProjectName.value!)
+      await refreshAll()
+    })
   }
 
   /** Start a single container and refresh */
