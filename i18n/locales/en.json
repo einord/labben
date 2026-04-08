@@ -404,6 +404,20 @@
     "update": "Update",
     "close": "Close",
     "loading": "Loading...",
-    "projectName": "Project name"
+    "projectName": "Project name",
+    "confirm": "Confirm",
+    "stop": "Stop"
+  },
+  "confirm": {
+    "projectDown": "This will stop all containers in the project. Are you sure?",
+    "projectDownTitle": "Stop project",
+    "containerStop": "This will stop the container. Are you sure?",
+    "containerStopTitle": "Stop container",
+    "proxyHostDelete": "This will permanently delete the proxy host. Are you sure?",
+    "proxyHostDeleteTitle": "Delete proxy host",
+    "clearCredentials": "This will disconnect from Nginx Proxy Manager. Are you sure?",
+    "clearCredentialsTitle": "Remove connection",
+    "clearProxy": "This will remove the proxy configuration. Are you sure?",
+    "clearProxyTitle": "Remove proxy"
   }
 }

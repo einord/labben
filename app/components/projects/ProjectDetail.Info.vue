@@ -19,6 +19,7 @@ const { t } = useI18n()
 const isMissing = computed(() => props.project.source === 'missing')
 const isSelf = computed(() => props.project.isSelf)
 const isLoading = (action: string) => props.activeAction === action
+const showDownConfirm = ref(false)
 
 defineEmits<{
   up: []
@@ -81,7 +82,7 @@ const statusVariant = computed(() => {
           icon="lucide:square"
           :disabled="isMissing || isSelf || !!activeAction"
           :loading="isLoading('down')"
-          @click="$emit('down')"
+          @click="showDownConfirm = true"
         >
           Down
         </UiButton>
@@ -117,6 +118,15 @@ const statusVariant = computed(() => {
       icon="lucide:alert-triangle"
       :title="$t('projects.nameConflict')"
       :description="$t('projects.nameConflictDescription', { newName: project.nameConflict.filesystemName, oldName: project.nameConflict.dockerName })"
+    />
+
+    <UiConfirmDialog
+      v-model="showDownConfirm"
+      :title="$t('confirm.projectDownTitle')"
+      :message="$t('confirm.projectDown')"
+      :confirm-text="'common.stop'"
+      variant="danger"
+      @confirm="showDownConfirm = false; $emit('down')"
     />
   </div>
 </template>

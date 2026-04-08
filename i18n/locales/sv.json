@@ -404,6 +404,20 @@
     "update": "Uppdatera",
     "close": "Stäng",
     "loading": "Laddar...",
-    "projectName": "Projektnamn"
+    "projectName": "Projektnamn",
+    "confirm": "Bekräfta",
+    "stop": "Stoppa"
+  },
+  "confirm": {
+    "projectDown": "Detta stoppar alla containrar i projektet. Är du säker?",
+    "projectDownTitle": "Stoppa projekt",
+    "containerStop": "Detta stoppar containern. Är du säker?",
+    "containerStopTitle": "Stoppa container",
+    "proxyHostDelete": "Detta tar permanent bort proxy-hosten. Är du säker?",
+    "proxyHostDeleteTitle": "Ta bort proxy host",
+    "clearCredentials": "Detta kopplar bort från Nginx Proxy Manager. Är du säker?",
+    "clearCredentialsTitle": "Ta bort anslutning",
+    "clearProxy": "Detta tar bort proxy-konfigurationen. Är du säker?",
+    "clearProxyTitle": "Ta bort proxy"
   }
 }

@@ -18,6 +18,7 @@ defineEmits<{
   restart: []
 }>()
 
+const showStopConfirm = ref(false)
 const isRunning = computed(() => props.status === 'running')
 const isStopped = computed(() =>
   props.status === 'exited' || props.status === 'dead' || props.status === 'created',
@@ -40,7 +41,7 @@ const isStopped = computed(() =>
       size="sm"
       icon="lucide:square"
       :loading="loading"
-      @click="$emit('stop')"
+      @click="showStopConfirm = true"
     />
     <UiButton
       v-if="isRunning && !disableDestructive"
@@ -49,6 +50,14 @@ const isStopped = computed(() =>
       icon="lucide:refresh-cw"
       :loading="loading"
       @click="$emit('restart')"
+    />
+    <UiConfirmDialog
+      v-model="showStopConfirm"
+      :title="$t('confirm.containerStopTitle')"
+      :message="$t('confirm.containerStop')"
+      :confirm-text="'common.stop'"
+      variant="danger"
+      @confirm="showStopConfirm = false; $emit('stop')"
     />
   </div>
 </template>

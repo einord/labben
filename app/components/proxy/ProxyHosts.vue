@@ -5,6 +5,8 @@ const { proxyHosts, loading, fetchProxyHosts, deleteProxyHost, status } = useNpm
 
 const showForm = ref(false)
 const editingHost = ref<NpmProxyHost | null>(null)
+const showDeleteConfirm = ref(false)
+const pendingDeleteHost = ref<NpmProxyHost | null>(null)
 
 function handleAdd() {
   editingHost.value = null
@@ -16,8 +18,16 @@ function handleEdit(host: NpmProxyHost) {
   showForm.value = true
 }
 
-async function handleDelete(host: NpmProxyHost) {
-  await deleteProxyHost(host.id)
+function confirmDelete(host: NpmProxyHost) {
+  pendingDeleteHost.value = host
+  showDeleteConfirm.value = true
+}
+
+async function handleDelete() {
+  if (!pendingDeleteHost.value) return
+  await deleteProxyHost(pendingDeleteHost.value.id)
+  showDeleteConfirm.value = false
+  pendingDeleteHost.value = null
 }
 
 function handleSaved() {
@@ -80,7 +90,7 @@ watch(() => status.value.connected, async (connected) => {
         </div>
         <div class="host-actions">
           <UiButton variant="ghost" size="sm" icon="lucide:pencil" @click="handleEdit(host)" />
-          <UiButton variant="ghost" size="sm" icon="lucide:trash-2" @click="handleDelete(host)" />
+          <UiButton variant="ghost" size="sm" icon="lucide:trash-2" @click="confirmDelete(host)" />
         </div>
       </div>
     </div>
@@ -89,6 +99,14 @@ watch(() => status.value.connected, async (connected) => {
       v-model="showForm"
       :edit-host="editingHost"
       @saved="handleSaved"
+    />
+
+    <UiConfirmDialog
+      v-model="showDeleteConfirm"
+      :title="$t('confirm.proxyHostDeleteTitle')"
+      :message="$t('confirm.proxyHostDelete')"
+      variant="danger"
+      @confirm="handleDelete"
     />
   </UiCard>
 </template>
