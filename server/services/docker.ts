@@ -5,7 +5,7 @@ import { readFile, writeFile, mkdir, access, readdir, stat, symlink, lstat } fro
 import { join, resolve } from 'node:path'
 import { composePath, composeHostDir } from '../utils/config'
 import { validateComposeYaml, parseCompose } from '../utils/compose'
-import { ProjectLockError } from '../utils/errors'
+import { withProjectLock } from '../utils/project-lock'
 import type { Readable } from 'node:stream'
 import type {
   ContainerSummary,
@@ -49,7 +49,6 @@ class DockerService {
   private hostComposeDir: string | null
   private symlinkError: string | null = null
   private projectCache: { data: ComposeProject[]; timestamp: number } | null = null
-  private projectLocks = new Map<string, Promise<void>>()
 
   constructor() {
     this.newProjectDir = composePath
@@ -221,25 +220,6 @@ class DockerService {
     return stream as unknown as Readable
   }
 
-  /**
-   * Acquire a per-project lock. Throws ProjectLockError if the project
-   * already has an operation in progress (fail-fast, no queuing).
-   */
-  private async withProjectLock<T>(name: string, fn: () => Promise<T>): Promise<T> {
-    if (this.projectLocks.has(name)) {
-      throw new ProjectLockError(name)
-    }
-    const promise = fn().finally(() => this.projectLocks.delete(name))
-    // Store promise as void since callers only need to check existence
-    this.projectLocks.set(name, promise as Promise<unknown> as Promise<void>)
-    return promise
-  }
-
-  /** Check whether a project currently has an operation in progress. */
-  isProjectLocked(name: string): boolean {
-    return this.projectLocks.has(name)
-  }
-
   /** Invalidate the project list cache (call after write operations). */
   invalidateProjectCache(): void {
     this.projectCache = null
@@ -313,7 +293,7 @@ class DockerService {
 
   /** Run `docker compose up -d` for a project. */
   async projectUp(name: string): Promise<string> {
-    return this.withProjectLock(name, async () => {
+    return withProjectLock(name, async () => {
       const result = await this.runComposeCommand(name, 'up', '-d')
       this.invalidateProjectCache()
       return result
@@ -322,7 +302,7 @@ class DockerService {
 
   /** Run `docker compose down` for a project. */
   async projectDown(name: string): Promise<string> {
-    return this.withProjectLock(name, async () => {
+    return withProjectLock(name, async () => {
       const result = await this.runComposeCommand(name, 'down')
       this.invalidateProjectCache()
       return result
@@ -331,14 +311,14 @@ class DockerService {
 
   /** Run `docker compose pull` for a project. */
   async projectPull(name: string): Promise<string> {
-    return this.withProjectLock(name, async () => {
+    return withProjectLock(name, async () => {
       return this.runComposeCommand(name, 'pull')
     })
   }
 
   /** Restart a project: down + up in one operation (avoids findProject after down removes containers). */
   async projectRestart(name: string): Promise<string> {
-    return this.withProjectLock(name, async () => {
+    return withProjectLock(name, async () => {
       const project = await this.findProject(name)
       const hostPath = project.hostConfigPath
       const run = (args: string[]) =>
@@ -361,7 +341,7 @@ class DockerService {
 
   /** Update a project: pull + down + up in one operation (avoids findProject after down removes containers). */
   async projectUpdate(name: string): Promise<string> {
-    return this.withProjectLock(name, async () => {
+    return withProjectLock(name, async () => {
       const project = await this.findProject(name)
       const hostPath = project.hostConfigPath
       const run = (args: string[]) =>
