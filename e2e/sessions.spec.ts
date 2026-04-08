@@ -4,11 +4,17 @@ test.describe('Session management', () => {
   test('settings shows sessions section with current session', async ({ page }) => {
     await page.goto('/')
 
+    // Wait for hydration to complete before interacting with the settings button
+    await page.waitForLoadState('networkidle')
+
     // Open settings modal
     await page.getByRole('button', { name: /settings/i }).click()
 
+    // Wait for the modal heading to appear (teleported to body)
+    await expect(page.getByRole('heading', { name: /settings/i })).toBeVisible({ timeout: 10000 })
+
     // Navigate to account section
-    await page.getByText('Account').click()
+    await page.getByRole('button', { name: /account/i }).click()
 
     // Verify sessions section is visible
     await expect(page.getByRole('heading', { name: /sessions/i })).toBeVisible()
@@ -20,9 +26,17 @@ test.describe('Session management', () => {
   test('sessions list shows at least one session', async ({ page }) => {
     await page.goto('/')
 
+    // Wait for hydration to complete before interacting with the settings button
+    await page.waitForLoadState('networkidle')
+
     // Open settings modal
     await page.getByRole('button', { name: /settings/i }).click()
-    await page.getByText('Account').click()
+
+    // Wait for the modal heading to appear (teleported to body)
+    await expect(page.getByRole('heading', { name: /settings/i })).toBeVisible({ timeout: 10000 })
+
+    // Navigate to account section
+    await page.getByRole('button', { name: /account/i }).click()
 
     // Should show the "no other sessions" message since we only have one session
     await expect(page.getByText(/no other active sessions/i)).toBeVisible()
