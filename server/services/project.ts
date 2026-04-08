@@ -74,6 +74,8 @@ class ProjectService {
         name,
         configPath: '',
         workingDir: '',
+        hostConfigPath: '',
+        hostWorkingDir: '',
         containers: [],
         runningCount: 0,
         totalCount: 0,

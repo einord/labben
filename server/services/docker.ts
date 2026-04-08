@@ -8,6 +8,7 @@ import { validateComposeYaml, parseCompose } from '../utils/compose'
 import type { Readable } from 'node:stream'
 import type {
   ContainerSummary,
+  ContainerStatusInfo,
   ContainerDetail,
   ContainerPort,
   ContainerVolume,
@@ -30,11 +31,23 @@ function toContainerStatus(state: string): ContainerStatus {
   return 'dead'
 }
 
+const PROJECT_CACHE_TTL_MS = 2000
+
+interface ProjectMapEntry {
+  containers: ContainerSummary[]
+  workingDir: string
+  configFile: string
+  hostWorkingDir: string
+  hostConfigFile: string
+  nameConflict?: { filesystemName: string; dockerName: string }
+}
+
 class DockerService {
   private _docker: Docker | null = null
   private newProjectDir: string
   private hostComposeDir: string | null
   private symlinkError: string | null = null
+  private projectCache: { data: ComposeProject[]; timestamp: number } | null = null
 
   constructor() {
     this.newProjectDir = composePath
@@ -118,6 +131,17 @@ class DockerService {
     }))
   }
 
+  /** List only status info for all containers — lightweight payload for polling. */
+  async listContainerStatuses(): Promise<ContainerStatusInfo[]> {
+    const containers = await this.docker.listContainers({ all: true })
+
+    return containers.map((c): ContainerStatusInfo => ({
+      id: c.Id,
+      status: toContainerStatus(c.State),
+      statusText: c.Status,
+    }))
+  }
+
   /** Get detailed information about a single container. */
   async getContainer(id: string): Promise<ContainerDetail> {
     const container = this.docker.getContainer(id)
@@ -195,16 +219,20 @@ class DockerService {
     return stream as unknown as Readable
   }
 
+  /** Invalidate the project list cache (call after write operations). */
+  invalidateProjectCache(): void {
+    this.projectCache = null
+  }
+
   /** List compose projects from both Docker containers and the filesystem. */
   async listProjects(): Promise<ComposeProject[]> {
+    // Return cached result if fresh enough
+    if (this.projectCache && (Date.now() - this.projectCache.timestamp) < PROJECT_CACHE_TTL_MS) {
+      return this.projectCache.data
+    }
+
     const containers = await this.listContainers()
-    const projectMap = new Map<string, {
-      containers: ContainerSummary[]
-      workingDir: string
-      configFile: string
-      hostWorkingDir: string
-      hostConfigFile: string
-    }>()
+    const projectMap = new Map<string, ProjectMapEntry>()
 
     // Group running containers by compose project
     // Docker labels contain host-side paths
@@ -241,9 +269,11 @@ class DockerService {
         containers: data.containers,
         runningCount,
         totalCount: data.containers.length,
+        nameConflict: data.nameConflict,
       })
     }
 
+    this.projectCache = { data: projects, timestamp: Date.now() }
     return projects
   }
 
@@ -262,12 +292,16 @@ class DockerService {
 
   /** Run `docker compose up -d` for a project. */
   async projectUp(name: string): Promise<string> {
-    return this.runComposeCommand(name, 'up', '-d')
+    const result = await this.runComposeCommand(name, 'up', '-d')
+    this.invalidateProjectCache()
+    return result
   }
 
   /** Run `docker compose down` for a project. */
   async projectDown(name: string): Promise<string> {
-    return this.runComposeCommand(name, 'down')
+    const result = await this.runComposeCommand(name, 'down')
+    this.invalidateProjectCache()
+    return result
   }
 
   /** Run `docker compose pull` for a project. */
@@ -287,8 +321,10 @@ class DockerService {
 
     try {
       const upOutput = await run(['up', '-d'])
+      this.invalidateProjectCache()
       return downOutput + upOutput
     } catch (err) {
+      this.invalidateProjectCache()
       const message = err instanceof Error ? err.message : String(err)
       throw new Error(`Restart failed during 'up' phase — project is currently down. ${message}`)
     }
@@ -307,8 +343,10 @@ class DockerService {
 
     try {
       const upOutput = await run(['up', '-d'])
+      this.invalidateProjectCache()
       return pullOutput + downOutput + upOutput
     } catch (err) {
+      this.invalidateProjectCache()
       const message = err instanceof Error ? err.message : String(err)
       throw new Error(`Update failed during 'up' phase — project is currently down. ${message}`)
     }
@@ -334,6 +372,7 @@ class DockerService {
     validateComposeYaml(content)
     await mkdir(projectDir, { recursive: true })
     await writeFile(configPath, content, 'utf-8')
+    this.invalidateProjectCache()
 
     return { name: safeName, configPath }
   }
@@ -352,7 +391,7 @@ class DockerService {
 
   /** Scan the compose directory and add any projects not already known from Docker. */
   private async addFilesystemProjects(
-    projectMap: Map<string, { containers: ContainerSummary[]; workingDir: string; configFile: string; hostWorkingDir: string; hostConfigFile: string }>,
+    projectMap: Map<string, ProjectMapEntry>,
   ): Promise<void> {
     try {
       const entries = await readdir(this.newProjectDir, { withFileTypes: true })
@@ -372,6 +411,7 @@ class DockerService {
         // Determine the effective project name: explicit name in compose file,
         // or the directory name lowercased (Docker Compose default behavior)
         const effectiveName = await this.resolveProjectName(configPath, entry.name)
+        const dirBasedName = entry.name.toLowerCase()
 
         // Check if this project already exists in Docker (from container labels)
         if (projectMap.has(effectiveName)) {
@@ -388,6 +428,21 @@ class DockerService {
           const existing = projectMap.get(caseMatch)!
           existing.workingDir = projectDir
           existing.configFile = configPath
+          continue
+        }
+
+        // Detect name conflict: compose file has explicit name that differs from
+        // directory name, and Docker still has containers under the old directory-based name.
+        // This causes the project to appear twice — once from Docker (old name) and once from filesystem (new name).
+        if (effectiveName !== dirBasedName && projectMap.has(dirBasedName)) {
+          const dockerProject = projectMap.get(dirBasedName)!
+          dockerProject.workingDir = projectDir
+          dockerProject.configFile = configPath
+          dockerProject.nameConflict = {
+            filesystemName: effectiveName,
+            dockerName: dirBasedName,
+          }
+          console.warn(`[docker] Name conflict detected: compose file defines name "${effectiveName}" but Docker knows this project as "${dirBasedName}". Run "docker compose down && docker compose up -d" in the project directory to reconcile.`)
           continue
         }
 

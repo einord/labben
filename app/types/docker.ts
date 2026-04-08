@@ -14,6 +14,13 @@ export interface ContainerPort {
   type: string
 }
 
+/** Lightweight container status info for polling */
+export interface ContainerStatusInfo {
+  id: string
+  status: ContainerStatus
+  statusText: string
+}
+
 /** Summary of a Docker container for list views */
 export interface ContainerSummary {
   id: string
@@ -72,6 +79,8 @@ export interface ComposeProject {
   runningCount: number
   /** Total number of containers */
   totalCount: number
+  /** Present when the compose file name differs from what Docker knows */
+  nameConflict?: { filesystemName: string; dockerName: string }
 }
 
 /** Request body for creating/updating a compose project */
