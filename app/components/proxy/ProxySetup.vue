@@ -159,7 +159,7 @@ onMounted(() => refresh())
       v-model="showClearConfirm"
       :title="$t('confirm.clearProxyTitle')"
       :message="$t('confirm.clearProxy')"
-      :confirm-text="'common.remove'"
+      confirm-text="common.remove"
       variant="danger"
       @confirm="handleClearConfirmed"
     />

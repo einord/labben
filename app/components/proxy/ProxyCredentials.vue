@@ -231,7 +231,7 @@ onMounted(async () => {
       v-model="showClearConfirm"
       :title="$t('confirm.clearCredentialsTitle')"
       :message="$t('confirm.clearCredentials')"
-      :confirm-text="'common.remove'"
+      confirm-text="common.remove"
       variant="danger"
       @confirm="handleClearCredentials"
     />

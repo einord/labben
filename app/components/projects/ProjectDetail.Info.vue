@@ -124,7 +124,7 @@ const statusVariant = computed(() => {
       v-model="showDownConfirm"
       :title="$t('confirm.projectDownTitle')"
       :message="$t('confirm.projectDown')"
-      :confirm-text="'common.stop'"
+      confirm-text="common.stop"
       variant="danger"
       @confirm="showDownConfirm = false; $emit('down')"
     />

@@ -55,7 +55,7 @@ const isStopped = computed(() =>
       v-model="showStopConfirm"
       :title="$t('confirm.containerStopTitle')"
       :message="$t('confirm.containerStop')"
-      :confirm-text="'common.stop'"
+      confirm-text="common.stop"
       variant="danger"
       @confirm="showStopConfirm = false; $emit('stop')"
     />
