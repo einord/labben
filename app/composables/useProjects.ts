@@ -60,11 +60,10 @@ export function useProjects() {
     }
   }
 
-  /** Restart a project (down + up) */
+  /** Restart a project (down + up in one server-side operation) */
   async function projectRestart(name: string) {
     try {
-      await $fetch(`/api/projects/${name}/down`, { method: 'POST' })
-      await $fetch(`/api/projects/${name}/up`, { method: 'POST' })
+      await $fetch(`/api/projects/${name}/restart`, { method: 'POST' })
       toast.success(t('toast.projectRestarted'))
     } catch (err) {
       toast.error(t('toast.projectRestartError'), extractErrorDetails(err))
