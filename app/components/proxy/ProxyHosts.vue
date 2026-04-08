@@ -7,6 +7,7 @@ const showForm = ref(false)
 const editingHost = ref<NpmProxyHost | null>(null)
 const showDeleteConfirm = ref(false)
 const pendingDeleteHost = ref<NpmProxyHost | null>(null)
+const deleting = ref(false)
 
 function handleAdd() {
   editingHost.value = null
@@ -25,9 +26,14 @@ function confirmDelete(host: NpmProxyHost) {
 
 async function handleDelete() {
   if (!pendingDeleteHost.value) return
-  await deleteProxyHost(pendingDeleteHost.value.id)
-  showDeleteConfirm.value = false
-  pendingDeleteHost.value = null
+  deleting.value = true
+  try {
+    await deleteProxyHost(pendingDeleteHost.value.id)
+    showDeleteConfirm.value = false
+    pendingDeleteHost.value = null
+  } finally {
+    deleting.value = false
+  }
 }
 
 function handleSaved() {
@@ -106,6 +112,7 @@ watch(() => status.value.connected, async (connected) => {
       :title="$t('confirm.proxyHostDeleteTitle')"
       :message="$t('confirm.proxyHostDelete')"
       variant="danger"
+      :loading="deleting"
       @confirm="handleDelete"
     />
   </UiCard>

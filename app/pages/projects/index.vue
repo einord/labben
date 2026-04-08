@@ -8,6 +8,7 @@ const {
   selectedContainerId,
   loading,
   activeAction,
+  containerLoadingIds,
   projectsLoading,
   containersLoading,
   dockerUnavailable,
@@ -142,6 +143,7 @@ onMounted(async () => {
             <ContainerList
               :containers="projectContainers"
               :loading="containersLoading"
+              :loading-ids="containerLoadingIds"
               :proxy-hosts="proxyHosts"
               :disable-destructive="selectedProject?.isSelf"
               @start="handleStartContainer"

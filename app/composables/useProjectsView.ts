@@ -102,6 +102,7 @@ export function useProjectsView() {
 
   const loading = computed(() => projectsLoading.value || containersLoading.value)
   const activeAction = ref<string | null>(null)
+  const containerLoadingIds = ref<string[]>([])
 
   /** Run a project action with loading tracking — pauses polling during execution */
   async function withAction(action: string, fn: () => Promise<void>) {
@@ -185,22 +186,40 @@ export function useProjectsView() {
     })
   }
 
+  /** Run a container action with per-container loading tracking */
+  async function withContainerAction(id: string, fn: () => Promise<void>) {
+    containerLoadingIds.value.push(id)
+    pausePolling()
+    try {
+      await fn()
+    } finally {
+      containerLoadingIds.value = containerLoadingIds.value.filter(i => i !== id)
+      resumePolling()
+    }
+  }
+
   /** Start a single container and refresh */
   async function handleStartContainer(id: string) {
-    await startContainer(id)
-    await refreshAll()
+    await withContainerAction(id, async () => {
+      await startContainer(id)
+      await refreshAll()
+    })
   }
 
   /** Stop a single container and refresh */
   async function handleStopContainer(id: string) {
-    await stopContainer(id)
-    await refreshAll()
+    await withContainerAction(id, async () => {
+      await stopContainer(id)
+      await refreshAll()
+    })
   }
 
   /** Restart a single container and refresh */
   async function handleRestartContainer(id: string) {
-    await restartContainer(id)
-    await refreshAll()
+    await withContainerAction(id, async () => {
+      await restartContainer(id)
+      await refreshAll()
+    })
   }
 
   /** Initialize by fetching all data including NPM status and base domain, then start polling */
@@ -246,6 +265,7 @@ export function useProjectsView() {
     selectedContainerId,
     loading,
     activeAction,
+    containerLoadingIds,
     projectsLoading,
     containersLoading,
     dockerUnavailable,
