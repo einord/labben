@@ -275,6 +275,25 @@ class DockerService {
     return this.runComposeCommand(name, 'pull')
   }
 
+  /** Restart a project: down + up in one operation (avoids findProject after down removes containers). */
+  async projectRestart(name: string): Promise<string> {
+    const project = await this.findProject(name)
+    const hostPath = project.hostConfigPath
+    const run = (args: string[]) =>
+      execFileAsync('docker', ['compose', '-f', hostPath, ...args], { timeout: 120_000 })
+        .then(({ stdout, stderr }) => stdout + stderr)
+
+    const downOutput = await run(['down'])
+
+    try {
+      const upOutput = await run(['up', '-d'])
+      return downOutput + upOutput
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err)
+      throw new Error(`Restart failed during 'up' phase — project is currently down. ${message}`)
+    }
+  }
+
   /** Update a project: pull + down + up in one operation (avoids findProject after down removes containers). */
   async projectUpdate(name: string): Promise<string> {
     const project = await this.findProject(name)
@@ -285,8 +304,14 @@ class DockerService {
 
     const pullOutput = await run(['pull'])
     const downOutput = await run(['down'])
-    const upOutput = await run(['up', '-d'])
-    return pullOutput + downOutput + upOutput
+
+    try {
+      const upOutput = await run(['up', '-d'])
+      return pullOutput + downOutput + upOutput
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err)
+      throw new Error(`Update failed during 'up' phase — project is currently down. ${message}`)
+    }
   }
 
   /** Create a new compose project directory and write the docker-compose.yml file. */
