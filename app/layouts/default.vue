@@ -149,7 +149,7 @@ function toggleSidebar() {
   gap: var(--spacing-sm);
   padding: var(--spacing-sm) var(--spacing-lg);
   color: var(--color-text-secondary);
-  transition: background-color var(--transition-fast), color var(--transition-fast);
+  transition: background-color var(--transition-fast), color var(--transition-fast), opacity var(--transition-fast);
   font-size: var(--font-size-md);
 }
 
