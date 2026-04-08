@@ -188,7 +188,9 @@ export function useProjectsView() {
 
   /** Run a container action with per-container loading tracking */
   async function withContainerAction(id: string, fn: () => Promise<void>) {
-    containerLoadingIds.value.push(id)
+    if (!containerLoadingIds.value.includes(id)) {
+      containerLoadingIds.value.push(id)
+    }
     pausePolling()
     try {
       await fn()
