@@ -13,6 +13,7 @@ const {
 
 const { detectUrl } = useNpm()
 
+const showClearConfirm = ref(false)
 const showCreateForm = ref(false)
 const newProjectName = ref('nginx-proxy-manager')
 const creating = ref(false)
@@ -40,8 +41,9 @@ async function handleSelect(name: string) {
   await refresh()
 }
 
-async function handleClear() {
+async function handleClearConfirmed() {
   await clearProxy()
+  showClearConfirm.value = false
   await refresh()
 }
 
@@ -75,7 +77,7 @@ onMounted(() => refresh())
               {{ $t('proxy.openAdmin') }}
             </UiButton>
           </a>
-          <UiButton variant="ghost" size="sm" icon="lucide:x" @click="handleClear">
+          <UiButton variant="ghost" size="sm" icon="lucide:x" @click="showClearConfirm = true">
             {{ $t('common.remove') }}
           </UiButton>
         </div>
@@ -153,6 +155,14 @@ onMounted(() => refresh())
         </div>
       </div>
     </UiCard>
+    <UiConfirmDialog
+      v-model="showClearConfirm"
+      :title="$t('confirm.clearProxyTitle')"
+      :message="$t('confirm.clearProxy')"
+      confirm-text="common.remove"
+      variant="danger"
+      @confirm="handleClearConfirmed"
+    />
   </div>
 </template>
 

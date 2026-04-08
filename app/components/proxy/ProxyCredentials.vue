@@ -17,6 +17,7 @@ const testing = ref(false)
 const testResult = ref<boolean | null>(null)
 const saving = ref(false)
 const showForm = ref(false)
+const showClearConfirm = ref(false)
 
 // Password change
 const newPassword = ref('')
@@ -73,6 +74,12 @@ async function handleChangePassword() {
   }
 }
 
+/** Handle confirmed clear credentials */
+async function handleClearCredentials() {
+  await clearCredentials()
+  showClearConfirm.value = false
+}
+
 /** Show edit form with current values */
 function editCredentials() {
   formUrl.value = status.value.url ?? ''
@@ -118,7 +125,7 @@ onMounted(async () => {
           <UiButton variant="ghost" size="sm" @click="editCredentials">
             {{ $t('proxyCredentials.change') }}
           </UiButton>
-          <UiButton variant="ghost" size="sm" icon="lucide:trash-2" @click="clearCredentials">
+          <UiButton variant="ghost" size="sm" icon="lucide:trash-2" @click="showClearConfirm = true">
             {{ $t('common.remove') }}
           </UiButton>
         </div>
@@ -219,6 +226,15 @@ onMounted(async () => {
         </UiButton>
       </div>
     </UiCard>
+
+    <UiConfirmDialog
+      v-model="showClearConfirm"
+      :title="$t('confirm.clearCredentialsTitle')"
+      :message="$t('confirm.clearCredentials')"
+      confirm-text="common.remove"
+      variant="danger"
+      @confirm="handleClearCredentials"
+    />
   </div>
 </template>
 
