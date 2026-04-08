@@ -55,22 +55,28 @@ function toggleSidebar() {
         </NuxtLink>
         <ClientOnly>
           <NuxtLink
-            v-if="showProxyNav"
             :to="PROXY_NAV_ITEM.to"
             class="nav-item"
+            :class="{ unconfigured: !showProxyNav }"
             @click="sidebarOpen = false"
           >
             <Icon :name="PROXY_NAV_ITEM.icon" class="nav-icon" />
             <span class="nav-label">{{ $t(PROXY_NAV_ITEM.labelKey) }}</span>
+            <UiBadge v-if="!showProxyNav" variant="neutral" size="sm">
+              {{ $t('nav.setup') }}
+            </UiBadge>
           </NuxtLink>
           <NuxtLink
-            v-if="showBackupNav"
             :to="BACKUP_NAV_ITEM.to"
             class="nav-item"
+            :class="{ unconfigured: !showBackupNav }"
             @click="sidebarOpen = false"
           >
             <Icon :name="BACKUP_NAV_ITEM.icon" class="nav-icon" />
             <span class="nav-label">{{ $t(BACKUP_NAV_ITEM.labelKey) }}</span>
+            <UiBadge v-if="!showBackupNav" variant="neutral" size="sm">
+              {{ $t('nav.setup') }}
+            </UiBadge>
           </NuxtLink>
         </ClientOnly>
       </nav>
@@ -143,7 +149,7 @@ function toggleSidebar() {
   gap: var(--spacing-sm);
   padding: var(--spacing-sm) var(--spacing-lg);
   color: var(--color-text-secondary);
-  transition: background-color var(--transition-fast), color var(--transition-fast);
+  transition: background-color var(--transition-fast), color var(--transition-fast), opacity var(--transition-fast);
   font-size: var(--font-size-md);
 }
 
@@ -156,6 +162,14 @@ function toggleSidebar() {
   background-color: var(--color-accent-dim);
   color: var(--color-accent);
   border-right: 3px solid var(--color-accent);
+}
+
+.nav-item.unconfigured {
+  opacity: 0.5;
+}
+
+.nav-item.unconfigured:hover {
+  opacity: 0.8;
 }
 
 .nav-icon {

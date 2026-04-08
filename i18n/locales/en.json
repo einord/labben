@@ -9,7 +9,8 @@
     "proxy": "Proxy",
     "backup": "Backup",
     "staticSites": "Static Sites",
-    "settings": "Settings"
+    "settings": "Settings",
+    "setup": "Setup"
   },
   "dashboard": {
     "title": "Dashboard",
