@@ -49,7 +49,9 @@ Coordination rules for agent teams:
 - The main agent (you) is responsible for coordinating changes and resolving any conflicts
 - Each agent should commit its work with clear, descriptive messages
 
-### Phase 3.5: Write tests
+### Phase 3.5: Write and run tests — MANDATORY GATE before PR
+
+**⚠ DO NOT proceed to Phase 4 (PR creation) until ALL tests pass. This is a hard gate, not a suggestion.**
 
 After implementation, write tests for new functionality where appropriate:
 - Unit tests for pure logic (utilities, server services)
@@ -62,12 +64,15 @@ After implementation, write tests for new functionality where appropriate:
 - E2e tests should be self-contained: create own test data, don't depend on existing state
 - Look at existing e2e tests in `e2e/` for patterns and conventions to follow
 - **Note:** Auth is required — e2e tests must handle the WebAuthn login flow or bypass it via test configuration
+- **Note:** Tests run without Docker — the app degrades gracefully when Docker is unavailable, so all pages render and smoke tests pass. Do NOT skip e2e tests because Docker is unavailable.
 
 **Smoke tests (`e2e/smoke.spec.ts`) must always pass.** These verify that every main page renders without server errors (500), without "Internal Server Error" text, and without critical console errors. Any change — server or client — can break SSR rendering, so these are non-negotiable.
 
 Run **all** tests and iterate until they pass:
-- `pnpm test` — unit tests (always run)
-- `pnpm test:e2e` — e2e + smoke tests (always run, not just for UI changes — smoke tests catch SSR breakage from any change)
+1. `pnpm test` — unit tests (always run)
+2. `pnpm test:e2e` — e2e + smoke tests (always run, not just for UI changes — smoke tests catch SSR breakage from any change)
+
+**If any test fails, fix the issue and re-run. Do not create the PR with failing tests.** If you cannot fix a test failure, explain the situation to the user and ask for guidance before proceeding.
 
 ### Phase 4: Create Pull Request
 

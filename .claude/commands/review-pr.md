@@ -32,6 +32,7 @@ This can be a PR number (e.g. "42"), a branch name, or empty (defaults to curren
    - Missing i18n (hardcoded UI text instead of `$t()` / `t()`)
    - Missing e2e tests for new UI functionality (smoke tests in `e2e/smoke.spec.ts` must cover new pages; feature-specific e2e tests required for non-trivial UI changes)
    - Changes that would break SSR rendering (composables called outside setup context, h3/Nitro API misuse, etc.)
+   - **Failing tests** — run `pnpm test` and `pnpm test:e2e` as part of the review. If any test fails, this is a critical issue. Tests run without Docker (the app degrades gracefully), so "Docker unavailable" is NOT a valid reason to skip e2e tests.
 
    **Improvement** (nice to have, non-blocking):
    - Code clarity and readability
