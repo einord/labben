@@ -42,7 +42,9 @@
     "publish": "Publish",
     "update": "Update",
     "dockerUnavailable": "Docker daemon is not available",
-    "dockerUnavailableDescription": "Cannot connect to the Docker daemon. Make sure Docker is running and the socket is mounted correctly."
+    "dockerUnavailableDescription": "Cannot connect to the Docker daemon. Make sure Docker is running and the socket is mounted correctly.",
+    "nameConflict": "Project name mismatch",
+    "nameConflictDescription": "The compose file defines the name \"{newName}\" but Docker still knows this project as \"{oldName}\". Run \"docker compose down\" followed by \"docker compose up -d\" in the project directory to reconcile."
   },
   "createProject": {
     "title": "New project",

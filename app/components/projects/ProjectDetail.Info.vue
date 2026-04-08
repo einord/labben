@@ -110,6 +110,14 @@ const statusVariant = computed(() => {
       </UiBadge>
       <span class="config-path" v-html="project.configPath.replace(/\//g, '/&#8203;')" />
     </div>
+
+    <UiAlert
+      v-if="project.nameConflict"
+      variant="warning"
+      icon="lucide:alert-triangle"
+      :title="$t('projects.nameConflict')"
+      :description="$t('projects.nameConflictDescription', { newName: project.nameConflict.filesystemName, oldName: project.nameConflict.dockerName })"
+    />
   </div>
 </template>
 

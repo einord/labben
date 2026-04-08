@@ -42,7 +42,9 @@
     "publish": "Publicera",
     "update": "Uppdatera",
     "dockerUnavailable": "Docker-daemon är inte tillgänglig",
-    "dockerUnavailableDescription": "Kan inte ansluta till Docker-daemon. Kontrollera att Docker körs och att socketen är korrekt monterad."
+    "dockerUnavailableDescription": "Kan inte ansluta till Docker-daemon. Kontrollera att Docker körs och att socketen är korrekt monterad.",
+    "nameConflict": "Projektnamn stämmer inte överens",
+    "nameConflictDescription": "Compose-filen definierar namnet \"{newName}\" men Docker känner fortfarande till projektet som \"{oldName}\". Kör \"docker compose down\" följt av \"docker compose up -d\" i projektmappen för att synkronisera."
   },
   "createProject": {
     "title": "Nytt projekt",
