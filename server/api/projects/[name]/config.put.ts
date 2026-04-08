@@ -1,4 +1,5 @@
 import { dockerService } from '../../../services/docker'
+import { isDockerUnavailableError } from '../../../utils/errors'
 import { ComposeValidationError } from '../../../utils/compose'
 
 interface ConfigBody {
@@ -20,6 +21,9 @@ export default defineEventHandler(async (event) => {
     await dockerService.saveProjectConfig(name, body.content)
     return { success: true }
   } catch (error) {
+    if (isDockerUnavailableError(error)) {
+      throw createError({ statusCode: 503, message: 'Docker daemon is not available' })
+    }
     const message = extractErrorMessage(error, 'Failed to save project config')
     throw createError({
       statusCode: error instanceof ComposeValidationError ? 400 : 500,

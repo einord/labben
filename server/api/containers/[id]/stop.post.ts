@@ -1,4 +1,5 @@
 import { dockerService } from '../../../services/docker'
+import { isDockerUnavailableError } from '../../../utils/errors'
 
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id')
@@ -10,6 +11,9 @@ export default defineEventHandler(async (event) => {
     await dockerService.stopContainer(id)
     return { success: true }
   } catch (error) {
+    if (isDockerUnavailableError(error)) {
+      throw createError({ statusCode: 503, message: 'Docker daemon is not available' })
+    }
     const statusCode = isNotFoundError(error) ? 404 : 500
     throw createError({
       statusCode,

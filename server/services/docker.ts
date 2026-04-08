@@ -45,6 +45,8 @@ interface ProjectMapEntry {
 
 class DockerService {
   private _docker: Docker | null = null
+  private _available: boolean | null = null
+  private _availableCheckedAt = 0
   private newProjectDir: string
   private hostComposeDir: string | null
   private symlinkError: string | null = null
@@ -104,6 +106,31 @@ class DockerService {
     }
   }
 
+  /** Check whether the Docker daemon is reachable. Result is cached for 10 seconds. */
+  async isAvailable(): Promise<boolean> {
+    const now = Date.now()
+    if (this._available !== null && (now - this._availableCheckedAt) < 10_000) {
+      return this._available
+    }
+    try {
+      await this.docker.ping()
+      this._available = true
+    } catch {
+      this._available = false
+    }
+    this._availableCheckedAt = now
+    return this._available
+  }
+
+  /** Require Docker to be available — throws 503-friendly error if not. */
+  private async requireDocker(): Promise<void> {
+    if (!(await this.isAvailable())) {
+      const err = new Error('Docker daemon is not available')
+      ;(err as NodeJS.ErrnoException).code = 'ECONNREFUSED'
+      throw err
+    }
+  }
+
   /** Lazy-initialize Docker connection to avoid HMR issues */
   private get docker(): Docker {
     if (!this._docker) {
@@ -113,8 +140,9 @@ class DockerService {
     return this._docker
   }
 
-  /** List all containers (including stopped), mapped to ContainerSummary. */
+  /** List all containers (including stopped), mapped to ContainerSummary. Returns empty array if Docker is unavailable. */
   async listContainers(): Promise<ContainerSummary[]> {
+    if (!(await this.isAvailable())) return []
     const containers = await this.docker.listContainers({ all: true })
 
     return containers.map((c): ContainerSummary => ({
@@ -132,8 +160,9 @@ class DockerService {
     }))
   }
 
-  /** List only status info for all containers — lightweight payload for polling. */
+  /** List only status info for all containers — lightweight payload for polling. Returns empty array if Docker is unavailable. */
   async listContainerStatuses(): Promise<ContainerStatusInfo[]> {
+    if (!(await this.isAvailable())) return []
     const containers = await this.docker.listContainers({ all: true })
 
     return containers.map((c): ContainerStatusInfo => ({
@@ -145,6 +174,7 @@ class DockerService {
 
   /** Get detailed information about a single container. */
   async getContainer(id: string): Promise<ContainerDetail> {
+    await this.requireDocker()
     const container = this.docker.getContainer(id)
     const info = await container.inspect()
 
@@ -176,24 +206,28 @@ class DockerService {
 
   /** Start a container by id. */
   async startContainer(id: string): Promise<void> {
+    await this.requireDocker()
     const container = this.docker.getContainer(id)
     await container.start()
   }
 
   /** Stop a container by id. */
   async stopContainer(id: string): Promise<void> {
+    await this.requireDocker()
     const container = this.docker.getContainer(id)
     await container.stop()
   }
 
   /** Restart a container by id. */
   async restartContainer(id: string): Promise<void> {
+    await this.requireDocker()
     const container = this.docker.getContainer(id)
     await container.restart()
   }
 
   /** Get the last N lines of logs from a container. */
   async getContainerLogs(id: string, tail: number = 100): Promise<string> {
+    await this.requireDocker()
     const container = this.docker.getContainer(id)
     const logs = await container.logs({
       stdout: true,
@@ -208,6 +242,7 @@ class DockerService {
 
   /** Stream live logs from a container. */
   async streamContainerLogs(id: string): Promise<Readable> {
+    await this.requireDocker()
     const container = this.docker.getContainer(id)
     const stream = await container.logs({
       stdout: true,
@@ -293,6 +328,7 @@ class DockerService {
 
   /** Run `docker compose up -d` for a project. */
   async projectUp(name: string): Promise<string> {
+    await this.requireDocker()
     return withProjectLock(name, async () => {
       const result = await this.runComposeCommand(name, 'up', '-d')
       this.invalidateProjectCache()
@@ -302,6 +338,7 @@ class DockerService {
 
   /** Run `docker compose down` for a project. */
   async projectDown(name: string): Promise<string> {
+    await this.requireDocker()
     return withProjectLock(name, async () => {
       const result = await this.runComposeCommand(name, 'down')
       this.invalidateProjectCache()
@@ -311,6 +348,7 @@ class DockerService {
 
   /** Run `docker compose pull` for a project. */
   async projectPull(name: string): Promise<string> {
+    await this.requireDocker()
     return withProjectLock(name, async () => {
       return this.runComposeCommand(name, 'pull')
     })
@@ -318,6 +356,7 @@ class DockerService {
 
   /** Restart a project: down + up in one operation (avoids findProject after down removes containers). */
   async projectRestart(name: string): Promise<string> {
+    await this.requireDocker()
     return withProjectLock(name, async () => {
       const project = await this.findProject(name)
       const hostPath = project.hostConfigPath
@@ -341,6 +380,7 @@ class DockerService {
 
   /** Update a project: pull + down + up in one operation (avoids findProject after down removes containers). */
   async projectUpdate(name: string): Promise<string> {
+    await this.requireDocker()
     return withProjectLock(name, async () => {
       const project = await this.findProject(name)
       const hostPath = project.hostConfigPath
