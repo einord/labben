@@ -1,9 +1,43 @@
-import type { ContainerSummary } from '~/types/docker'
+import type { ContainerSummary, ContainerStatusInfo } from '~/types/docker'
 import type { ProjectWithMetadata } from '~/types/project'
 
 export function useProjectsView() {
   const route = useRoute()
   const router = useRouter()
+
+  // Status polling — updates container statuses in-place without full refetch
+  function applyStatusUpdate(statuses: ContainerStatusInfo[]) {
+    const statusMap = new Map(statuses.map(s => [s.id, s]))
+
+    // Update containers in-place
+    for (const container of allContainers.value) {
+      const fresh = statusMap.get(container.id)
+      if (fresh && (container.status !== fresh.status || container.statusText !== fresh.statusText)) {
+        container.status = fresh.status
+        container.statusText = fresh.statusText
+      }
+    }
+
+    // Update project container statuses and running counts
+    for (const project of projects.value) {
+      let changed = false
+      for (const container of project.containers) {
+        const fresh = statusMap.get(container.id)
+        if (fresh && (container.status !== fresh.status || container.statusText !== fresh.statusText)) {
+          container.status = fresh.status
+          container.statusText = fresh.statusText
+          changed = true
+        }
+      }
+      if (changed) {
+        project.runningCount = project.containers.filter(c => c.status === 'running').length
+      }
+    }
+  }
+
+  const { pause: pausePolling, resume: resumePolling, start: startPolling, stop: stopPolling } = useStatusPolling({
+    onUpdate: applyStatusUpdate,
+  })
 
   const {
     projects,
@@ -69,13 +103,15 @@ export function useProjectsView() {
   const loading = computed(() => projectsLoading.value || containersLoading.value)
   const activeAction = ref<string | null>(null)
 
-  /** Run a project action with loading tracking */
+  /** Run a project action with loading tracking — pauses polling during execution */
   async function withAction(action: string, fn: () => Promise<void>) {
     activeAction.value = action
+    pausePolling()
     try {
       await fn()
     } finally {
       activeAction.value = null
+      resumePolling()
     }
   }
 
@@ -165,7 +201,7 @@ export function useProjectsView() {
     await refreshAll()
   }
 
-  /** Initialize by fetching all data including NPM status and base domain */
+  /** Initialize by fetching all data including NPM status and base domain, then start polling */
   async function init() {
     await Promise.all([
       Promise.all([fetchProjects(), fetchContainers(), fetchGroups()]),
@@ -176,6 +212,8 @@ export function useProjectsView() {
     if (npmStatus.value.connected) {
       await fetchProxyHosts()
     }
+    // Start lightweight status polling after initial data is loaded
+    startPolling()
   }
 
   /** Open proxy form for a container with smart defaults */
