@@ -11,6 +11,19 @@ export function isDockerUnavailableResponse(err: unknown): boolean {
   return false
 }
 
+/** Check if a fetch error is a 409 Conflict (operation already in progress) */
+export function isConflictResponse(err: unknown): boolean {
+  if (err && typeof err === 'object') {
+    const e = err as Record<string, unknown>
+    if (e.statusCode === 409 || e.status === 409) return true
+    if (e.response && typeof e.response === 'object') {
+      const resp = e.response as Record<string, unknown>
+      if (resp.status === 409) return true
+    }
+  }
+  return false
+}
+
 /** Extract a human-readable error message from a fetch error */
 export function extractErrorDetails(err: unknown): string {
   if (err && typeof err === 'object') {

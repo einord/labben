@@ -36,7 +36,8 @@ export function useProjects() {
       await $fetch(`/api/projects/${name}/up`, { method: 'POST' })
       toast.success(t('toast.projectStarted'))
     } catch (err) {
-      toast.error(t('toast.projectStartError'), extractErrorDetails(err))
+      if (isConflictResponse(err)) toast.error(t('toast.projectBusy'))
+      else toast.error(t('toast.projectStartError'), extractErrorDetails(err))
     }
   }
 
@@ -46,7 +47,8 @@ export function useProjects() {
       await $fetch(`/api/projects/${name}/down`, { method: 'POST' })
       toast.success(t('toast.projectStopped'))
     } catch (err) {
-      toast.error(t('toast.projectStopError'), extractErrorDetails(err))
+      if (isConflictResponse(err)) toast.error(t('toast.projectBusy'))
+      else toast.error(t('toast.projectStopError'), extractErrorDetails(err))
     }
   }
 
@@ -56,7 +58,8 @@ export function useProjects() {
       await $fetch(`/api/projects/${name}/pull`, { method: 'POST' })
       toast.success(t('toast.imagesUpdated'))
     } catch (err) {
-      toast.error(t('toast.imagesPullError'), extractErrorDetails(err))
+      if (isConflictResponse(err)) toast.error(t('toast.projectBusy'))
+      else toast.error(t('toast.imagesPullError'), extractErrorDetails(err))
     }
   }
 
@@ -66,7 +69,8 @@ export function useProjects() {
       await $fetch(`/api/projects/${name}/restart`, { method: 'POST' })
       toast.success(t('toast.projectRestarted'))
     } catch (err) {
-      toast.error(t('toast.projectRestartError'), extractErrorDetails(err))
+      if (isConflictResponse(err)) toast.error(t('toast.projectBusy'))
+      else toast.error(t('toast.projectRestartError'), extractErrorDetails(err))
     }
   }
 
@@ -76,7 +80,8 @@ export function useProjects() {
       await $fetch(`/api/projects/${name}/update`, { method: 'POST' })
       toast.success(t('toast.projectUpdated'))
     } catch (err) {
-      toast.error(t('toast.projectUpdateError'), extractErrorDetails(err))
+      if (isConflictResponse(err)) toast.error(t('toast.projectBusy'))
+      else toast.error(t('toast.projectUpdateError'), extractErrorDetails(err))
     }
   }
 

@@ -172,6 +172,7 @@
     "containerRestartError": "Could not restart container",
     "containersFetchError": "Could not fetch containers",
     "projectsFetchError": "Could not fetch projects",
+    "projectBusy": "An operation is already in progress on this project",
     "projectStarted": "Project started",
     "projectStartError": "Could not start project",
     "projectStopped": "Project stopped",

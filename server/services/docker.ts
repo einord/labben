@@ -5,6 +5,7 @@ import { readFile, writeFile, mkdir, access, readdir, stat, symlink, lstat } fro
 import { join, resolve } from 'node:path'
 import { composePath, composeHostDir } from '../utils/config'
 import { validateComposeYaml, parseCompose } from '../utils/compose'
+import { ProjectLockError } from '../utils/errors'
 import type { Readable } from 'node:stream'
 import type {
   ContainerSummary,
@@ -48,6 +49,7 @@ class DockerService {
   private hostComposeDir: string | null
   private symlinkError: string | null = null
   private projectCache: { data: ComposeProject[]; timestamp: number } | null = null
+  private projectLocks = new Map<string, Promise<void>>()
 
   constructor() {
     this.newProjectDir = composePath
@@ -219,6 +221,25 @@ class DockerService {
     return stream as unknown as Readable
   }
 
+  /**
+   * Acquire a per-project lock. Throws ProjectLockError if the project
+   * already has an operation in progress (fail-fast, no queuing).
+   */
+  private async withProjectLock<T>(name: string, fn: () => Promise<T>): Promise<T> {
+    if (this.projectLocks.has(name)) {
+      throw new ProjectLockError(name)
+    }
+    const promise = fn().finally(() => this.projectLocks.delete(name))
+    // Store promise as void since callers only need to check existence
+    this.projectLocks.set(name, promise as Promise<unknown> as Promise<void>)
+    return promise
+  }
+
+  /** Check whether a project currently has an operation in progress. */
+  isProjectLocked(name: string): boolean {
+    return this.projectLocks.has(name)
+  }
+
   /** Invalidate the project list cache (call after write operations). */
   invalidateProjectCache(): void {
     this.projectCache = null
@@ -292,64 +313,74 @@ class DockerService {
 
   /** Run `docker compose up -d` for a project. */
   async projectUp(name: string): Promise<string> {
-    const result = await this.runComposeCommand(name, 'up', '-d')
-    this.invalidateProjectCache()
-    return result
+    return this.withProjectLock(name, async () => {
+      const result = await this.runComposeCommand(name, 'up', '-d')
+      this.invalidateProjectCache()
+      return result
+    })
   }
 
   /** Run `docker compose down` for a project. */
   async projectDown(name: string): Promise<string> {
-    const result = await this.runComposeCommand(name, 'down')
-    this.invalidateProjectCache()
-    return result
+    return this.withProjectLock(name, async () => {
+      const result = await this.runComposeCommand(name, 'down')
+      this.invalidateProjectCache()
+      return result
+    })
   }
 
   /** Run `docker compose pull` for a project. */
   async projectPull(name: string): Promise<string> {
-    return this.runComposeCommand(name, 'pull')
+    return this.withProjectLock(name, async () => {
+      return this.runComposeCommand(name, 'pull')
+    })
   }
 
   /** Restart a project: down + up in one operation (avoids findProject after down removes containers). */
   async projectRestart(name: string): Promise<string> {
-    const project = await this.findProject(name)
-    const hostPath = project.hostConfigPath
-    const run = (args: string[]) =>
-      execFileAsync('docker', ['compose', '-f', hostPath, ...args], { timeout: 120_000 })
-        .then(({ stdout, stderr }) => stdout + stderr)
+    return this.withProjectLock(name, async () => {
+      const project = await this.findProject(name)
+      const hostPath = project.hostConfigPath
+      const run = (args: string[]) =>
+        execFileAsync('docker', ['compose', '-f', hostPath, ...args], { timeout: 120_000 })
+          .then(({ stdout, stderr }) => stdout + stderr)
 
-    const downOutput = await run(['down'])
+      const downOutput = await run(['down'])
 
-    try {
-      const upOutput = await run(['up', '-d'])
-      this.invalidateProjectCache()
-      return downOutput + upOutput
-    } catch (err) {
-      this.invalidateProjectCache()
-      const message = err instanceof Error ? err.message : String(err)
-      throw new Error(`Restart failed during 'up' phase — project is currently down. ${message}`)
-    }
+      try {
+        const upOutput = await run(['up', '-d'])
+        this.invalidateProjectCache()
+        return downOutput + upOutput
+      } catch (err) {
+        this.invalidateProjectCache()
+        const message = err instanceof Error ? err.message : String(err)
+        throw new Error(`Restart failed during 'up' phase — project is currently down. ${message}`)
+      }
+    })
   }
 
   /** Update a project: pull + down + up in one operation (avoids findProject after down removes containers). */
   async projectUpdate(name: string): Promise<string> {
-    const project = await this.findProject(name)
-    const hostPath = project.hostConfigPath
-    const run = (args: string[]) =>
-      execFileAsync('docker', ['compose', '-f', hostPath, ...args], { timeout: 120_000 })
-        .then(({ stdout, stderr }) => stdout + stderr)
+    return this.withProjectLock(name, async () => {
+      const project = await this.findProject(name)
+      const hostPath = project.hostConfigPath
+      const run = (args: string[]) =>
+        execFileAsync('docker', ['compose', '-f', hostPath, ...args], { timeout: 120_000 })
+          .then(({ stdout, stderr }) => stdout + stderr)
 
-    const pullOutput = await run(['pull'])
-    const downOutput = await run(['down'])
+      const pullOutput = await run(['pull'])
+      const downOutput = await run(['down'])
 
-    try {
-      const upOutput = await run(['up', '-d'])
-      this.invalidateProjectCache()
-      return pullOutput + downOutput + upOutput
-    } catch (err) {
-      this.invalidateProjectCache()
-      const message = err instanceof Error ? err.message : String(err)
-      throw new Error(`Update failed during 'up' phase — project is currently down. ${message}`)
-    }
+      try {
+        const upOutput = await run(['up', '-d'])
+        this.invalidateProjectCache()
+        return pullOutput + downOutput + upOutput
+      } catch (err) {
+        this.invalidateProjectCache()
+        const message = err instanceof Error ? err.message : String(err)
+        throw new Error(`Update failed during 'up' phase — project is currently down. ${message}`)
+      }
+    })
   }
 
   /** Create a new compose project directory and write the docker-compose.yml file. */
