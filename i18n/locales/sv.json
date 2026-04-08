@@ -172,6 +172,7 @@
     "containerRestartError": "Kunde inte starta om container",
     "containersFetchError": "Kunde inte hämta containers",
     "projectsFetchError": "Kunde inte hämta projekt",
+    "projectBusy": "En operation pågår redan på detta projekt",
     "projectStarted": "Projekt startat",
     "projectStartError": "Kunde inte starta projekt",
     "projectStopped": "Projekt stoppat",

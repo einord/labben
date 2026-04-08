@@ -1,3 +1,11 @@
+/** Error thrown when a project operation is attempted while another is already in progress. */
+export class ProjectLockError extends Error {
+  constructor(projectName: string) {
+    super(`An operation is already in progress on project '${projectName}'`)
+    this.name = 'ProjectLockError'
+  }
+}
+
 /** Check if a Docker error is a 404 (container/resource not found) */
 export function isNotFoundError(error: unknown): boolean {
   return error instanceof Error && error.message.includes('no such container')

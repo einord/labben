@@ -5,6 +5,7 @@ import { readFile, writeFile, mkdir, access, readdir, stat, symlink, lstat } fro
 import { join, resolve } from 'node:path'
 import { composePath, composeHostDir } from '../utils/config'
 import { validateComposeYaml, parseCompose } from '../utils/compose'
+import { withProjectLock } from '../utils/project-lock'
 import type { Readable } from 'node:stream'
 import type {
   ContainerSummary,
@@ -292,64 +293,74 @@ class DockerService {
 
   /** Run `docker compose up -d` for a project. */
   async projectUp(name: string): Promise<string> {
-    const result = await this.runComposeCommand(name, 'up', '-d')
-    this.invalidateProjectCache()
-    return result
+    return withProjectLock(name, async () => {
+      const result = await this.runComposeCommand(name, 'up', '-d')
+      this.invalidateProjectCache()
+      return result
+    })
   }
 
   /** Run `docker compose down` for a project. */
   async projectDown(name: string): Promise<string> {
-    const result = await this.runComposeCommand(name, 'down')
-    this.invalidateProjectCache()
-    return result
+    return withProjectLock(name, async () => {
+      const result = await this.runComposeCommand(name, 'down')
+      this.invalidateProjectCache()
+      return result
+    })
   }
 
   /** Run `docker compose pull` for a project. */
   async projectPull(name: string): Promise<string> {
-    return this.runComposeCommand(name, 'pull')
+    return withProjectLock(name, async () => {
+      return this.runComposeCommand(name, 'pull')
+    })
   }
 
   /** Restart a project: down + up in one operation (avoids findProject after down removes containers). */
   async projectRestart(name: string): Promise<string> {
-    const project = await this.findProject(name)
-    const hostPath = project.hostConfigPath
-    const run = (args: string[]) =>
-      execFileAsync('docker', ['compose', '-f', hostPath, ...args], { timeout: 120_000 })
-        .then(({ stdout, stderr }) => stdout + stderr)
+    return withProjectLock(name, async () => {
+      const project = await this.findProject(name)
+      const hostPath = project.hostConfigPath
+      const run = (args: string[]) =>
+        execFileAsync('docker', ['compose', '-f', hostPath, ...args], { timeout: 120_000 })
+          .then(({ stdout, stderr }) => stdout + stderr)
 
-    const downOutput = await run(['down'])
+      const downOutput = await run(['down'])
 
-    try {
-      const upOutput = await run(['up', '-d'])
-      this.invalidateProjectCache()
-      return downOutput + upOutput
-    } catch (err) {
-      this.invalidateProjectCache()
-      const message = err instanceof Error ? err.message : String(err)
-      throw new Error(`Restart failed during 'up' phase — project is currently down. ${message}`)
-    }
+      try {
+        const upOutput = await run(['up', '-d'])
+        this.invalidateProjectCache()
+        return downOutput + upOutput
+      } catch (err) {
+        this.invalidateProjectCache()
+        const message = err instanceof Error ? err.message : String(err)
+        throw new Error(`Restart failed during 'up' phase — project is currently down. ${message}`)
+      }
+    })
   }
 
   /** Update a project: pull + down + up in one operation (avoids findProject after down removes containers). */
   async projectUpdate(name: string): Promise<string> {
-    const project = await this.findProject(name)
-    const hostPath = project.hostConfigPath
-    const run = (args: string[]) =>
-      execFileAsync('docker', ['compose', '-f', hostPath, ...args], { timeout: 120_000 })
-        .then(({ stdout, stderr }) => stdout + stderr)
+    return withProjectLock(name, async () => {
+      const project = await this.findProject(name)
+      const hostPath = project.hostConfigPath
+      const run = (args: string[]) =>
+        execFileAsync('docker', ['compose', '-f', hostPath, ...args], { timeout: 120_000 })
+          .then(({ stdout, stderr }) => stdout + stderr)
 
-    const pullOutput = await run(['pull'])
-    const downOutput = await run(['down'])
+      const pullOutput = await run(['pull'])
+      const downOutput = await run(['down'])
 
-    try {
-      const upOutput = await run(['up', '-d'])
-      this.invalidateProjectCache()
-      return pullOutput + downOutput + upOutput
-    } catch (err) {
-      this.invalidateProjectCache()
-      const message = err instanceof Error ? err.message : String(err)
-      throw new Error(`Update failed during 'up' phase — project is currently down. ${message}`)
-    }
+      try {
+        const upOutput = await run(['up', '-d'])
+        this.invalidateProjectCache()
+        return pullOutput + downOutput + upOutput
+      } catch (err) {
+        this.invalidateProjectCache()
+        const message = err instanceof Error ? err.message : String(err)
+        throw new Error(`Update failed during 'up' phase — project is currently down. ${message}`)
+      }
+    })
   }
 
   /** Create a new compose project directory and write the docker-compose.yml file. */
