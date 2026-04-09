@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/einord/labben/compare/labben-v0.2.0...labben-v0.2.1) (2026-04-09)
+
+
+### Bug Fixes
+
+* made deploy quicker ([455229e](https://github.com/einord/labben/commit/455229ede246a74d9906c1c3520a10f50b24b7ae))
+
 ## [0.2.0](https://github.com/einord/labben/compare/labben-v0.1.0...labben-v0.2.0) (2026-04-08)
 
 
