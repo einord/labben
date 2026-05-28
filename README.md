@@ -1,3 +1,5 @@
+> **Moved:** This repository now lives at [forgejo.nyqvist.app/jonte/labben](https://forgejo.nyqvist.app/jonte/labben). This GitHub repository is kept as a read-only archive.
+
 # Labben
 
 A self-hosted homelab management dashboard for Docker. Manage your Compose projects, containers, reverse proxy, and backups — all from one clean interface.
