@@ -1,1 +1,10 @@
-onlyBuiltDependencies: cpu-features,ssh2,esbuild,protobufjs
+packages:
+  - .
+
+onlyBuiltDependencies:
+  - '@parcel/watcher'
+  - better-sqlite3
+  - cpu-features
+  - esbuild
+  - protobufjs
+  - ssh2
