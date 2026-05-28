@@ -28,7 +28,7 @@ COMPOSE_PATH=/path/to/your/compose/projects
 ### 2. Download `docker-compose.yml`
 
 ```bash
-curl -O https://raw.githubusercontent.com/einord/labben/main/docker-compose.yml
+curl -O https://forgejo.nyqvist.app/jonte/labben/raw/branch/main/docker-compose.yml
 ```
 
 ### 3. Start Labben

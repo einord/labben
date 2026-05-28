@@ -1,6 +1,6 @@
 services:
   labben:
-    image: ghcr.io/einord/labben:latest
+    image: forgejo.nyqvist.app/jonte/labben:latest
     ports:
       - "3005:3005"
     volumes:
